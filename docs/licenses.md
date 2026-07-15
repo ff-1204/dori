@@ -29,5 +29,6 @@
 |------|----------|-----------|------|
 | assets/og.png (링크 미리보기 이미지) | 자체 제작 | ✅ | PowerShell System.Drawing 스크립트로 생성(외부 소재 없음) |
 | 효과음 전체 | 자체 생성 | ✅ | Web Audio 합성(`src/sfx.js`), 외부 음원 없음 |
+| assets/icon-192/512.png (PWA 아이콘) | 자체 제작 | ✅ | PowerShell System.Drawing 스크립트로 생성(외부 소재 없음) |
 
 > 실제 에셋을 추가하면 각 항목의 출처·라이선스·URL을 반드시 기록한다.

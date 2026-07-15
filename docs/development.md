@@ -18,8 +18,11 @@ dori/
 ├── README.md             # 프로젝트 소개(핵심 요약)
 ├── CHANGELOG.md          # 릴리즈 노트
 ├── robots.txt / sitemap.xml   # 검색 엔진용
+├── manifest.json         # PWA 매니페스트(바로가기 설치)
+├── sw.js                 # 최소 서비스워커(설치 조건용, 캐시 없음)
 ├── assets/
-│   └── og.png            # 링크 미리보기 이미지(자체 제작 1200×630)
+│   ├── og.png            # 링크 미리보기 이미지(자체 제작 1200×630)
+│   └── icon-192/512.png  # PWA 아이콘(자체 제작 룰렛 심볼)
 ├── src/
 │   ├── main.js           # 게임 설정 + 씬 등록
 │   ├── theme.js          # 디자인 토큰(팔레트·간격·이징) — visual-polish 기준
@@ -70,6 +73,12 @@ npx serve
 1. 변경 사항 커밋 ([git.md](./git.md) 컨벤션 준수)
 2. `git push`
 3. 약 20초 후 `https://ff-1204.github.io/dori/` 반영
+
+## 바로가기 (PWA)
+
+- `manifest.json` + 최소 `sw.js`(캐시 없음)로 설치형 웹앱 요건 충족.
+- 허브 하단 **📲 바로가기** 버튼: `beforeinstallprompt`를 잡아둔 프롬프트로 즉시 설치(Chrome/안드로이드/Edge), 미지원(iOS Safari 등)은 방법 안내 모달.
+- 이미 standalone 실행 중이면 안내 토스트만. 아이콘은 자체 제작 룰렛 심볼(192/512).
 
 ## 공유 · SEO
 

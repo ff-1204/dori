@@ -1,0 +1,16 @@
+{
+  "name": "dori — 결정·뽑기·복불복 미니게임",
+  "short_name": "dori",
+  "description": "뭐 먹지? 누가 쏘지? 고민은 짧게, 결정은 즐겁게.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#12131c",
+  "theme_color": "#12131c",
+  "lang": "ko",
+  "icons": [
+    { "src": "assets/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}

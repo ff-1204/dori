@@ -111,15 +111,100 @@ export default class HubScene extends Phaser.Scene {
       y += SP.md;
     });
 
-    // 하단 제작자 크레딧 → GitHub (자연스러운 외부 링크, 안전 영역 안쪽)
-    const credit = this.add.text(width / 2, this.scale.height - 44, 'made by ff-1204  ↗', {
+    this.buildTopBar();
+    this.buildBottomBar();
+  }
+
+  // ===== 하단 바: 효과음(좌) · 크레딧(중앙) · 바로가기(우) =====
+  buildBottomBar() {
+    const { width, height } = this.scale;
+    const by = height - 44; // 안전 영역 안쪽
+
+    // 효과음 토글(기본 꺼짐, localStorage 저장) — 상태가 아이콘으로 정직하게 드러남
+    this.soundBtn = this.add.text(SP.md + 16, by, Sfx.isEnabled() ? '🔊' : '🔇', {
+      fontSize: '32px',
+    }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+    this.soundBtn.on('pointerup', () => {
+      const next = !Sfx.isEnabled();
+      Sfx.setEnabled(next);
+      this.soundBtn.setText(next ? '🔊' : '🔇');
+      if (next) Sfx.play('pop');
+      this.toast(next ? '효과음 켜짐' : '효과음 꺼짐');
+    });
+
+    // 제작자 크레딧 → GitHub (자연스러운 외부 링크)
+    const credit = this.add.text(width / 2, by, 'made by ff-1204  ↗', {
       fontFamily: FONT, fontSize: '26px', color: css(C.subtext),
     }).setOrigin(0.5).setInteractive({ useHandCursor: true });
     credit.on('pointerover', () => credit.setColor(css(C.primary)));
     credit.on('pointerout', () => credit.setColor(css(C.subtext)));
     credit.on('pointerup', () => window.open('https://github.com/ff-1204', '_blank'));
 
-    this.buildTopBar();
+    // 바로가기(PWA 설치) — 지원 브라우저는 즉시 설치, 아니면 방법 안내
+    const install = this.add.text(width - SP.md, by, '📲 바로가기', {
+      fontFamily: FONT, fontSize: '26px', color: css(C.subtext), fontStyle: 'bold',
+    }).setOrigin(1, 0.5).setInteractive({ useHandCursor: true });
+    install.on('pointerover', () => install.setColor(css(C.primary)));
+    install.on('pointerout', () => install.setColor(css(C.subtext)));
+    install.on('pointerup', () => this.installShortcut());
+  }
+
+  async installShortcut() {
+    // 이미 앱(standalone)으로 실행 중이면 안내만
+    if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) {
+      this.toast('이미 바로가기로 실행 중이에요');
+      return;
+    }
+    // Chrome/Edge/안드로이드: 잡아둔 설치 프롬프트를 바로 띄운다
+    const evt = window.__deferredInstall;
+    if (evt) {
+      evt.prompt();
+      try {
+        const choice = await evt.userChoice;
+        if (choice && choice.outcome === 'accepted') {
+          this.toast('바로가기가 추가되었어요');
+          window.__deferredInstall = null;
+        }
+      } catch (e) { /* 사용자가 닫음 */ }
+      return;
+    }
+    // iOS 사파리 등 프롬프트 미지원: 방법 안내 모달
+    this.openInstallGuide();
+  }
+
+  openInstallGuide() {
+    if (this.guideModal) return;
+    const { width, height } = this.scale;
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+
+    this.guideModal = this.add.container(0, 0).setDepth(200);
+    const dim = this.add.rectangle(0, 0, width, height, 0x000000, 0.75).setOrigin(0).setInteractive();
+    dim.on('pointerup', () => { this.guideModal.destroy(); this.guideModal = null; });
+    this.guideModal.add(dim);
+
+    const pw = 560; const ph = 380;
+    const px = (width - pw) / 2; const py = (height - ph) / 2;
+    const panel = this.add.graphics();
+    panel.fillStyle(C.surface, 1).fillRoundedRect(px, py, pw, ph, 20);
+    panel.lineStyle(2, C.surfaceAlt, 1).strokeRoundedRect(px, py, pw, ph, 20);
+    this.guideModal.add(panel);
+
+    this.guideModal.add(this.add.text(width / 2, py + 56, '📲 바로가기 만들기', {
+      fontFamily: FONT, fontSize: '36px', color: css(C.text), fontStyle: 'bold',
+    }).setOrigin(0.5));
+
+    const body = isIOS
+      ? 'Safari 하단의 공유 버튼(□↑)을 누른 뒤\n\'홈 화면에 추가\'를 선택하세요'
+      : '브라우저 메뉴(⋮) 또는 주소창의 설치 아이콘에서\n\'홈 화면에 추가\'/\'설치\'를 선택하세요';
+    this.guideModal.add(this.add.text(width / 2, py + 170, body, {
+      fontFamily: FONT, fontSize: '28px', color: css(C.subtext), align: 'center', lineSpacing: 12,
+    }).setOrigin(0.5));
+
+    const close = this.add.text(width / 2, py + ph - 56, '✕ 닫기', {
+      fontFamily: FONT, fontSize: '30px', color: css(C.subtext), fontStyle: 'bold',
+    }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+    close.on('pointerup', () => { this.guideModal.destroy(); this.guideModal = null; });
+    this.guideModal.add(close);
   }
 
   // ===== 상단 바: QR(좌) · 공유(우) — 제목(중앙)과 좌표 겹침 없음 =====
@@ -139,18 +224,6 @@ export default class HubScene extends Phaser.Scene {
     shareBtn.on('pointerover', () => shareBtn.setColor(css(C.primary)));
     shareBtn.on('pointerout', () => shareBtn.setColor(css(C.subtext)));
     shareBtn.on('pointerup', () => this.doShare());
-
-    // 효과음 토글(기본 꺼짐, localStorage 저장) — 상태가 아이콘으로 정직하게 드러남
-    this.soundBtn = this.add.text(width - 160, SP.md + 2, Sfx.isEnabled() ? '🔊' : '🔇', {
-      fontSize: '34px',
-    }).setOrigin(1, 0).setInteractive({ useHandCursor: true });
-    this.soundBtn.on('pointerup', () => {
-      const next = !Sfx.isEnabled();
-      Sfx.setEnabled(next);
-      this.soundBtn.setText(next ? '🔊' : '🔇');
-      if (next) Sfx.play('pop');
-      this.toast(next ? '효과음 켜짐' : '효과음 꺼짐');
-    });
   }
 
   async doShare() {
