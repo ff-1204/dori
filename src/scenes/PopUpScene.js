@@ -84,6 +84,7 @@ export default class PopUpScene extends MiniGame {
       s.used = false;
       s.hit.setInteractive({ useHandCursor: true });
       if (s.sword) { s.sword.destroy(); s.sword = null; }
+      if (s.maskG) { s.maskG.destroy(); s.maskG = null; }
     });
     this.hint.setColor(css(C.subtext)).setScale(1);
     this.hint.setText(`칼 구멍 ${SLOTS}개 · 트리거는 1개`);
@@ -108,8 +109,14 @@ export default class PopUpScene extends MiniGame {
     sword.add(sg);
     s.sword = sword;
 
+    // 구멍 안으로 들어간 칼날은 가린다(구멍 오른쪽 영역만 보이는 마스크)
+    const maskG = this.make.graphics({ add: false });
+    maskG.fillStyle(0xffffff, 1).fillRect(s.x + 20, s.y - 50, 500, 100);
+    sword.setMask(maskG.createGeometryMask());
+    s.maskG = maskG;
+
     this.tweens.add({
-      targets: sword, x: s.x + 40, duration: 140, ease: 'Quad.easeIn',
+      targets: sword, x: s.x + 10, duration: 140, ease: 'Quad.easeIn',
       onComplete: () => {
         if (i === this.trigger) this.launch(i);
         else this.safe(i);

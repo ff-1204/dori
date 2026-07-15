@@ -29,8 +29,7 @@ function ensureFry(items) {
   return items;
 }
 
-// 모드/보증/숫자 설정
-const LS_MODE = 'dori.roulette.mode';       // 'menu' | 'number'
+// 모드/보증/숫자 설정 (모드는 저장하지 않음 — 재진입 시 항상 기본 '메뉴' 모드)
 const LS_NUM = 'dori.roulette.numberCount'; // 숫자 모드 칸 수
 const LS_SPINS = 'dori.roulette.spins';     // 🍟 보증 카운터(메뉴 모드 전용)
 const PITY = 10;                            // 10번째 스핀은 감자튀김 보증(공개 규칙 — docs/game.md)
@@ -75,7 +74,7 @@ export default class RouletteScene extends MiniGame {
     // 시간대 → 식사 종류 → 메뉴(저장분 우선) / 모드(메뉴·숫자) 복원
     this.mealKey = mealForPhase(this.timePhase && this.timePhase.key);
     this.meal = MEALS[this.mealKey];
-    this.mode = loadStr(LS_MODE, 'menu') === 'number' ? 'number' : 'menu';
+    this.mode = 'menu'; // 재진입 시 항상 기본(메뉴) 모드로 시작
     this.numberCount = Phaser.Math.Clamp(parseInt(loadStr(LS_NUM, '6'), 10) || 6, 2, 16);
     this.setupItems();
     this.makeFryTexture();
@@ -135,7 +134,6 @@ export default class RouletteScene extends MiniGame {
   toggleMode() {
     if (this.locked) return;
     this.mode = this.mode === 'menu' ? 'number' : 'menu';
-    saveStr(LS_MODE, this.mode);
     this.setupItems();
     this.rebuildWheel();
     this.titleText.setText(this.titleFor());

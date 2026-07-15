@@ -8,7 +8,7 @@ import { makeButton } from '../ui.js';
 import { Sfx } from '../sfx.js';
 
 const LS_SLOTS = 'dori.pinball.slots';
-const DEFAULT_SLOTS = ['대박', '꽝', '2등', '2등', '꽝', '대박']; // 플링코 정석: 가장자리(희귀)=큰 보상
+const DEFAULT_SLOTS = ['꽝', '2등', '1등', '3등', '2등', '꽝']; // 1·2·3등 + 꽝꽝(가장자리)
 const SLOT_N = 6;
 const LEFT = 70;
 const RIGHT = 650;

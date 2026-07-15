@@ -56,14 +56,7 @@ export default class CrocoScene extends MiniGame {
     upper.fillStyle(0xffffff, 1).fillCircle(200, 300, 34).fillCircle(520, 300, 34);
     upper.fillStyle(C.bg, 1).fillCircle(200, 306, 14).fillCircle(520, 306, 14);
     this.upperJaw.add(upper);
-    // 위턱 이빨(장식)
-    const fangs = this.add.graphics();
-    fangs.fillStyle(0xffffff, 1);
-    for (let i = 0; i < 8; i += 1) {
-      const x = 130 + i * 66;
-      fangs.fillTriangle(x, 450, x + 40, 450, x + 20, 496);
-    }
-    this.upperJaw.add(fangs);
+    // (위턱 세모 장식 제거 — 누르는 버튼만으로 이빨을 표현)
 
     // 누르는 이빨 12개(2줄 × 6개, 입 안 y 500~630) — 터치 타깃 88×72
     this.teeth = [];
@@ -91,6 +84,10 @@ export default class CrocoScene extends MiniGame {
       t.pressed = false;
       t.g.setAlpha(1);
       t.g.y = 0;
+      // 빨간(함정) 표시 포함 원래 모습으로 다시 그림
+      t.g.clear();
+      t.g.fillStyle(0x000000, 0.25).fillRoundedRect(t.x - 32, t.y - 26 + 5, 64, 56, 12);
+      t.g.fillStyle(0xffffff, 1).fillRoundedRect(t.x - 32, t.y - 30, 64, 56, 12);
       t.hit.setInteractive({ useHandCursor: true });
     });
     this.hint.setColor(css(C.subtext)).setScale(1);
@@ -119,12 +116,16 @@ export default class CrocoScene extends MiniGame {
 
   chomp(i) {
     this.bitten = true;
+    // 함정 이빨은 빨간색으로 표시(색상 연결: 위험색) — 어떤 이빨이었는지 정직하게 공개
+    const t = this.teeth[i];
+    t.g.setAlpha(1);
+    t.g.fillStyle(C.danger, 1).fillRoundedRect(t.x - 32, t.y - 30, 64, 56, 12);
     // 위턱이 쾅 닫힌다(Peak)
     this.tweens.add({
       targets: this.upperJaw, y: 170, duration: 130, ease: 'Quad.easeIn',
       onComplete: () => {
         Sfx.play('bang');
-        this.burst(this.teeth[i].x, 560, C.danger, 36);
+        this.burst(t.x, t.y, C.danger, 36);
         this.colorFlash(C.danger, 220);
         this.shake(0.014, 280);
         this.hint.setColor(css(C.danger));

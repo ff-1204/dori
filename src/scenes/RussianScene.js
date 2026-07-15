@@ -108,7 +108,8 @@ export default class RussianScene extends MiniGame {
   }
 
   resolve(t) {
-    const dot = this.chamberDots[t];
+    // 회전이 끝난 뒤 포인터(위)에 온 약실은 child (t+1)%6 — 지나간 칸이 아니라 도착한 칸을 표시
+    const dot = this.chamberDots[(t + 1) % CHAMBERS];
     if (t === this.bullet) {
       // 빵! — Peak 연출(위험색으로 색상 연결)
       dot.setFillStyle(C.danger);
