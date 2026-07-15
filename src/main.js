@@ -2,6 +2,7 @@ import BootScene from './scenes/BootScene.js';
 import PreloadScene from './scenes/PreloadScene.js';
 import HubScene from './scenes/HubScene.js';
 import RouletteScene from './scenes/RouletteScene.js';
+import LadderScene from './scenes/LadderScene.js';
 import { enforceHostLock } from './guard.js';
 
 // 도메인 잠금: 허용 호스트가 아니면 게임을 시작하지 않는다(무단 재호스팅 억제).
@@ -17,7 +18,7 @@ if (enforceHostLock()) {
       mode: Phaser.Scale.FIT,          // 비율 유지하며 화면에 맞춤
       autoCenter: Phaser.Scale.CENTER_BOTH,
     },
-    scene: [BootScene, PreloadScene, HubScene, RouletteScene],
+    scene: [BootScene, PreloadScene, HubScene, RouletteScene, LadderScene],
   };
 
   // eslint-disable-next-line no-new

@@ -1,0 +1,53 @@
+# 장르 트렌드 조사 (2026-07)
+
+결정 돕기 · 랜덤 뽑기 · 복불복 장르의 실사용 트렌드 조사와, dori 기능 설계로의 번역.
+조사일: 2026-07-16. 새 인사이트가 생기면 이 문서에 추가한다.
+
+## 1. 사다리타기 — 한국 결정 게임의 대표
+
+- 온라인 사다리타기는 **2~30명**을 지원하며 **내기·제비뽑기·당첨자 추첨·팀 나누기·벌칙 정하기** 용도로 모바일/PC에서 널리 쓰임.
+- 대표 사용 맥락: **점심 내기 · 간식 내기 · 커피 내기 · 청소 당번 · 벌칙 1명 뽑기**.
+- TV 예능·모임에서 "공정한 추첨 방법"으로 인식됨 → **공정성(순열 보장)이 곧 신뢰**.
+- 흔한 UX: 참가자 이름 입력 → 사다리 생성 → 이름을 눌러 경로 애니메이션 → 결과 확인. "꽝 찾기" 모드도 인기.
+
+**→ dori 적용**: 사다리타기를 참가자/결과 **편집형**으로 구현. **용도 프리셋(커피·벌칙·청소·당첨)** 제공, 경로는 참가자 색으로 **색상 연결** 애니메이션.
+
+## 2. 돌림판(Wheel of Names류) — 세계적으로 검증된 포맷
+
+- Wheel of Names 등은 교사(발표자 뽑기)·경품 추첨·벌칙 정하기에 널리 사용.
+- 인기 기능: **항목 커스텀**, **뽑힌 항목 제거(비복원)**, 당첨 축하 연출(콘페티), 목록 저장.
+
+**→ dori 적용**: 룰렛에 이미 커스텀+저장 구현. **"뽑히면 제거(비복원 모드)"**를 로드맵에 추가 — 여러 명이 순서대로 다른 결과를 받아야 할 때 유용.
+
+## 3. 복불복 — 예능 스타일 운 게임
+
+- 복불복(福不福)은 **운만으로 승패**를 가르는 예능식 게임 문화. 랜덤 벌칙(긁는 복권식)·카드뽑기·제비뽑기 앱이 꾸준히 인기.
+- **악어 이빨 룰렛 · 통아저씨류 보드게임은 여전히 판매**될 만큼 물리 완구 수요가 있음 → 디지털 재현 가치.
+- 술자리 게임 전성기(10~20년 전)보다는 잦아들었으나, **가벼운 벌칙 정하기 수요는 상시적**.
+
+**→ dori 적용**: 악어 이빨·통아저씨를 로드맵대로 구현하되 **벌칙은 가볍고 유쾌하게** 프레이밍(게임 이론 §9). 러시안 룰렛은 "물 룰렛" 같은 순화 컨셉 검토.
+
+## 4. 플링코(Plinko)/구슬 물리 게임 — 바이럴 포맷
+
+- 물리 기반 플링코가 스트리밍에서 바이럴: **짧은 라운드(수 초) + 즉각 만족 + 낮은 진입장벽**.
+- 핵심 심리: **"통제된 불확실성"** — 시작 지점은 플레이어가 고르지만(주도성) 결과는 물리에 맡김 → 기대감·도파민.
+- 시각적 만족: 공이 핀 사이를 튀는 스펙터클 자체가 재미.
+
+**→ dori 적용**: 랜덤 핀볼 구현 시 **"떨어뜨릴 위치를 플레이어가 선택"**하는 주도성을 핵심 메커니즘으로. 결과 칸은 균등 검증(game-mechanics A-3).
+
+## 5. 공통 시사점
+
+| 인사이트 | dori 반영 |
+|----------|-----------|
+| 도구가 아니라 **의식(ritual)** — 내기·벌칙의 순간을 함께 보는 재미 | 결과 공개 연출에 마감 집중(Peak-End) |
+| **커스텀 + 저장**이 재방문을 만든다 | 모든 게임에 편집 + localStorage(룰렛 완료, 사다리 적용) |
+| **공정성 인식**이 곧 제품 신뢰 | 정직한 매핑·순열 보장·검증 가능한 애니메이션 |
+| 참가자 다인 지원(2~N명) | 사다리 2~6명(모바일 가독성 한계), 추후 확장 검토 |
+| 주도성(내가 고른다)이 몰입을 만든다 | 핀볼 낙하 지점 선택, 사다리 줄 선택, 악어 이빨 선택 |
+
+## 출처
+
+- [사다리타기 게임 | OJJ](https://apps.ojj.kr/ladder/) · [사다리타기 - 나무위키](https://namu.wiki/w/%EC%82%AC%EB%8B%A4%EB%A6%AC%ED%83%80%EA%B8%B0) · [온라인 사다리타기(sciencelove)](https://sciencelove.com/2614)
+- [Wheel of Names](https://wheelofnames.com/ko/) · [WheelOrbit](https://wheelorbit.com/) · [PiliApp 랜덤이름추첨기](https://kr.piliapp.com/random/wheel/)
+- [복불복 - 나무위키](https://namu.wiki/w/%EB%B3%B5%EB%B6%88%EB%B3%B5) · [랜덤 벌칙 게임(Google Play)](https://play.google.com/store/apps/details?id=com.oon.RandomPick&hl=ko) · [악어 이빨 룰렛 보드게임(에듀팜몰)](https://edufarmmall.co.kr/product/%EC%95%85%EC%96%B4-%EC%9D%B4%EB%B9%A8-%EB%A3%B0%EB%A0%9B-%EB%B3%B4%EB%93%9C-%EA%B2%8C%EC%9E%84-%EB%B3%B5%EB%B6%88%EB%B3%B5-%EB%B2%8C%EC%B9%99/5807)
+- [Why Physics-Based Plinko Games Are the Next Viral Streaming Craze (GameSpace)](https://gamespace.com/all-articles/news/why-physics-based-plinko-games-are-the-next-viral-streaming-craze-you-cant-miss/) · [The Physics And Probability Behind Plinko (Leadership)](https://leadership.ng/the-physics-and-probability-behind-plinko-game-outcomes/)

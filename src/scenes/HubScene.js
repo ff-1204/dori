@@ -9,7 +9,7 @@ const GAMES = [
     cat: '결정 돕기',
     items: [
       { key: 'Roulette', name: '점심 메뉴 룰렛', ready: true },
-      { key: 'Ladder', name: '사다리타기', ready: false },
+      { key: 'Ladder', name: '사다리타기', ready: true },
       { key: 'Pinball', name: '랜덤 핀볼', ready: false },
     ],
   },

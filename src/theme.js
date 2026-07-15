@@ -17,6 +17,9 @@ export const C = {
 // 룰렛 등 여러 칸을 칠할 때 쓰는 강조색 순환(팔레트 내에서만)
 export const SLICE = [C.primary, C.success, C.warning, C.danger];
 
+// 참가자 식별색(사다리 등 다인 게임, 최대 6명) — 색상 연결(visual-polish §3-1a)용
+export const PLAYER = [C.primary, C.success, C.warning, C.danger, 0xc77dff, 0xff9f6c];
+
 // 숫자 색 → CSS 문자열(Text color용)
 export const css = (n) => `#${n.toString(16).padStart(6, '0')}`;
 

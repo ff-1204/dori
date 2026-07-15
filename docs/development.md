@@ -27,7 +27,8 @@ dori/
 │       ├── BootScene.js      # 최초 초기화
 │       ├── PreloadScene.js   # 에셋 로딩 + 로딩 바
 │       ├── HubScene.js       # 게임 선택 허브(범주별 목록)
-│       └── RouletteScene.js  # 점심 메뉴 룰렛(첫 실제 게임)
+│       ├── RouletteScene.js  # 메뉴 룰렛(시간대별 세트 + 편집)
+│       └── LadderScene.js    # 사다리타기(참가자·결과 편집 + 프리셋)
 ├── docs/                 # 프로젝트 문서
 ├── CLAUDE.md             # Claude Code 작업 가이드
 ├── LICENSE               # 독점(All Rights Reserved)
