@@ -111,12 +111,13 @@ export default class PopUpScene extends MiniGame {
 
     // 구멍 안으로 들어간 칼날은 가린다(구멍 오른쪽 영역만 보이는 마스크)
     const maskG = this.make.graphics({ add: false });
-    maskG.fillStyle(0xffffff, 1).fillRect(s.x + 20, s.y - 50, 500, 100);
+    maskG.fillStyle(0xffffff, 1).fillRect(s.x + 8, s.y - 50, 500, 100);
     sword.setMask(maskG.createGeometryMask());
     s.maskG = maskG;
 
+    // 최종 위치: 밖으로 나온 부분(가드+손잡이)이 옆 구멍(간격 78px) 전에 끝나게 깊이 꽂는다
     this.tweens.add({
-      targets: sword, x: s.x + 10, duration: 140, ease: 'Quad.easeIn',
+      targets: sword, x: s.x - 20, duration: 140, ease: 'Quad.easeIn',
       onComplete: () => {
         if (i === this.trigger) this.launch(i);
         else this.safe(i);
