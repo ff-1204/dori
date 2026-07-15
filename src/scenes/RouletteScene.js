@@ -94,6 +94,7 @@ export default class RouletteScene extends MiniGame {
 
     this.buildWheel();
     this.buildPointer();
+    this.updateFryHint(); // 진입 시 카운터가 이미 9면 바로 반짝임
 
     this.resultText = this.add.text(this.cx, 930, this.defaultHint(), {
       fontFamily: FONT, fontSize: '38px', color: css(C.subtext), fontStyle: 'bold', align: 'center',
@@ -225,6 +226,11 @@ export default class RouletteScene extends MiniGame {
       let rot = mid;
       if (Math.cos(mid) < 0) rot += Math.PI;
       label.setRotation(rot);
+      // 🍟 숨은 치트 진입점(더블탭) — 이스터에그라 커서 힌트 없음
+      if (name === FRY && this.mode === 'menu') {
+        label.setInteractive();
+        label.on('pointerup', () => this.onFryTap());
+      }
       this.wheel.add(label);
     });
 
@@ -234,8 +240,66 @@ export default class RouletteScene extends MiniGame {
 
   rebuildWheel() {
     if (this.wheel) this.wheel.destroy();
+    this.fryHint = null; // 휠과 함께 파괴됨
     this.wheelAngle = 0;
     this.buildWheel();
+    this.updateFryHint();
+  }
+
+  // 특정 칸 위에 흰 오버레이(반짝임용) — 휠 컨테이너에 넣어 함께 회전
+  sliceOverlay(i) {
+    const g = this.add.graphics();
+    g.fillStyle(0xffffff, 1);
+    g.beginPath();
+    g.slice(0, 0, this.radius, Phaser.Math.DegToRad(i * this.sliceAngle), Phaser.Math.DegToRad((i + 1) * this.sliceAngle), false);
+    g.closePath();
+    g.fillPath();
+    g.setAlpha(0);
+    this.wheel.add(g);
+    return g;
+  }
+
+  // 🍟 보증 예고: 9번째 스핀 뒤(카운터 9)부터 감자튀김 칸이 은은하게 반짝인다(정직한 힌트)
+  updateFryHint() {
+    const pity = parseInt(loadStr(LS_SPINS, '0'), 10) || 0;
+    const need = this.mode === 'menu' && pity >= PITY - 1 && this.items.indexOf(FRY) !== -1;
+    if (!need) {
+      if (this.fryHint) { this.fryHint.forEach((o) => o.destroy()); this.fryHint = null; }
+      return;
+    }
+    if (this.fryHint) return;
+    const i = this.items.indexOf(FRY);
+    const glow = this.sliceOverlay(i);
+    this.tweens.add({ targets: glow, alpha: 0.35, duration: 520, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    const mid = Phaser.Math.DegToRad((i + 0.5) * this.sliceAngle);
+    const spark = this.add.text(Math.cos(mid) * this.radius * 0.85, Math.sin(mid) * this.radius * 0.85, '✨', {
+      fontSize: '32px',
+    }).setOrigin(0.5);
+    this.wheel.add(spark);
+    this.fryHint = [glow, spark];
+  }
+
+  // 🍟 숨은 치트: 감자튀김 칸 더블탭 → 칸이 반짝이며 감자튀김 확정 스핀
+  onFryTap() {
+    if (this.locked || this.mode !== 'menu') return;
+    const now = this.time.now;
+    if (this.lastFryTap && now - this.lastFryTap < 350) {
+      this.lastFryTap = 0;
+      this.flashFrySlice(() => this.spin(true));
+    } else {
+      this.lastFryTap = now;
+    }
+  }
+
+  flashFrySlice(onDone) {
+    const i = this.items.indexOf(FRY);
+    if (i === -1) { onDone(); return; }
+    Sfx.play('pop');
+    const g = this.sliceOverlay(i);
+    this.tweens.add({
+      targets: g, alpha: 0.7, duration: 110, yoyo: true, repeat: 2, ease: 'Quad.easeInOut',
+      onComplete: () => { g.destroy(); onDone(); },
+    });
   }
 
   buildPointer() {
@@ -245,7 +309,7 @@ export default class RouletteScene extends MiniGame {
     g.fillStyle(C.text, 1).fillTriangle(this.cx - 24, topY - 46, this.cx + 24, topY - 46, this.cx, topY + 6);
   }
 
-  spin() {
+  spin(forceFry = false) {
     if (this.locked) return;
     this.lock();
     this.spinBtn.disableButton();
@@ -258,7 +322,8 @@ export default class RouletteScene extends MiniGame {
       let pity = parseInt(loadStr(LS_SPINS, '0'), 10) || 0;
       pity += 1;
       const fryIdx = this.items.indexOf(FRY);
-      if (pity >= PITY && fryIdx !== -1) winner = fryIdx;
+      if (forceFry && fryIdx !== -1) winner = fryIdx; // 더블탭 치트
+      else if (pity >= PITY && fryIdx !== -1) winner = fryIdx;
       else winner = this.rng.between(0, this.n - 1);
       // 감자튀김이 나오면(보증이든 자연이든) 카운터 리셋
       if (this.items[winner] === FRY) pity = 0;
@@ -314,6 +379,7 @@ export default class RouletteScene extends MiniGame {
     this.spinBtn.enableButton();
     this.spinBtn.setLabel('다시 돌리기');
     this.unlock();
+    this.updateFryHint(); // 보증 카운터 9면 반짝임 시작, 감자튀김이 나왔으면 해제
   }
 
   // ===== 메뉴 편집 =====

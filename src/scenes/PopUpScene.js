@@ -85,6 +85,9 @@ export default class PopUpScene extends MiniGame {
       s.hit.setInteractive({ useHandCursor: true });
       if (s.sword) { s.sword.destroy(); s.sword = null; }
       if (s.maskG) { s.maskG.destroy(); s.maskG = null; }
+      // 빨간(트리거) 표시 포함 원래 슬릿으로 복원
+      s.slit.clear();
+      s.slit.fillStyle(C.bg, 0.85).fillRoundedRect(s.x - 26, s.y - 8, 52, 16, 8);
     });
     this.hint.setColor(css(C.subtext)).setScale(1);
     this.hint.setText(`칼 구멍 ${SLOTS}개 · 트리거는 1개`);
@@ -127,6 +130,10 @@ export default class PopUpScene extends MiniGame {
 
   launch(i) {
     this.launched = true;
+    // 트리거 구멍은 빨간색으로 공개(색상 연결: 위험색 — 악어 이빨과 동일 규칙)
+    const s = this.slots[i];
+    s.slit.clear();
+    s.slit.fillStyle(C.danger, 1).fillRoundedRect(s.x - 30, s.y - 12, 60, 24, 10);
     // 펑! 아저씨 발사(Peak — 위로 회전하며 날아간다)
     Sfx.play('bang');
     this.burst(this.cx, 452, C.warning, 40);
