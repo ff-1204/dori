@@ -270,10 +270,8 @@ export default class LadderScene extends MiniGame {
     this.hint.setColor(css(color)).setText(`${this.names[i]} → ${this.results[endCol]} !`);
     this.hint.setScale(0);
     this.tweens.add({ targets: this.hint, scale: 1, duration: 300, ease: EASE.bounce });
-    const r = (color >> 16) & 0xff;
-    const gc = (color >> 8) & 0xff;
-    const b = color & 0xff;
-    this.cameras.main.flash(150, r, gc, b);
+    this.colorFlash(color, 150);
+    this.burst(label.x, label.y - 12, color, 20); // 도착 지점에서 참가자 색 폭발
 
     this.unlock();
     this.mainBtn.enableButton();

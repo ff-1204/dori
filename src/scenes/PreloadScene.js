@@ -20,6 +20,20 @@ export default class PreloadScene extends Phaser.Scene {
   }
 
   create() {
+    this.createSharedTextures();
     this.scene.start('Hub');
+  }
+
+  // 여러 게임이 공유하는 코드 생성 텍스처(파티클·핀볼)
+  createSharedTextures() {
+    const make = (key, size, radius) => {
+      const g = this.add.graphics();
+      g.fillStyle(0xffffff, 1).fillCircle(size / 2, size / 2, radius);
+      g.generateTexture(key, size, size);
+      g.destroy();
+    };
+    make('spark', 16, 8);   // 파티클(틴트로 색상 연결)
+    make('ball', 28, 14);   // 핀볼 공
+    make('peg', 18, 9);     // 핀볼 핀
   }
 }

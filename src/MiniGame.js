@@ -24,4 +24,30 @@ export default class MiniGame extends Phaser.Scene {
 
   lock() { this.locked = true; }
   unlock() { this.locked = false; }
+
+  // ===== 공통 연출 헬퍼(주스·색상 연결) =====
+
+  // 색상 연결 플래시: 결과 출처 요소의 색으로 화면 플래시
+  colorFlash(color, duration = 170) {
+    this.cameras.main.flash(duration, (color >> 16) & 0xff, (color >> 8) & 0xff, color & 0xff);
+  }
+
+  // 파티클 폭발(도파민): 출처 색으로 터뜨린다
+  burst(x, y, color, count = 26) {
+    const em = this.add.particles(x, y, 'spark', {
+      speed: { min: 140, max: 420 },
+      angle: { min: 0, max: 360 },
+      scale: { start: 0.9, end: 0 },
+      lifespan: { min: 350, max: 750 },
+      gravityY: 700,
+      tint: color,
+      emitting: false,
+    }).setDepth(50);
+    em.explode(count);
+    this.time.delayedCall(900, () => em.destroy());
+  }
+
+  shake(intensity = 0.008, duration = 180) {
+    this.cameras.main.shake(duration, intensity);
+  }
 }

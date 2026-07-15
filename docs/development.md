@@ -19,7 +19,7 @@ dori/
 │   ├── main.js           # 게임 설정 + 씬 등록
 │   ├── theme.js          # 디자인 토큰(팔레트·간격·이징) — visual-polish 기준
 │   ├── ui.js             # 공통 UI(어포던스 버튼·뒤로가기)
-│   ├── MiniGame.js       # 미니게임 공통 베이스(FSM·시드 RNG·입력 잠금·시간 분위기)
+│   ├── MiniGame.js       # 미니게임 공통 베이스(FSM·시드 RNG·입력 잠금·시간 분위기·연출 헬퍼 burst/colorFlash/shake)
 │   ├── timeOfDay.js      # 시간대 분위기(서카디안) — affective-design 기준
 │   ├── ads.js            # 광고 슬롯 스텁(no-op) — commercial 기준, 미연결
 │   ├── guard.js          # 도메인 잠금 가드 — 허용 호스트에서만 실행
@@ -28,7 +28,12 @@ dori/
 │       ├── PreloadScene.js   # 에셋 로딩 + 로딩 바
 │       ├── HubScene.js       # 게임 선택 허브(범주별 목록)
 │       ├── RouletteScene.js  # 메뉴 룰렛(시간대별 세트 + 편집)
-│       └── LadderScene.js    # 사다리타기(참가자·결과 편집 + 프리셋)
+│       ├── LadderScene.js    # 사다리타기(참가자·결과 편집 + 프리셋)
+│       ├── PinballScene.js   # 랜덤 핀볼(Arcade 물리·낙하 지점 선택)
+│       ├── DrawScene.js      # 뽑기 상자(비복원 추첨)
+│       ├── RussianScene.js   # 러시안 룰렛(조건부 확률 정직 표시)
+│       ├── CrocoScene.js     # 악어 이빨(트리거 슬롯)
+│       └── PopUpScene.js     # 통아저씨(트리거 슬롯 + 발사)
 ├── docs/                 # 프로젝트 문서
 ├── CLAUDE.md             # Claude Code 작업 가이드
 ├── LICENSE               # 독점(All Rights Reserved)

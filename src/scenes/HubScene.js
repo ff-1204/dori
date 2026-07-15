@@ -14,21 +14,21 @@ const GAMES = [
     items: [
       { key: 'Roulette', name: '메뉴 룰렛', ready: true }, // 라벨은 시간대에 맞춰 동적 표기
       { key: 'Ladder', name: '사다리타기', ready: true },
-      { key: 'Pinball', name: '랜덤 핀볼', ready: false },
+      { key: 'Pinball', name: '랜덤 핀볼', ready: true },
     ],
   },
   {
     cat: '랜덤 뽑기',
     items: [
-      { key: 'Draw', name: '뽑기 상자', ready: false },
+      { key: 'Draw', name: '뽑기 상자', ready: true },
     ],
   },
   {
     cat: '복불복',
     items: [
-      { key: 'Russian', name: '러시안 룰렛', ready: false },
-      { key: 'Croco', name: '악어 이빨 누르기', ready: false },
-      { key: 'PopUp', name: '통아저씨', ready: false },
+      { key: 'Russian', name: '러시안 룰렛', ready: true },
+      { key: 'Croco', name: '악어 이빨 누르기', ready: true },
+      { key: 'PopUp', name: '통아저씨', ready: true },
     ],
   },
 ];
