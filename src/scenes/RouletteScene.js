@@ -159,11 +159,16 @@ export default class RouletteScene extends MiniGame {
   }
 
   reveal(winner) {
-    this.resultText.setColor(css(C.success));
+    // 색상 연결(color linkage): 결과 텍스트·플래시를 당첨 칸 색과 매칭 → 출처가 색으로 이어짐
+    const sliceColor = SLICE[winner % SLICE.length];
+    this.resultText.setColor(css(sliceColor));
     this.resultText.setText(`오늘 ${this.meal.label}은\n${this.items[winner]} !`);
     this.resultText.setScale(0);
     this.tweens.add({ targets: this.resultText, scale: 1, duration: 320, ease: EASE.bounce });
-    this.cameras.main.flash(180, 108, 199, 255);
+    const r = (sliceColor >> 16) & 0xff;
+    const g = (sliceColor >> 8) & 0xff;
+    const b = sliceColor & 0xff;
+    this.cameras.main.flash(180, r, g, b);
 
     this.spinBtn.enableButton();
     this.spinBtn.setLabel('다시 돌리기');
