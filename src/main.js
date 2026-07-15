@@ -9,6 +9,7 @@ import RussianScene from './scenes/RussianScene.js';
 import CrocoScene from './scenes/CrocoScene.js';
 import PopUpScene from './scenes/PopUpScene.js';
 import DancheongScene from './scenes/DancheongScene.js';
+import LottoScene from './scenes/LottoScene.js';
 import { enforceHostLock } from './guard.js';
 
 // 도메인 잠금: 허용 호스트가 아니면 게임을 시작하지 않는다(무단 재호스팅 억제).
@@ -30,7 +31,7 @@ if (enforceHostLock()) {
       BootScene, PreloadScene, HubScene,
       RouletteScene, LadderScene, PinballScene,
       DrawScene, RussianScene, CrocoScene, PopUpScene,
-      DancheongScene,
+      DancheongScene, LottoScene,
     ],
   };
 

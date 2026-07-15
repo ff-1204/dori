@@ -25,13 +25,14 @@ const GAMES = [
     cat: '랜덤 뽑기',
     items: [
       { key: 'Draw', name: '🎁 뽑기 상자', ready: true },
+      { key: 'Lotto', name: '🎱 로또 추첨', ready: true },
     ],
   },
   {
     cat: '복불복',
     items: [
       { key: 'Russian', name: '💥 러시안 룰렛', ready: true },
-      { key: 'Croco', name: '🐊 악어 이빨 누르기', ready: true },
+      { key: 'Croco', name: '🐊 악어 이빨', ready: true },
       { key: 'PopUp', name: '🗡️ 통아저씨', ready: true },
       { key: 'Dancheong', name: '🔮 단청', ready: true },
     ],
@@ -79,9 +80,11 @@ export default class HubScene extends Phaser.Scene {
       fontFamily: FONT, fontSize: '32px', color: css(C.subtext),
     }).setOrigin(0.5);
 
-    // 범주별 게임 목록
+    // 범주별 게임 목록 — 2열 그리드(게임 수 확장 대응)
     let y = 258;
-    const btnW = width - SP.xl * 2;
+    const colW = 304;
+    const leftX = SP.xl + colW / 2;
+    const rightX = width - SP.xl - colW / 2;
     GAMES.forEach((group) => {
       this.add.text(SP.xl, y, group.cat, {
         fontFamily: FONT, fontSize: '34px', color: css(C.primary), fontStyle: 'bold',
@@ -91,24 +94,22 @@ export default class HubScene extends Phaser.Scene {
       // 룰렛 라벨은 현재 시간대의 식사로 표기(게임 내 동작과 일치 — 정직한 매핑)
       const mealLabel = MEAL_LABEL[mealForPhase(phase.key)];
 
-      group.items.forEach((g) => {
+      group.items.forEach((g, idx) => {
         const displayName = g.key === 'Roulette'
-          ? `${MEAL_EMOJI[mealForPhase(phase.key)]} ${mealLabel} 메뉴 룰렛`
+          ? `${MEAL_EMOJI[mealForPhase(phase.key)]} ${mealLabel} 룰렛`
           : g.name;
         makeButton(this, {
-          x: width / 2,
-          y: y + 40,
-          w: btnW,
-          h: 80, // 8개 게임 수용을 위해 압축(작은 폰에서도 물리 44px 확보)
-          label: g.ready ? displayName : `${displayName}   ·   준비 중`,
+          x: idx % 2 === 0 ? leftX : rightX,
+          y: y + Math.floor(idx / 2) * 92 + 40,
+          w: colW,
+          h: 80,
+          label: g.ready ? displayName : `${displayName} · 준비 중`,
           variant: g.ready ? 'primary' : 'disabled',
           onClick: g.ready ? () => this.scene.start(g.key) : null,
-          fontSize: 34,
+          fontSize: 30,
         });
-        y += 80 + 12;
       });
-
-      y += SP.md;
+      y += Math.ceil(group.items.length / 2) * 92 + SP.md;
     });
 
     this.buildTopBar();
