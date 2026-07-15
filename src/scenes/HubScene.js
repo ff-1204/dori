@@ -2,7 +2,7 @@
 // 미구현 게임은 '준비 중'으로 흐리게 표시(정직한 어포던스: 누를 수 없음을 드러냄).
 import { C, css, FONT, SP } from '../theme.js';
 import { makeButton } from '../ui.js';
-import { applyTimeAtmosphere } from '../timeOfDay.js';
+import { applyTimeAtmosphere, mealForPhase, MEAL_LABEL } from '../timeOfDay.js';
 
 const SITE_URL = 'https://ff-1204.github.io/dori/';
 const SHARE_TITLE = 'dori — 결정 룰렛·사다리타기·복불복 미니게임';
@@ -12,7 +12,7 @@ const GAMES = [
   {
     cat: '결정 돕기',
     items: [
-      { key: 'Roulette', name: '점심 메뉴 룰렛', ready: true },
+      { key: 'Roulette', name: '메뉴 룰렛', ready: true }, // 라벨은 시간대에 맞춰 동적 표기
       { key: 'Ladder', name: '사다리타기', ready: true },
       { key: 'Pinball', name: '랜덤 핀볼', ready: false },
     ],
@@ -83,13 +83,17 @@ export default class HubScene extends Phaser.Scene {
       }).setOrigin(0, 0.5);
       y += 52;
 
+      // 룰렛 라벨은 현재 시간대의 식사로 표기(게임 내 동작과 일치 — 정직한 매핑)
+      const mealLabel = MEAL_LABEL[mealForPhase(phase.key)];
+
       group.items.forEach((g) => {
+        const displayName = g.key === 'Roulette' ? `${mealLabel} 메뉴 룰렛` : g.name;
         makeButton(this, {
           x: width / 2,
           y: y + 44,
           w: btnW,
           h: 88, // 터치 타깃 ≥ 88px
-          label: g.ready ? g.name : `${g.name}   ·   준비 중`,
+          label: g.ready ? displayName : `${displayName}   ·   준비 중`,
           variant: g.ready ? 'primary' : 'disabled',
           onClick: g.ready ? () => this.scene.start(g.key) : null,
           fontSize: 36,

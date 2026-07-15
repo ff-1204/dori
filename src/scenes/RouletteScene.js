@@ -4,6 +4,7 @@
 import MiniGame from '../MiniGame.js';
 import { C, css, FONT, SLICE, EASE, RADIUS } from '../theme.js';
 import { makeButton } from '../ui.js';
+import { mealForPhase } from '../timeOfDay.js';
 
 // 트렌드 기반 기본 메뉴(사용자가 편집 가능)
 const MEALS = {
@@ -11,12 +12,6 @@ const MEALS = {
   lunch: { label: '점심', defaults: ['김치찌개', '된장찌개', '제육볶음', '비빔밥', '돈까스', '라면', '냉면', '짜장면', '부대찌개', '순두부찌개'] },
   dinner: { label: '저녁', defaults: ['치킨', '삼겹살', '피자', '족발', '보쌈', '회', '찜닭', '마라탕', '파스타', '국밥'] },
 };
-
-function mealForPhase(phaseKey) {
-  if (phaseKey === 'morning') return 'breakfast';
-  if (phaseKey === 'evening' || phaseKey === 'night') return 'dinner';
-  return 'lunch'; // noon, afternoon
-}
 
 const keyFor = (mealKey) => `dori.roulette.${mealKey}`;
 

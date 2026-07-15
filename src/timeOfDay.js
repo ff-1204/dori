@@ -17,6 +17,15 @@ export function getTimePhase(hour = new Date().getHours()) {
   return PHASES.find((p) => h >= p.from && h < p.to) ?? PHASES[0];
 }
 
+// 시간대 → 식사 종류(룰렛 등 음식 관련 게임 공용)
+export const MEAL_LABEL = { breakfast: '아침', lunch: '점심', dinner: '저녁' };
+
+export function mealForPhase(phaseKey) {
+  if (phaseKey === 'morning') return 'breakfast';
+  if (phaseKey === 'evening' || phaseKey === 'night') return 'dinner';
+  return 'lunch'; // noon, afternoon
+}
+
 // 배경 뒤(depth -10)에 시간대 글로우를 은은하게 깔고 phase를 반환한다.
 export function applyTimeAtmosphere(scene) {
   const phase = getTimePhase();
