@@ -1,8 +1,9 @@
-// 붉청 — 양자택일 오라클(복불복). 질문을 입력하면 운명이 붉 또는 청으로 답한다.
-// 핵심: 결정적 해시 = FNV-1a("붉청" + 정규화(질문) + 4시간창번호) % 2.
+// 단청(丹靑) — 양자택일 오라클(복불복). 丹(붉을 단)·靑(푸를 청): 질문하면 운명이 붉 또는 청으로 답한다.
+// 핵심: 결정적 해시 = FNV-1a("단청" + 정규화(질문) + 4시간창번호) % 2.
 // 순수 함수라 서버·저장소 없이 어떤 기기/브라우저에서 열어도 같은 질문이면 같은 답이고,
 // 답은 4시간(KST 00/04/08/12/16/20시 정각 경계)에 1번만 바뀔 수 있다 — 리롤 불가(운명성).
-// 정직성: 이 규칙(유효 시각·동일 답)을 화면에 그대로 공개한다. 입력은 클라이언트에서만 처리(전송 없음).
+// 정직성: "동일 답" 규칙을 안내 문구로 공개. 카운트다운은 도박적 긴급함을 만들어 표시하지 않는다.
+// 입력은 클라이언트에서만 처리(전송 없음).
 import MiniGame from '../MiniGame.js';
 import { C, css, FONT, EASE } from '../theme.js';
 import { makeButton } from '../ui.js';
@@ -33,25 +34,21 @@ function windowIndex(now = Date.now()) {
   return Math.floor((now + KST_OFFSET) / WINDOW_MS);
 }
 
-function windowEndMs(now = Date.now()) {
-  return (windowIndex(now) + 1) * WINDOW_MS - KST_OFFSET;
-}
-
 // 0 = 붉, 1 = 청
 function pickColor(text, now = Date.now()) {
-  return fnv1a(`붉청|${normalize(text)}|${windowIndex(now)}`) % 2;
+  return fnv1a(`단청|${normalize(text)}|${windowIndex(now)}`) % 2;
 }
 
-export default class BukcheongScene extends MiniGame {
+export default class DancheongScene extends MiniGame {
   constructor() {
-    super('Bukcheong');
+    super('Dancheong');
   }
 
   onCreate() {
     const { width } = this.scale;
     this.cx = width / 2;
 
-    this.add.text(this.cx, 140, '붉청', {
+    this.add.text(this.cx, 140, '단청', {
       fontFamily: FONT, fontSize: '48px', color: css(C.text), fontStyle: 'bold',
     }).setOrigin(0.5);
 
@@ -118,7 +115,6 @@ export default class BukcheongScene extends MiniGame {
     this.lock();
     this.askBtn.disableButton();
     this.resultText.setColor(css(C.subtext)).setText('...').setScale(1);
-    if (this.countdownTimer) { this.countdownTimer.remove(); this.countdownTimer = null; }
     Sfx.play('pop');
 
     // 빌드업: 구슬이 점점 빨리 돌며 커진다(기대 → 긴장)
@@ -164,8 +160,6 @@ export default class BukcheongScene extends MiniGame {
     this.resultText.setScale(0);
     this.tweens.add({ targets: this.resultText, scale: 1, duration: 320, ease: EASE.bounce });
 
-    this.startCountdown();
-
     this.askBtn.enableButton();
     this.askBtn.setLabel('다시 묻기');
     this.unlock();
@@ -187,23 +181,4 @@ export default class BukcheongScene extends MiniGame {
     });
   }
 
-  // 유효 시각 카운트다운(규칙 공개)
-  startCountdown() {
-    const update = () => {
-      const remain = windowEndMs() - Date.now();
-      if (remain <= 0) {
-        this.noteText.setText('운명이 새로 바뀌었어요 — 다시 물어보세요');
-        if (this.countdownTimer) { this.countdownTimer.remove(); this.countdownTimer = null; }
-        return;
-      }
-      const h = Math.floor(remain / 3600000);
-      const m = Math.floor((remain % 3600000) / 60000);
-      const s = Math.floor((remain % 60000) / 1000);
-      const end = new Date(windowEndMs());
-      const endStr = `${String(end.getHours()).padStart(2, '0')}:${String(end.getMinutes()).padStart(2, '0')}`;
-      this.noteText.setText(`이 답은 ${endStr}까지 유효 · 새 운명까지 ${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`);
-    };
-    update();
-    this.countdownTimer = this.time.addEvent({ delay: 1000, loop: true, callback: update });
-  }
 }

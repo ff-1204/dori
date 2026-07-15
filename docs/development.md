@@ -40,7 +40,7 @@ dori/
 │       ├── RussianScene.js   # 러시안 룰렛(조건부 확률 정직 표시)
 │       ├── CrocoScene.js     # 악어 이빨(트리거 슬롯)
 │       ├── PopUpScene.js     # 통아저씨(트리거 슬롯 + 발사)
-│       └── BukcheongScene.js # 붉청(결정적 해시 오라클, HTML 입력 오버레이)
+│       └── DancheongScene.js # 단청(결정적 해시 오라클, HTML 입력 오버레이)
 ├── docs/                 # 프로젝트 문서
 ├── CLAUDE.md             # Claude Code 작업 가이드
 ├── LICENSE               # 독점(All Rights Reserved)
