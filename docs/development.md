@@ -17,16 +17,22 @@ dori/
 ├── index.html            # Phaser CDN 로드 + 캔버스 컨테이너
 ├── src/
 │   ├── main.js           # 게임 설정 + 씬 등록
+│   ├── theme.js          # 디자인 토큰(팔레트·간격·이징) — visual-polish 기준
+│   ├── ui.js             # 공통 UI(어포던스 버튼·뒤로가기)
+│   ├── MiniGame.js       # 미니게임 공통 베이스(FSM·시드 RNG·입력 잠금)
 │   └── scenes/
 │       ├── BootScene.js      # 최초 초기화
-│       ├── PreloadScene.js   # 에셋 로딩 + 로딩 바 + 타일 텍스처 생성
-│       ├── MenuScene.js      # 타이틀 + 시작 버튼
-│       └── GameScene.js      # 게임 플레이(현재 탭 데모)
+│       ├── PreloadScene.js   # 에셋 로딩 + 로딩 바
+│       ├── HubScene.js       # 게임 선택 허브(범주별 목록)
+│       └── RouletteScene.js  # 점심 메뉴 룰렛(첫 실제 게임)
 ├── docs/                 # 프로젝트 문서
 ├── CLAUDE.md             # Claude Code 작업 가이드
 ├── LICENSE               # MIT
 └── .gitignore
 ```
+
+새 미니게임은 `MiniGame`을 상속한 씬을 `src/scenes/`에 추가하고, `main.js` 씬 목록과
+`HubScene`의 게임 목록(`ready: true`)에 등록한다.
 
 ## 로컬 실행
 
@@ -60,7 +66,9 @@ npx serve
 ## 코드 컨벤션
 
 - 씬은 `Phaser.Scene`을 상속하고 파일당 하나씩 분리
-- 씬 키는 문자열(`'Boot'`, `'Preload'`, `'Menu'`, `'Game'`)로 통일
+- 씬 키는 문자열(`'Boot'`, `'Preload'`, `'Hub'`, 게임별 키)로 통일
+- 미니게임 씬은 `MiniGame` 베이스 상속, `onCreate()`에 게임 로직 구현
+- 색·간격·이징은 하드코딩 대신 `theme.js` 토큰 사용, 버튼은 `ui.js`의 `makeButton`
 - 에셋이 없을 땐 `generateTexture`로 코드 생성(현재 타일 텍스처 방식)
 - 좌표는 `scale.width/height` 기준 상대 배치(멀티 디바이스 대응)
 - 주석은 한국어로 간결하게

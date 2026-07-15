@@ -1,20 +1,20 @@
 import BootScene from './scenes/BootScene.js';
 import PreloadScene from './scenes/PreloadScene.js';
-import MenuScene from './scenes/MenuScene.js';
-import GameScene from './scenes/GameScene.js';
+import HubScene from './scenes/HubScene.js';
+import RouletteScene from './scenes/RouletteScene.js';
 
-// 게임 전역 설정 (세로형 캐주얼/퍼즐 기준)
+// 게임 전역 설정 (세로형, docs/responsive-design.md 기준)
 const config = {
   type: Phaser.AUTO,
   parent: 'game',
   width: 720,
   height: 1280,
-  backgroundColor: '#1d1f2b',
+  backgroundColor: '#12131c',
   scale: {
-    mode: Phaser.Scale.FIT,          // 화면 크기에 맞춰 비율 유지하며 축소/확대
+    mode: Phaser.Scale.FIT,          // 비율 유지하며 화면에 맞춤
     autoCenter: Phaser.Scale.CENTER_BOTH,
   },
-  scene: [BootScene, PreloadScene, MenuScene, GameScene],
+  scene: [BootScene, PreloadScene, HubScene, RouletteScene],
 };
 
 // eslint-disable-next-line no-new
