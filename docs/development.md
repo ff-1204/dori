@@ -49,9 +49,18 @@ npx serve
 2. `git push`
 3. 약 20초 후 `https://ff-1204.github.io/dori/` 반영
 
+## 멀티 디바이스 / 반응형
+
+- 대상: **데스크톱 · 모바일 · 태블릿**.
+- 기준 해상도 720×1280(세로), Phaser `Scale.FIT` + `CENTER_BOTH`([main.js](../src/main.js)).
+- `index.html` 뷰포트에 `viewport-fit=cover`로 노치 안전 영역 대응.
+- 좌표는 고정 px 대신 `this.scale.width/height` 기준 **상대 배치**.
+- 자세한 이론·규칙(터치 타깃·안전 영역·입력 방식·방향 등)은 [responsive-design.md](./responsive-design.md).
+
 ## 코드 컨벤션
 
 - 씬은 `Phaser.Scene`을 상속하고 파일당 하나씩 분리
 - 씬 키는 문자열(`'Boot'`, `'Preload'`, `'Menu'`, `'Game'`)로 통일
 - 에셋이 없을 땐 `generateTexture`로 코드 생성(현재 타일 텍스처 방식)
+- 좌표는 `scale.width/height` 기준 상대 배치(멀티 디바이스 대응)
 - 주석은 한국어로 간결하게
