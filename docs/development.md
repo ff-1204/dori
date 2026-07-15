@@ -59,6 +59,14 @@ npx serve
 2. `git push`
 3. 약 20초 후 `https://ff-1204.github.io/dori/` 반영
 
+## 공유 · SEO
+
+- **공유 버튼**(허브 우상단): 모바일은 `navigator.share`(네이티브 시트), 데스크톱은 클립보드 복사 + 토스트.
+- **QR 모달**(허브 좌상단): `qrcode-generator`(MIT, CDN)로 접속 QR 생성 — 흰 배경 + quiet zone 확보.
+- **링크 미리보기**: `index.html`에 Open Graph/Twitter 메타(제목·설명·URL·locale). `og:image`는 1200×630 제작 후 추가(TODO).
+- **검색 최적화**: title/description, canonical, JSON-LD(WebApplication), `robots.txt`, `sitemap.xml`, `<noscript>` 설명 텍스트(캔버스 게임의 크롤러 대응).
+- 사이트 정보(제목·설명·URL) 변경 시 **index.html 메타 + HubScene 공유 문구 + sitemap**을 함께 갱신한다.
+
 ## 멀티 디바이스 / 반응형
 
 - 대상: **데스크톱 · 모바일 · 태블릿**.

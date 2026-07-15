@@ -4,6 +4,10 @@ import { C, css, FONT, SP } from '../theme.js';
 import { makeButton } from '../ui.js';
 import { applyTimeAtmosphere } from '../timeOfDay.js';
 
+const SITE_URL = 'https://ff-1204.github.io/dori/';
+const SHARE_TITLE = 'dori — 결정 룰렛·사다리타기·복불복 미니게임';
+const SHARE_TEXT = '점심 메뉴 룰렛, 사다리타기로 결정 고민 끝!';
+
 const GAMES = [
   {
     cat: '결정 돕기',
@@ -103,5 +107,121 @@ export default class HubScene extends Phaser.Scene {
     credit.on('pointerover', () => credit.setColor(css(C.primary)));
     credit.on('pointerout', () => credit.setColor(css(C.subtext)));
     credit.on('pointerup', () => window.open('https://github.com/ff-1204', '_blank'));
+
+    this.buildTopBar();
+  }
+
+  // ===== 상단 바: QR(좌) · 공유(우) — 제목(중앙)과 좌표 겹침 없음 =====
+  buildTopBar() {
+    const { width } = this.scale;
+
+    const qrBtn = this.add.text(SP.md, SP.md + 6, '▦ QR', {
+      fontFamily: FONT, fontSize: '30px', color: css(C.subtext), fontStyle: 'bold',
+    }).setOrigin(0, 0).setInteractive({ useHandCursor: true });
+    qrBtn.on('pointerover', () => qrBtn.setColor(css(C.primary)));
+    qrBtn.on('pointerout', () => qrBtn.setColor(css(C.subtext)));
+    qrBtn.on('pointerup', () => this.openQr());
+
+    const shareBtn = this.add.text(width - SP.md, SP.md + 6, '공유 ↗', {
+      fontFamily: FONT, fontSize: '30px', color: css(C.subtext), fontStyle: 'bold',
+    }).setOrigin(1, 0).setInteractive({ useHandCursor: true });
+    shareBtn.on('pointerover', () => shareBtn.setColor(css(C.primary)));
+    shareBtn.on('pointerout', () => shareBtn.setColor(css(C.subtext)));
+    shareBtn.on('pointerup', () => this.doShare());
+  }
+
+  async doShare() {
+    // 모바일: 네이티브 공유 시트 / 데스크톱: 주소 복사(정직한 피드백 토스트)
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: SHARE_TITLE, text: SHARE_TEXT, url: SITE_URL });
+      } catch (e) { /* 사용자가 취소 — 조용히 무시 */ }
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(SITE_URL);
+      this.toast('주소가 복사됐어요');
+    } catch (e) {
+      this.toast('복사 실패 — 주소창에서 복사해 주세요');
+    }
+  }
+
+  // ===== QR 모달: 흰 배경(스캔 대비) + 여백(quiet zone) =====
+  openQr() {
+    if (this.qrModal) return;
+    if (typeof window.qrcode !== 'function') { this.toast('QR 모듈을 불러오지 못했어요'); return; }
+
+    const { width, height } = this.scale;
+    this.qrModal = this.add.container(0, 0).setDepth(200);
+
+    const dim = this.add.rectangle(0, 0, width, height, 0x000000, 0.75).setOrigin(0).setInteractive();
+    dim.on('pointerup', () => this.closeQr());
+    this.qrModal.add(dim);
+
+    // QR 데이터 생성
+    const qr = window.qrcode(0, 'M');
+    qr.addData(SITE_URL);
+    qr.make();
+    const count = qr.getModuleCount();
+
+    const qrSize = 420;
+    const pad = 36; // quiet zone
+    const panelW = qrSize + pad * 2;
+    const panelH = qrSize + pad * 2 + 96;
+    const px = (width - panelW) / 2;
+    const py = 340;
+
+    const panel = this.add.graphics();
+    panel.fillStyle(0xffffff, 1).fillRoundedRect(px, py, panelW, panelH, 20);
+    this.qrModal.add(panel);
+
+    const cell = qrSize / count;
+    const mods = this.add.graphics();
+    mods.fillStyle(0x12131c, 1);
+    for (let r = 0; r < count; r += 1) {
+      for (let c = 0; c < count; c += 1) {
+        if (qr.isDark(r, c)) {
+          mods.fillRect(px + pad + c * cell, py + pad + r * cell, Math.ceil(cell), Math.ceil(cell));
+        }
+      }
+    }
+    this.qrModal.add(mods);
+
+    this.qrModal.add(this.add.text(width / 2, py + pad + qrSize + 48, '카메라로 스캔하면 바로 접속!', {
+      fontFamily: FONT, fontSize: '28px', color: '#12131c', fontStyle: 'bold',
+    }).setOrigin(0.5));
+
+    const close = this.add.text(width / 2, py + panelH + 56, '✕ 닫기', {
+      fontFamily: FONT, fontSize: '32px', color: css(C.subtext), fontStyle: 'bold',
+    }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+    close.on('pointerup', () => this.closeQr());
+    this.qrModal.add(close);
+
+    // 팝 등장(주스)
+    this.qrModal.setAlpha(0);
+    this.tweens.add({ targets: this.qrModal, alpha: 1, duration: 180, ease: 'Quad.easeOut' });
+  }
+
+  closeQr() {
+    if (!this.qrModal) return;
+    this.qrModal.destroy();
+    this.qrModal = null;
+  }
+
+  toast(msg) {
+    if (this.toastText) this.toastText.destroy();
+    this.toastText = this.add.text(this.scale.width / 2, 1150, msg, {
+      fontFamily: FONT, fontSize: '28px', color: css(C.bg), fontStyle: 'bold',
+      backgroundColor: css(C.primary), padding: { x: 24, y: 12 },
+    }).setOrigin(0.5).setDepth(300).setAlpha(0);
+    this.tweens.add({ targets: this.toastText, alpha: 1, duration: 150 });
+    this.time.delayedCall(1600, () => {
+      if (this.toastText && this.toastText.active) {
+        this.tweens.add({
+          targets: this.toastText, alpha: 0, duration: 250,
+          onComplete: () => { if (this.toastText) { this.toastText.destroy(); this.toastText = null; } },
+        });
+      }
+    });
   }
 }

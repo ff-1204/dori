@@ -3,7 +3,38 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>dori</title>
+
+  <!-- ===== SEO ===== -->
+  <title>dori — 결정 룰렛·사다리타기·복불복 미니게임</title>
+  <meta name="description" content="점심 메뉴 룰렛, 사다리타기로 결정 고민 끝! 커피 내기·벌칙·당번 정하기까지, 설치 없이 바로 하는 무료 랜덤 미니게임 모음.">
+  <link rel="canonical" href="https://ff-1204.github.io/dori/">
+
+  <!-- ===== 링크 공유 미리보기 (Open Graph / Twitter) ===== -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="dori">
+  <meta property="og:title" content="dori — 결정 룰렛·사다리타기·복불복 미니게임">
+  <meta property="og:description" content="점심 메뉴 룰렛, 사다리타기로 결정 고민 끝! 설치 없이 바로 하는 무료 랜덤 미니게임 모음.">
+  <meta property="og:url" content="https://ff-1204.github.io/dori/">
+  <meta property="og:locale" content="ko_KR">
+  <!-- TODO: og:image — 1200×630 대표 이미지 제작 후 추가(assets/og.png) -->
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="dori — 결정 룰렛·사다리타기·복불복 미니게임">
+  <meta name="twitter:description" content="점심 메뉴 룰렛, 사다리타기로 결정 고민 끝! 설치 없이 바로 하는 무료 랜덤 미니게임 모음.">
+
+  <!-- 구조화 데이터(검색 결과 확장) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "dori",
+    "url": "https://ff-1204.github.io/dori/",
+    "description": "점심 메뉴 룰렛, 사다리타기 등 결정 돕기·랜덤 뽑기·복불복 무료 미니게임 모음",
+    "applicationCategory": "GameApplication",
+    "operatingSystem": "Web",
+    "inLanguage": "ko",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "KRW" }
+  }
+  </script>
 
   <!-- ===== 광고 연결 준비: Google H5 Games Ads (전면·보상형) =====
        승인·동의(CMP)·커스텀 도메인 준비 후 아래 주석을 해제하고 ca-pub-XXXX를 실제 ID로 교체.
@@ -31,7 +62,15 @@
 </head>
 <body>
   <div id="game"></div>
+  <!-- 크롤러/JS 미지원 환경용 설명(SEO) -->
+  <noscript>
+    <h1>dori — 결정 룰렛·사다리타기·복불복 미니게임</h1>
+    <p>점심 메뉴 룰렛과 사다리타기로 결정 고민을 끝내세요. 커피 내기, 벌칙, 당번 정하기까지 —
+    설치 없이 브라우저에서 바로 하는 무료 랜덤 미니게임 모음입니다. 이 게임은 JavaScript가 필요합니다.</p>
+  </noscript>
   <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
+  <!-- QR 생성(MIT, docs/licenses.md 기록) -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
   <script type="module" src="src/main.js"></script>
 </body>
 </html>

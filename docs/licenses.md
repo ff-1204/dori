@@ -11,6 +11,7 @@
 | 항목 | 버전 | 라이선스 | 상업 사용 | 출처 |
 |------|------|----------|-----------|------|
 | Phaser | 3.80.1 | MIT | ✅ | https://github.com/phaserjs/phaser (CDN: jsdelivr) |
+| qrcode-generator | 1.4.4 | MIT | ✅ | https://github.com/kazuhikoarase/qrcode-generator (CDN: jsdelivr) — QR 접속 모달용 |
 
 ## 폰트
 
