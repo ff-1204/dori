@@ -45,9 +45,27 @@
 | 참가자 다인 지원(2~N명) | 사다리 2~6명(모바일 가독성 한계), 추후 확장 검토 |
 | 주도성(내가 고른다)이 몰입을 만든다 | 핀볼 낙하 지점 선택, 사다리 줄 선택, 악어 이빨 선택 |
 
+## 6. 시간대별 음식 트렌드 (룰렛 기본 메뉴 근거)
+
+### 아침 — 간편식 전환
+- 한국 성인 중 아침에 밥을 먹는 비율 **약 40%**(2021년 약 60%에서 하락). 편의점 간편식·베이커리가 아침을 대체.
+- 편의점 아침 시간대(5~10시) 매출 **+17%**(2025, CU). 삼각김밥·김밥·샐러드·빵·요거트가 주력.
+- **→ 기본 메뉴**: 토스트·샌드위치·삼각김밥·김밥·샐러드·요거트·시리얼·계란후라이·죽·집밥.
+
+### 점심 — 직장인 선호(한식 압도적)
+- 설문 기준 **제육볶음 1위**(특히 남성), **백반**이 꾸준한 1위 후보(잡코리아 24.9%), **찌개류**(김치·된장·순두부) 상시 상위권, **짬뽕**·덮밥류(비빔밥 등)도 상위.
+- **→ 기본 메뉴**: 제육볶음·백반·김치찌개·된장찌개·순두부찌개·비빔밥·짬뽕·돈까스·부대찌개·냉면.
+
+### 저녁 — 배달 순위
+- 배달 주문 순위(2025): **1위 치킨 · 2위 피자 · 3위 족발/보쌈 · 4위 햄버거 · 5위 중식**. 치킨은 검색량 연 1천만 건 이상의 절대 강자.
+- **→ 기본 메뉴**: 치킨·피자·족발·보쌈·햄버거·삼겹살(외식 대표)·회·찜닭·마라탕·국밥.
+
+> 기본값은 어디까지나 출발점 — 사용자가 자유롭게 편집(자율성). 저장된 사용자 목록은 기본값 변경의 영향을 받지 않음(localStorage 우선).
+
 ## 출처
 
 - [사다리타기 게임 | OJJ](https://apps.ojj.kr/ladder/) · [사다리타기 - 나무위키](https://namu.wiki/w/%EC%82%AC%EB%8B%A4%EB%A6%AC%ED%83%80%EA%B8%B0) · [온라인 사다리타기(sciencelove)](https://sciencelove.com/2614)
 - [Wheel of Names](https://wheelofnames.com/ko/) · [WheelOrbit](https://wheelorbit.com/) · [PiliApp 랜덤이름추첨기](https://kr.piliapp.com/random/wheel/)
 - [복불복 - 나무위키](https://namu.wiki/w/%EB%B3%B5%EB%B6%88%EB%B3%B5) · [랜덤 벌칙 게임(Google Play)](https://play.google.com/store/apps/details?id=com.oon.RandomPick&hl=ko) · [악어 이빨 룰렛 보드게임(에듀팜몰)](https://edufarmmall.co.kr/product/%EC%95%85%EC%96%B4-%EC%9D%B4%EB%B9%A8-%EB%A3%B0%EB%A0%9B-%EB%B3%B4%EB%93%9C-%EA%B2%8C%EC%9E%84-%EB%B3%B5%EB%B6%88%EB%B3%B5-%EB%B2%8C%EC%B9%99/5807)
 - [Why Physics-Based Plinko Games Are the Next Viral Streaming Craze (GameSpace)](https://gamespace.com/all-articles/news/why-physics-based-plinko-games-are-the-next-viral-streaming-craze-you-cant-miss/) · [The Physics And Probability Behind Plinko (Leadership)](https://leadership.ng/the-physics-and-probability-behind-plinko-game-outcomes/)
+- 음식: [직장인 점심 1위 제육볶음(미트러버뉴스)](https://www.meatlovernews.co.kr/news/articleView.html?idxno=10356) · [직장인 점심 고민 설문(헤럴드/다음)](https://v.daum.net/v/Pvw1GnNfY1) · [2025 배달음식 순위(아하)](https://www.a-ha.io/questions/4d99ee100f3cd5be8cde465157385b98) · [2025 치킨 검색 순위(파이낸셜투데이)](http://www.ftoday.co.kr/news/articleView.html?idxno=344032) · [한국 아침식사 풍경 변화(나마네)](https://blog.namanecard.com/en/korean-breakfast-foods-local-guide-en/)
