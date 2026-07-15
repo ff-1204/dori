@@ -1,7 +1,7 @@
-// 단청(丹靑) — 양자택일 오라클(복불복). 丹(붉을 단)·靑(푸를 청): 질문하면 운명이 붉 또는 청으로 답한다.
+// 단청(丹靑) — 양자택일 오라클(복불복). 丹(붉을 단)·靑(푸를 청): 질문하면 붉 또는 청으로 답한다.
 // 핵심: 결정적 해시 = FNV-1a("단청" + 정규화(질문) + 4시간창번호) % 2.
 // 순수 함수라 서버·저장소 없이 어떤 기기/브라우저에서 열어도 같은 질문이면 같은 답이고,
-// 답은 4시간(KST 00/04/08/12/16/20시 정각 경계)에 1번만 바뀔 수 있다 — 리롤 불가(운명성).
+// 답은 4시간(KST 00/04/08/12/16/20시 정각 경계)에 1번만 바뀔 수 있다 — 리롤 불가(번복 없음).
 // 정직성: "동일 답" 규칙을 안내 문구로 공개. 카운트다운은 도박적 긴급함을 만들어 표시하지 않는다.
 // 입력은 클라이언트에서만 처리(전송 없음).
 import MiniGame from '../MiniGame.js';
@@ -52,7 +52,7 @@ export default class DancheongScene extends MiniGame {
       fontFamily: FONT, fontSize: '48px', color: css(C.text), fontStyle: 'bold',
     }).setOrigin(0.5);
 
-    this.add.text(this.cx, 196, '묻고, 운명의 색을 받으세요', {
+    this.add.text(this.cx, 196, '묻고, 색으로 답을 받으세요', {
       fontFamily: FONT, fontSize: '26px', color: css(C.subtext),
     }).setOrigin(0.5);
 
@@ -76,7 +76,7 @@ export default class DancheongScene extends MiniGame {
     }).setOrigin(0.5);
 
     this.askBtn = makeButton(this, {
-      x: this.cx, y: 1100, w: 380, h: 100, label: '운명에 묻기', variant: 'primary',
+      x: this.cx, y: 1100, w: 380, h: 100, label: '단청에 묻기', variant: 'primary',
       onClick: () => this.ask(),
     });
   }
@@ -166,7 +166,7 @@ export default class DancheongScene extends MiniGame {
 
     const shown = q.trim().length > 12 ? `${q.trim().slice(0, 12)}…` : q.trim();
     this.resultText.setColor(css(color));
-    this.resultText.setText(`"${shown}"\n운명은 ${name} !`);
+    this.resultText.setText(`"${shown}"\n답은 ${name} !`);
     this.resultText.setScale(0);
     this.tweens.add({ targets: this.resultText, scale: 1, duration: 320, ease: EASE.bounce });
 
