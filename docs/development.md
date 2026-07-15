@@ -14,7 +14,12 @@
 
 ```
 dori/
-├── index.html            # Phaser CDN 로드 + 캔버스 컨테이너
+├── index.html            # Phaser CDN 로드 + SEO/OG 메타 + 캔버스 컨테이너
+├── README.md             # 프로젝트 소개(핵심 요약)
+├── CHANGELOG.md          # 릴리즈 노트
+├── robots.txt / sitemap.xml   # 검색 엔진용
+├── assets/
+│   └── og.png            # 링크 미리보기 이미지(자체 제작 1200×630)
 ├── src/
 │   ├── main.js           # 게임 설정 + 씬 등록
 │   ├── theme.js          # 디자인 토큰(팔레트·간격·이징) — visual-polish 기준

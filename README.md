@@ -1,0 +1,54 @@
+# dori 🎡
+
+> 뭐 먹지? 누가 쏘지? — **고민은 짧게, 결정은 즐겁게.**
+
+결정 돕기 · 랜덤 뽑기 · 복불복 **미니게임 컬렉션**.
+
+**▶ 플레이: https://ff-1204.github.io/dori/**
+
+## 게임 (7종)
+
+| 범주 | 게임 | 핵심 |
+|------|------|------|
+| 결정 돕기 | 🍚 메뉴 룰렛 | 시간대(아침·점심·저녁·야식)별 트렌드 메뉴, 편집·저장, 숫자 모드 |
+| | 🪜 사다리타기 | 참가자 2~6명, 용도 프리셋(커피·벌칙·청소·당첨), 색상 경로 |
+| | 🎯 랜덤 핀볼 | 낙하 지점 직접 선택 → 실제 물리 낙하 → 슬로모 → 파티클 |
+| 랜덤 뽑기 | 🎁 뽑기 상자 | 비복원 추첨 — 뽑힌 항목은 제외, 남은 풀이 항상 보임 |
+| 복불복 | 💥 러시안 룰렛 | 6약실, 조건부 확률을 화면에 정직하게 표시 |
+| | 🐊 악어 이빨 | 12개 중 함정 1개, 걸린 이빨은 빨간색으로 공개 |
+| | 🗡️ 통아저씨 | 칼을 꽂다 보면… 펑! |
+
+> 🍟 어딘가에 이스터에그가 숨어 있습니다.
+
+## 설계 원칙
+
+- **정직함이 최우선** — 화면에 보이는 것과 결과가 항상 일치(정직한 매핑·확률 공개), 다크 패턴 없음
+- **게이미피케이션 + 어포던스**를 모든 결정의 기준으로 ([docs/design-principles.md](docs/design-principles.md))
+- **색상 연결** — 결과의 색은 그 출처(칸·참가자·이빨)의 색을 따라감
+- **시간대 감성** — 접속 시각에 따라 분위기·인사말·메뉴가 바뀜(서카디안 리듬 기반)
+
+## 기술
+
+- **Phaser 3** (CDN) + 바닐라 JS ES 모듈 — 빌드 도구 없음
+- **GitHub Pages** 배포 — `main` 푸시 후 약 20초면 반영
+- 에셋 대부분 코드 생성(도형·이모지 텍스처·Web Audio 합성음)
+- 로컬 실행: `python -m http.server 8000` (ES 모듈은 정적 서버 필요)
+
+## 문서
+
+| 문서 | 내용 |
+|------|------|
+| [design-principles](docs/design-principles.md) | ⭐ 최우선 설계 원칙(게이미피케이션·어포던스) |
+| [game](docs/game.md) | 컨셉·현재 상태·로드맵·게임별 수치 |
+| [game-theory](docs/game-theory.md) / [game-mechanics](docs/game-mechanics.md) | 난수·확률·공정성 이론과 게임별 메커니즘 |
+| [trend-research](docs/trend-research.md) | 장르·음식 트렌드 조사와 기능 번역 |
+| [visual-polish](docs/visual-polish.md) | 팔레트·이징·색상 연결·카피 톤 |
+| [affective-design](docs/affective-design.md) | 심리·생리(시간) 패턴 기반 감성 설계 |
+| [responsive-design](docs/responsive-design.md) | 멀티 디바이스·입력 방식·터치 타깃 |
+| [development](docs/development.md) / [git](docs/git.md) | 구조·실행·배포·커밋 컨벤션 |
+| [commercial](docs/commercial.md) / [licenses](docs/licenses.md) | 상업화 규칙·서드파티 라이선스 |
+
+## 라이선스
+
+**All Rights Reserved** — 무단 복제·재호스팅·상업적 이용을 금합니다. [LICENSE](LICENSE) 참고.
+서드파티 구성요소는 [docs/licenses.md](docs/licenses.md)에 기록되어 있습니다.
