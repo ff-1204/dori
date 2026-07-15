@@ -2,8 +2,8 @@
 // 핵심: 결정적 해시 = FNV-1a("단청" + 정규화(질문) + 4시간창번호) % 2.
 // 순수 함수라 서버·저장소 없이 어떤 기기/브라우저에서 열어도 같은 질문이면 같은 답이고,
 // 답은 4시간(KST 00/04/08/12/16/20시 정각 경계)에 1번만 바뀔 수 있다 — 리롤 불가(번복 없음).
-// 정직성: "동일 답" 규칙을 안내 문구로 공개. 카운트다운은 도박적 긴급함을 만들어 표시하지 않는다.
-// 입력은 클라이언트에서만 처리(전송 없음).
+// 표현: 수정구가 아니라 붉/청 두 색패(色牌) — 하이라이트가 둘 사이를 오가다 한쪽에 멈춘다.
+// 정직성: 두 선택지가 항상 화면에 보이고, "동일 답" 규칙을 안내 문구로 공개. 입력은 클라이언트에서만 처리.
 import MiniGame from '../MiniGame.js';
 import { C, css, FONT, EASE } from '../theme.js';
 import { makeButton } from '../ui.js';
@@ -64,13 +64,13 @@ export default class DancheongScene extends MiniGame {
       + 'text-align:center;font-family:sans-serif;">',
     );
 
-    this.buildOrb();
+    this.buildTiles();
 
     this.resultText = this.add.text(this.cx, 890, '', {
       fontFamily: FONT, fontSize: '38px', color: css(C.subtext), fontStyle: 'bold', align: 'center',
     }).setOrigin(0.5);
 
-    // 규칙 공개(정직성): 유효 시간·동일 답 안내
+    // 규칙 공개(정직성): 동일 답 안내
     this.noteText = this.add.text(this.cx, 990, '같은 질문은 어디서 물어도 4시간 동안 같은 답이에요', {
       fontFamily: FONT, fontSize: '24px', color: css(C.subtext),
     }).setOrigin(0.5);
@@ -81,29 +81,36 @@ export default class DancheongScene extends MiniGame {
     });
   }
 
-  // 붉/청 반반의 오라클 구슬 — 천천히 돈다(무엇이 나올지 모름을 정직하게 표현)
-  buildOrb() {
-    this.orb = this.add.container(this.cx, 620);
-    this.orbHalves = this.add.graphics();
-    this.orb.add(this.orbHalves);
-    this.drawHalves();
-
-    // 대기 상태: 느린 회전
-    this.idleSpin = this.tweens.add({
-      targets: this.orb, angle: 360, duration: 14000, repeat: -1, ease: 'Linear',
-    });
+  // 붉/청 두 색패 — 두 선택지가 항상 나란히 보인다(정직)
+  buildTiles() {
+    const size = 220;
+    const y = 590;
+    this.tiles = [
+      this.makeTile(this.cx - 130, y, size, RED, '붉'),
+      this.makeTile(this.cx + 130, y, size, BLUE, '청'),
+    ];
   }
 
-  // 반반(붉/청) 상태로 그리기
-  drawHalves() {
-    this.orbHalves.clear();
-    this.orbHalves.fillStyle(RED, 1);
-    this.orbHalves.slice(0, 0, 165, Phaser.Math.DegToRad(90), Phaser.Math.DegToRad(270), false);
-    this.orbHalves.fillPath();
-    this.orbHalves.fillStyle(BLUE, 1);
-    this.orbHalves.slice(0, 0, 165, Phaser.Math.DegToRad(-90), Phaser.Math.DegToRad(90), false);
-    this.orbHalves.fillPath();
-    this.orbHalves.lineStyle(6, C.bg, 1).strokeCircle(0, 0, 165);
+  makeTile(x, y, size, color, glyph) {
+    const con = this.add.container(x, y);
+    const g = this.add.graphics();
+    g.fillStyle(0x000000, 0.25).fillRoundedRect(-size / 2 + 4, -size / 2 + 10, size, size, 24); // 그림자
+    g.fillStyle(color, 1).fillRoundedRect(-size / 2, -size / 2, size, size, 24);
+    con.add(g);
+    con.add(this.add.text(0, 0, glyph, {
+      fontFamily: FONT, fontSize: '96px', color: css(C.bg), fontStyle: 'bold',
+    }).setOrigin(0.5));
+    con.color = color;
+    con.glyph = glyph;
+    return con;
+  }
+
+  // 두 패를 대기 상태로(동등한 강조)
+  resetTiles() {
+    this.tiles.forEach((t) => {
+      this.tweens.killTweensOf(t);
+      t.setAlpha(1).setScale(1);
+    });
   }
 
   getQuestion() {
@@ -121,45 +128,37 @@ export default class DancheongScene extends MiniGame {
     this.lock();
     this.askBtn.disableButton();
     this.resultText.setColor(css(C.subtext)).setText('...').setScale(1);
+    this.resetTiles(); // 이전 결과는 여기서 해제(버튼 누를 때까지 유지)
     Sfx.play('pop');
 
-    // 이전 결과를 이제야 지우고(버튼 누를 때까지 유지) 반반 상태로 복귀
-    if (this.mark) { this.mark.destroy(); this.mark = null; }
-    this.drawHalves();
+    // 빌드업: 하이라이트가 두 패 사이를 튕기다 점점 느려진다(기대 → 긴장)
+    const steps = [130, 130, 130, 130, 170, 170, 210, 260, 320];
+    this.bounceStep(q, 0, steps);
+  }
 
-    // 빌드업: 구슬이 점점 빨리 돌며 커진다(기대 → 긴장)
-    this.idleSpin.pause();
-    this.tweens.add({
-      targets: this.orb, angle: this.orb.angle + 1080, duration: 1500, ease: 'Cubic.easeIn',
-    });
-    this.tweens.add({
-      targets: this.orb, scale: 1.12, duration: 750, yoyo: true, ease: 'Sine.easeInOut',
-      onComplete: () => this.reveal(q),
-    });
+  bounceStep(q, i, steps) {
+    if (i >= steps.length) { this.reveal(q); return; }
+    const on = this.tiles[i % 2];
+    const off = this.tiles[(i + 1) % 2];
+    on.setAlpha(1).setScale(1.07);
+    off.setAlpha(0.4).setScale(0.94);
+    Sfx.play('tick');
+    this.time.delayedCall(steps[i], () => this.bounceStep(q, i + 1, steps));
   }
 
   reveal(q) {
-    const now = Date.now();
-    const isRed = pickColor(q, now) === 0;
-    const color = isRed ? RED : BLUE;
-    const name = isRed ? '붉' : '청';
+    const isRed = pickColor(q) === 0;
+    const chosen = this.tiles[isRed ? 0 : 1];
+    const other = this.tiles[isRed ? 1 : 0];
+    const color = chosen.color;
+    const name = chosen.glyph;
 
-    // 구슬이 한 색으로 확정(색상 연결의 원천)
-    this.orbHalves.clear();
-    this.orbHalves.fillStyle(color, 1).fillCircle(0, 0, 165);
-    this.orbHalves.lineStyle(6, C.bg, 1).strokeCircle(0, 0, 165);
-    this.orb.setAngle(0);
-    this.orb.setScale(0.9);
-    this.tweens.add({ targets: this.orb, scale: 1, duration: 380, ease: EASE.bounce });
+    // 선택 확정: 답 패는 크게, 나머지는 물러난다(결과는 다음 질문 전까지 유지)
+    other.setAlpha(0.22).setScale(0.9);
+    chosen.setAlpha(1).setScale(0.95);
+    this.tweens.add({ targets: chosen, scale: 1.12, duration: 340, ease: EASE.bounce });
 
-    // 구슬 위에 결과 글자(다음 질문 전까지 유지)
-    this.mark = this.add.text(0, 0, name, {
-      fontFamily: FONT, fontSize: '120px', color: css(C.bg), fontStyle: 'bold',
-    }).setOrigin(0.5).setScale(0);
-    this.orb.add(this.mark);
-    this.tweens.add({ targets: this.mark, scale: 1, duration: 320, ease: EASE.popIn });
-
-    this.burst(this.cx, 620, color, 36);
+    this.burst(chosen.x, chosen.y, color, 34);
     this.colorFlash(color, 200);
     this.shake(0.005, 150);
     Sfx.play(isRed ? 'bang' : 'win');
@@ -173,6 +172,5 @@ export default class DancheongScene extends MiniGame {
     this.askBtn.enableButton();
     this.askBtn.setLabel('다시 묻기');
     this.unlock();
-    // 결과는 자동으로 사라지지 않는다 — '다시 묻기'를 누를 때까지 유지
   }
 }
