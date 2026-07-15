@@ -1,4 +1,41 @@
+# 검색 엔진은 허용(SEO 유지)
 User-agent: *
 Allow: /
+
+# ===== AI 학습 크롤러 차단 (검색 노출에는 영향 없음) =====
+# OpenAI 학습
+User-agent: GPTBot
+Disallow: /
+
+# Google Gemini 학습(Google 검색과 별개)
+User-agent: Google-Extended
+Disallow: /
+
+# Anthropic (Claude) 학습
+User-agent: ClaudeBot
+Disallow: /
+
+User-agent: anthropic-ai
+Disallow: /
+
+User-agent: Claude-Web
+Disallow: /
+
+# Common Crawl(다수 학습 데이터셋의 원천)
+User-agent: CCBot
+Disallow: /
+
+# 기타 학습 크롤러
+User-agent: Bytespider
+Disallow: /
+
+User-agent: meta-externalagent
+Disallow: /
+
+User-agent: Applebot-Extended
+Disallow: /
+
+User-agent: cohere-ai
+Disallow: /
 
 Sitemap: https://ff-1204.github.io/dori/sitemap.xml
