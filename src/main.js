@@ -8,6 +8,7 @@ import DrawScene from './scenes/DrawScene.js';
 import RussianScene from './scenes/RussianScene.js';
 import CrocoScene from './scenes/CrocoScene.js';
 import PopUpScene from './scenes/PopUpScene.js';
+import BukcheongScene from './scenes/BukcheongScene.js';
 import { enforceHostLock } from './guard.js';
 
 // 도메인 잠금: 허용 호스트가 아니면 게임을 시작하지 않는다(무단 재호스팅 억제).
@@ -24,10 +25,12 @@ if (enforceHostLock()) {
       autoCenter: Phaser.Scale.CENTER_BOTH,
     },
     physics: { default: 'arcade', arcade: { debug: false } }, // 핀볼 등 물리 게임용
+    dom: { createContainer: true },                            // 붉청 등 HTML 입력 오버레이용
     scene: [
       BootScene, PreloadScene, HubScene,
       RouletteScene, LadderScene, PinballScene,
       DrawScene, RussianScene, CrocoScene, PopUpScene,
+      BukcheongScene,
     ],
   };
 

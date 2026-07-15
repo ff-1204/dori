@@ -33,6 +33,7 @@ const GAMES = [
       { key: 'Russian', name: '💥 러시안 룰렛', ready: true },
       { key: 'Croco', name: '🐊 악어 이빨 누르기', ready: true },
       { key: 'PopUp', name: '🗡️ 통아저씨', ready: true },
+      { key: 'Bukcheong', name: '🔮 붉청', ready: true },
     ],
   },
 ];
@@ -96,15 +97,15 @@ export default class HubScene extends Phaser.Scene {
           : g.name;
         makeButton(this, {
           x: width / 2,
-          y: y + 44,
+          y: y + 40,
           w: btnW,
-          h: 88, // 터치 타깃 ≥ 88px
+          h: 80, // 8개 게임 수용을 위해 압축(작은 폰에서도 물리 44px 확보)
           label: g.ready ? displayName : `${displayName}   ·   준비 중`,
           variant: g.ready ? 'primary' : 'disabled',
           onClick: g.ready ? () => this.scene.start(g.key) : null,
-          fontSize: 36,
+          fontSize: 34,
         });
-        y += 88 + SP.sm;
+        y += 80 + 12;
       });
 
       y += SP.md;
