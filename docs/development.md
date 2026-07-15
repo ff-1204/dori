@@ -22,6 +22,7 @@ dori/
 │   ├── MiniGame.js       # 미니게임 공통 베이스(FSM·시드 RNG·입력 잠금·시간 분위기)
 │   ├── timeOfDay.js      # 시간대 분위기(서카디안) — affective-design 기준
 │   ├── ads.js            # 광고 슬롯 스텁(no-op) — commercial 기준, 미연결
+│   ├── guard.js          # 도메인 잠금 가드 — 허용 호스트에서만 실행
 │   └── scenes/
 │       ├── BootScene.js      # 최초 초기화
 │       ├── PreloadScene.js   # 에셋 로딩 + 로딩 바
@@ -29,7 +30,7 @@ dori/
 │       └── RouletteScene.js  # 점심 메뉴 룰렛(첫 실제 게임)
 ├── docs/                 # 프로젝트 문서
 ├── CLAUDE.md             # Claude Code 작업 가이드
-├── LICENSE               # MIT
+├── LICENSE               # 독점(All Rights Reserved)
 └── .gitignore
 ```
 
