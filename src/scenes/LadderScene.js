@@ -6,6 +6,7 @@
 import MiniGame from '../MiniGame.js';
 import { C, css, FONT, PLAYER, RADIUS, EASE } from '../theme.js';
 import { makeButton } from '../ui.js';
+import { Sfx } from '../sfx.js';
 
 const ROWS = 8; // 가로 다리 행 수
 const MIN_P = 2;
@@ -272,6 +273,7 @@ export default class LadderScene extends MiniGame {
     this.tweens.add({ targets: this.hint, scale: 1, duration: 300, ease: EASE.bounce });
     this.colorFlash(color, 150);
     this.burst(label.x, label.y - 12, color, 20); // 도착 지점에서 참가자 색 폭발
+    Sfx.play('win');
 
     this.unlock();
     this.mainBtn.enableButton();

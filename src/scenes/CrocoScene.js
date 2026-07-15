@@ -4,6 +4,7 @@
 import MiniGame from '../MiniGame.js';
 import { C, css, FONT, EASE } from '../theme.js';
 import { makeButton } from '../ui.js';
+import { Sfx } from '../sfx.js';
 
 const TEETH = 12; // 6 × 2줄
 const CROC = 0x2e8b57; // 악어 몸통색(게임 전용 장식색)
@@ -104,6 +105,7 @@ export default class CrocoScene extends MiniGame {
     t.pressed = true;
     t.hit.disableInteractive();
     this.doneCount += 1;
+    Sfx.play('tap');
 
     // 이빨 눌림(즉각 피드백)
     this.tweens.add({
@@ -121,6 +123,7 @@ export default class CrocoScene extends MiniGame {
     this.tweens.add({
       targets: this.upperJaw, y: 170, duration: 130, ease: 'Quad.easeIn',
       onComplete: () => {
+        Sfx.play('bang');
         this.burst(this.teeth[i].x, 560, C.danger, 36);
         this.colorFlash(C.danger, 220);
         this.shake(0.014, 280);

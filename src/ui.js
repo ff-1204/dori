@@ -1,5 +1,6 @@
 // 공통 UI 컴포넌트 — 어포던스(눌러 보임)·정직한 피드백 원칙 적용.
 import { C, css, FONT, RADIUS, SP } from './theme.js';
+import { Sfx } from './sfx.js';
 
 // 어포던스 버튼: 입체감(그림자) + 눌림/호버 피드백. 터치 타깃 ≥ 88px 권장.
 // variant: 'primary' | 'success' | 'danger' | 'disabled'
@@ -37,7 +38,7 @@ export function makeButton(scene, opts) {
   // 호버는 데스크톱 보너스, 눌림은 모든 입력 공통 피드백
   hit.on('pointerover', () => con.setScale(1.04));
   hit.on('pointerout', () => con.setScale(1));
-  hit.on('pointerdown', () => con.setScale(0.94));
+  hit.on('pointerdown', () => { con.setScale(0.94); Sfx.play('tap'); });
   hit.on('pointerup', () => { con.setScale(1.04); if (onClick) onClick(); });
   hit.on('pointerupoutside', () => con.setScale(1));
 

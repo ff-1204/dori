@@ -4,6 +4,7 @@
 import MiniGame from '../MiniGame.js';
 import { C, css, FONT, EASE } from '../theme.js';
 import { makeButton } from '../ui.js';
+import { Sfx } from '../sfx.js';
 
 const CHAMBERS = 6;
 
@@ -111,6 +112,7 @@ export default class RussianScene extends MiniGame {
     if (t === this.bullet) {
       // 빵! — Peak 연출(위험색으로 색상 연결)
       dot.setFillStyle(C.danger);
+      Sfx.play('bang');
       this.burst(this.cx, this.cy - 175, C.danger, 40);
       this.colorFlash(C.danger, 220);
       this.shake(0.012, 260);
@@ -122,6 +124,7 @@ export default class RussianScene extends MiniGame {
       this.triggerBtn.setLabel('다시 장전');
     } else {
       // 찰칵 — 빈 약실 표시(정직: 지나간 칸이 안전했음을 보여준다)
+      Sfx.play('tick');
       dot.setFillStyle(C.surfaceAlt).setStrokeStyle(4, C.success);
       const click = this.add.text(this.cx, this.cy - 230, '찰칵', {
         fontFamily: FONT, fontSize: '36px', color: css(C.success), fontStyle: 'bold',

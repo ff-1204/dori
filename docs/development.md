@@ -22,6 +22,7 @@ dori/
 │   ├── MiniGame.js       # 미니게임 공통 베이스(FSM·시드 RNG·입력 잠금·시간 분위기·연출 헬퍼 burst/colorFlash/shake)
 │   ├── timeOfDay.js      # 시간대 분위기(서카디안) — affective-design 기준
 │   ├── ads.js            # 광고 슬롯 스텁(no-op) — commercial 기준, 미연결
+│   ├── sfx.js            # 효과음(Web Audio 합성, 기본 꺼짐, 허브 🔇/🔊 토글)
 │   ├── guard.js          # 도메인 잠금 가드 — 허용 호스트에서만 실행
 │   └── scenes/
 │       ├── BootScene.js      # 최초 초기화

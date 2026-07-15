@@ -5,6 +5,7 @@ import MiniGame from '../MiniGame.js';
 import { C, css, FONT, SLICE, EASE, RADIUS } from '../theme.js';
 import { makeButton } from '../ui.js';
 import { mealForPhase } from '../timeOfDay.js';
+import { Sfx } from '../sfx.js';
 
 // 트렌드 조사 기반 기본 메뉴(trend-research.md §6, 사용자가 편집 가능)
 const MEALS = {
@@ -167,6 +168,7 @@ export default class RouletteScene extends MiniGame {
     this.tweens.add({ targets: this.resultText, scale: 1, duration: 320, ease: EASE.bounce });
     this.colorFlash(sliceColor, 180);
     this.burst(this.cx, this.cy - this.radius, sliceColor, 26); // 당첨 칸(포인터) 위치에서 폭발
+    Sfx.play('win');
 
     this.spinBtn.enableButton();
     this.spinBtn.setLabel('다시 돌리기');

@@ -5,6 +5,7 @@
 import MiniGame from '../MiniGame.js';
 import { C, css, FONT, PLAYER, EASE, RADIUS } from '../theme.js';
 import { makeButton } from '../ui.js';
+import { Sfx } from '../sfx.js';
 
 const LS_ITEMS = 'dori.draw.items';
 const DEFAULTS = ['1번', '2번', '3번', '4번'];
@@ -166,6 +167,7 @@ export default class DrawScene extends MiniGame {
 
     this.burst(this.cx, 560, color, 30);
     this.colorFlash(color, 170);
+    Sfx.play('win');
 
     const left = this.remaining().length;
     this.hint.setColor(css(color)).setText(`${name} 당첨!   (남은 ${left}/${this.items.length})`);

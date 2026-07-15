@@ -3,6 +3,10 @@
 import { C, css, FONT, SP } from '../theme.js';
 import { makeButton } from '../ui.js';
 import { applyTimeAtmosphere, mealForPhase, MEAL_LABEL } from '../timeOfDay.js';
+import { Sfx } from '../sfx.js';
+
+// 시간대별 룰렛 이모지(라벨과 함께 바뀐다)
+const MEAL_EMOJI = { breakfast: '🍳', lunch: '🍚', dinner: '🍗', latenight: '🌙' };
 
 const SITE_URL = 'https://ff-1204.github.io/dori/';
 const SHARE_TITLE = 'dori — 결정 룰렛·사다리타기·복불복 미니게임';
@@ -12,23 +16,23 @@ const GAMES = [
   {
     cat: '결정 돕기',
     items: [
-      { key: 'Roulette', name: '메뉴 룰렛', ready: true }, // 라벨은 시간대에 맞춰 동적 표기
-      { key: 'Ladder', name: '사다리타기', ready: true },
-      { key: 'Pinball', name: '랜덤 핀볼', ready: true },
+      { key: 'Roulette', name: '메뉴 룰렛', ready: true }, // 라벨·이모지는 시간대에 맞춰 동적 표기
+      { key: 'Ladder', name: '🪜 사다리타기', ready: true },
+      { key: 'Pinball', name: '🎯 랜덤 핀볼', ready: true },
     ],
   },
   {
     cat: '랜덤 뽑기',
     items: [
-      { key: 'Draw', name: '뽑기 상자', ready: true },
+      { key: 'Draw', name: '🎁 뽑기 상자', ready: true },
     ],
   },
   {
     cat: '복불복',
     items: [
-      { key: 'Russian', name: '러시안 룰렛', ready: true },
-      { key: 'Croco', name: '악어 이빨 누르기', ready: true },
-      { key: 'PopUp', name: '통아저씨', ready: true },
+      { key: 'Russian', name: '💥 러시안 룰렛', ready: true },
+      { key: 'Croco', name: '🐊 악어 이빨 누르기', ready: true },
+      { key: 'PopUp', name: '🗡️ 통아저씨', ready: true },
     ],
   },
 ];
@@ -87,7 +91,9 @@ export default class HubScene extends Phaser.Scene {
       const mealLabel = MEAL_LABEL[mealForPhase(phase.key)];
 
       group.items.forEach((g) => {
-        const displayName = g.key === 'Roulette' ? `${mealLabel} 메뉴 룰렛` : g.name;
+        const displayName = g.key === 'Roulette'
+          ? `${MEAL_EMOJI[mealForPhase(phase.key)]} ${mealLabel} 메뉴 룰렛`
+          : g.name;
         makeButton(this, {
           x: width / 2,
           y: y + 44,
@@ -132,6 +138,18 @@ export default class HubScene extends Phaser.Scene {
     shareBtn.on('pointerover', () => shareBtn.setColor(css(C.primary)));
     shareBtn.on('pointerout', () => shareBtn.setColor(css(C.subtext)));
     shareBtn.on('pointerup', () => this.doShare());
+
+    // 효과음 토글(기본 꺼짐, localStorage 저장) — 상태가 아이콘으로 정직하게 드러남
+    this.soundBtn = this.add.text(width - 160, SP.md + 2, Sfx.isEnabled() ? '🔊' : '🔇', {
+      fontSize: '34px',
+    }).setOrigin(1, 0).setInteractive({ useHandCursor: true });
+    this.soundBtn.on('pointerup', () => {
+      const next = !Sfx.isEnabled();
+      Sfx.setEnabled(next);
+      this.soundBtn.setText(next ? '🔊' : '🔇');
+      if (next) Sfx.play('pop');
+      this.toast(next ? '효과음 켜짐' : '효과음 꺼짐');
+    });
   }
 
   async doShare() {

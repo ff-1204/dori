@@ -4,6 +4,7 @@
 import MiniGame from '../MiniGame.js';
 import { C, css, FONT, EASE } from '../theme.js';
 import { makeButton } from '../ui.js';
+import { Sfx } from '../sfx.js';
 
 const SLOTS = 12; // 4 × 3줄
 const BARREL = 0x8a5a33; // 나무통 색(게임 전용 장식색)
@@ -96,6 +97,7 @@ export default class PopUpScene extends MiniGame {
     s.used = true;
     s.hit.disableInteractive();
     this.doneCount += 1;
+    Sfx.play('tap');
 
     // 칼이 오른쪽에서 날아와 꽂힌다(즉각 피드백)
     const sword = this.add.container(s.x + 220, s.y);
@@ -118,6 +120,7 @@ export default class PopUpScene extends MiniGame {
   launch(i) {
     this.launched = true;
     // 펑! 아저씨 발사(Peak — 위로 회전하며 날아간다)
+    Sfx.play('bang');
     this.burst(this.cx, 452, C.warning, 40);
     this.colorFlash(C.warning, 220);
     this.shake(0.012, 260);

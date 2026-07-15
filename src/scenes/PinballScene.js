@@ -5,6 +5,7 @@
 import MiniGame from '../MiniGame.js';
 import { C, css, FONT, SLICE, EASE, RADIUS } from '../theme.js';
 import { makeButton } from '../ui.js';
+import { Sfx } from '../sfx.js';
 
 const LS_SLOTS = 'dori.pinball.slots';
 const DEFAULT_SLOTS = ['대박', '꽝', '2등', '2등', '꽝', '대박']; // 플링코 정석: 가장자리(희귀)=큰 보상
@@ -177,6 +178,7 @@ export default class PinballScene extends MiniGame {
 
     this.hits += 1;
     this.hitText.setText(`튕김 ×${this.hits}`);
+    Sfx.play('tick');
   }
 
   update() {
@@ -217,6 +219,7 @@ export default class PinballScene extends MiniGame {
     this.burst(slotX, 930, color, 36);
     this.colorFlash(color, 190);
     this.shake(0.006, 160);
+    Sfx.play('win');
 
     this.resultText.setColor(css(color));
     this.resultText.setText(`${this.slots[idx]} !   (튕김 ×${this.hits})`);
