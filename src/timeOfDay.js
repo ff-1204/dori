@@ -18,11 +18,12 @@ export function getTimePhase(hour = new Date().getHours()) {
 }
 
 // 시간대 → 식사 종류(룰렛 등 음식 관련 게임 공용)
-export const MEAL_LABEL = { breakfast: '아침', lunch: '점심', dinner: '저녁' };
+export const MEAL_LABEL = { breakfast: '아침', lunch: '점심', dinner: '저녁', latenight: '야식' };
 
 export function mealForPhase(phaseKey) {
   if (phaseKey === 'morning') return 'breakfast';
-  if (phaseKey === 'evening' || phaseKey === 'night') return 'dinner';
+  if (phaseKey === 'evening') return 'dinner';
+  if (phaseKey === 'night') return 'latenight'; // 21시~새벽 5시
   return 'lunch'; // noon, afternoon
 }
 
