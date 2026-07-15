@@ -29,6 +29,20 @@ function ensureFry(items) {
   return items;
 }
 
+// 모드/보증/숫자 설정
+const LS_MODE = 'dori.roulette.mode';       // 'menu' | 'number'
+const LS_NUM = 'dori.roulette.numberCount'; // 숫자 모드 칸 수
+const LS_SPINS = 'dori.roulette.spins';     // 🍟 보증 카운터(메뉴 모드 전용)
+const PITY = 10;                            // 10번째 스핀은 감자튀김 보증(공개 규칙 — docs/game.md)
+const NUM_COLORS = [C.primary, C.success, C.warning, C.danger, 0xc77dff]; // 숫자 모드는 노랑 포함 순환
+
+function loadStr(key, fallback) {
+  try { return localStorage.getItem(key) ?? fallback; } catch (e) { return fallback; }
+}
+function saveStr(key, v) {
+  try { localStorage.setItem(key, v); } catch (e) { /* 무시 */ }
+}
+
 const keyFor = (mealKey) => `dori.roulette.${mealKey}`;
 
 function loadItems(mealKey, defaults) {
@@ -58,21 +72,31 @@ export default class RouletteScene extends MiniGame {
     this.radius = 300;
     this.wheelAngle = 0;
 
-    // 시간대 → 식사 종류 → 메뉴(저장분 우선)
+    // 시간대 → 식사 종류 → 메뉴(저장분 우선) / 모드(메뉴·숫자) 복원
     this.mealKey = mealForPhase(this.timePhase && this.timePhase.key);
     this.meal = MEALS[this.mealKey];
-    this.items = ensureFry(loadItems(this.mealKey, this.meal.defaults));
+    this.mode = loadStr(LS_MODE, 'menu') === 'number' ? 'number' : 'menu';
+    this.numberCount = Phaser.Math.Clamp(parseInt(loadStr(LS_NUM, '6'), 10) || 6, 2, 16);
+    this.setupItems();
     this.makeFryTexture();
 
     // 제목은 포인터(원판 위 y≈214~266)와 겹치지 않게 충분히 위에 배치
-    this.titleText = this.add.text(this.cx, 140, `${this.meal.label} 메뉴 룰렛`, {
+    this.titleText = this.add.text(this.cx, 140, this.titleFor(), {
       fontFamily: FONT, fontSize: '48px', color: css(C.text), fontStyle: 'bold',
     }).setOrigin(0.5);
+
+    // 모드 토글(메뉴 ↔ 숫자) — 우측 상단
+    this.modeBtn = this.add.text(width - 32, 140, this.mode === 'menu' ? '🔢 숫자로' : '🍽 메뉴로', {
+      fontFamily: FONT, fontSize: '28px', color: css(C.subtext), fontStyle: 'bold',
+    }).setOrigin(1, 0.5).setInteractive({ useHandCursor: true });
+    this.modeBtn.on('pointerover', () => this.modeBtn.setColor(css(C.primary)));
+    this.modeBtn.on('pointerout', () => this.modeBtn.setColor(css(C.subtext)));
+    this.modeBtn.on('pointerup', () => this.toggleMode());
 
     this.buildWheel();
     this.buildPointer();
 
-    this.resultText = this.add.text(this.cx, 930, '돌려서 메뉴를 정하세요', {
+    this.resultText = this.add.text(this.cx, 930, this.defaultHint(), {
       fontFamily: FONT, fontSize: '38px', color: css(C.subtext), fontStyle: 'bold', align: 'center',
     }).setOrigin(0.5);
 
@@ -81,13 +105,61 @@ export default class RouletteScene extends MiniGame {
       onClick: () => this.spin(),
     });
 
-    // 메뉴 편집 진입(부담 없는 보조 액션)
-    this.editBtn = this.add.text(this.cx, 1206, '✎ 메뉴 편집', {
+    // 보조 액션: 메뉴 모드=편집 / 숫자 모드=개수 설정
+    this.editBtn = this.add.text(this.cx, 1206, this.editLabel(), {
       fontFamily: FONT, fontSize: '30px', color: css(C.subtext),
     }).setOrigin(0.5).setInteractive({ useHandCursor: true });
     this.editBtn.on('pointerover', () => this.editBtn.setColor(css(C.primary)));
     this.editBtn.on('pointerout', () => this.editBtn.setColor(css(C.subtext)));
-    this.editBtn.on('pointerup', () => this.openEditor());
+    this.editBtn.on('pointerup', () => {
+      if (this.mode === 'menu') this.openEditor();
+      else this.promptNumberCount();
+    });
+  }
+
+  // 모드에 따른 항목 구성(숫자 모드엔 감자튀김 없음)
+  setupItems() {
+    if (this.mode === 'number') {
+      this.items = Array.from({ length: this.numberCount }, (_, i) => String(i + 1));
+    } else {
+      this.items = ensureFry(loadItems(this.mealKey, this.meal.defaults));
+    }
+  }
+
+  titleFor() { return this.mode === 'number' ? '숫자 룰렛' : `${this.meal.label} 메뉴 룰렛`; }
+
+  defaultHint() { return this.mode === 'number' ? '돌려서 숫자를 정하세요' : '돌려서 메뉴를 정하세요'; }
+
+  editLabel() { return this.mode === 'number' ? '# 숫자 개수' : '✎ 메뉴 편집'; }
+
+  toggleMode() {
+    if (this.locked) return;
+    this.mode = this.mode === 'menu' ? 'number' : 'menu';
+    saveStr(LS_MODE, this.mode);
+    this.setupItems();
+    this.rebuildWheel();
+    this.titleText.setText(this.titleFor());
+    this.modeBtn.setText(this.mode === 'menu' ? '🔢 숫자로' : '🍽 메뉴로');
+    this.editBtn.setText(this.editLabel());
+    this.resultText.setColor(css(C.subtext)).setText(this.defaultHint()).setScale(1);
+    this.spinBtn.setLabel('돌리기');
+  }
+
+  promptNumberCount() {
+    if (this.locked) return;
+    const input = window.prompt('숫자 개수 (2~16)');
+    if (input == null) return;
+    const n = parseInt(input.trim(), 10);
+    if (!n || n < 2 || n > 16) {
+      this.resultText.setColor(css(C.warning)).setText('2~16 사이로 입력해 주세요');
+      return;
+    }
+    this.numberCount = n;
+    saveStr(LS_NUM, String(n));
+    this.setupItems();
+    this.rebuildWheel();
+    this.resultText.setColor(css(C.subtext)).setText(this.defaultHint()).setScale(1);
+    this.spinBtn.setLabel('돌리기');
   }
 
   // 🍟 파티클용 텍스처: 시스템 이모지를 렌더텍스처로 굽는다(외부 에셋 없음 → 라이선스 클린)
@@ -101,8 +173,9 @@ export default class RouletteScene extends MiniGame {
     rt.destroy();
   }
 
-  // 칸 색: 감자튀김만 노란색(전용), 나머지는 노랑 제외 순환
+  // 칸 색: 메뉴 모드는 감자튀김만 노란색(전용), 숫자 모드는 전체 색 순환
   colorFor(i) {
+    if (this.mode === 'number') return NUM_COLORS[i % NUM_COLORS.length];
     return this.items[i] === FRY ? FRY_COLOR : OTHER_COLORS[i % OTHER_COLORS.length];
   }
 
@@ -164,7 +237,20 @@ export default class RouletteScene extends MiniGame {
     this.resultText.setColor(css(C.subtext));
     this.resultText.setText('...');
 
-    const winner = this.rng.between(0, this.n - 1);
+    let winner;
+    if (this.mode === 'menu') {
+      // 🍟 보증(피티): 10번째 스핀은 감자튀김 확정 — 공개 규칙(docs/game.md)
+      let pity = parseInt(loadStr(LS_SPINS, '0'), 10) || 0;
+      pity += 1;
+      const fryIdx = this.items.indexOf(FRY);
+      if (pity >= PITY && fryIdx !== -1) winner = fryIdx;
+      else winner = this.rng.between(0, this.n - 1);
+      // 감자튀김이 나오면(보증이든 자연이든) 카운터 리셋
+      if (this.items[winner] === FRY) pity = 0;
+      saveStr(LS_SPINS, String(pity));
+    } else {
+      winner = this.rng.between(0, this.n - 1);
+    }
     const winnerCenter = (winner + 0.5) * this.sliceAngle;
 
     const spins = 4;
@@ -190,11 +276,13 @@ export default class RouletteScene extends MiniGame {
   reveal(winner) {
     // 색상 연결(color linkage): 결과 텍스트·플래시를 당첨 칸 색과 매칭 → 출처가 색으로 이어짐
     const sliceColor = this.colorFor(winner);
-    const isFry = this.items[winner] === FRY;
+    const isFry = this.mode === 'menu' && this.items[winner] === FRY;
+    let text;
+    if (isFry) text = `오늘 ${this.meal.label}은\n🍟 감자튀김 !!`;
+    else if (this.mode === 'number') text = `결과는\n${this.items[winner]} !`;
+    else text = `오늘 ${this.meal.label}은\n${this.items[winner]} !`;
     this.resultText.setColor(css(sliceColor));
-    this.resultText.setText(isFry
-      ? `오늘 ${this.meal.label}은\n🍟 감자튀김 !!`
-      : `오늘 ${this.meal.label}은\n${this.items[winner]} !`);
+    this.resultText.setText(text);
     this.resultText.setScale(0);
     this.tweens.add({ targets: this.resultText, scale: 1, duration: 320, ease: EASE.bounce });
     this.colorFlash(sliceColor, 180);
@@ -353,7 +441,7 @@ export default class RouletteScene extends MiniGame {
 
   closeEditor() {
     if (this.editor) { this.editor.destroy(); this.editor = null; }
-    this.resultText.setColor(css(C.subtext)).setText('돌려서 메뉴를 정하세요').setScale(1);
+    this.resultText.setColor(css(C.subtext)).setText(this.defaultHint()).setScale(1);
     this.spinBtn.setLabel('돌리기');
   }
 }
