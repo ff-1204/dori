@@ -48,7 +48,12 @@
 | [development](docs/development.md) / [git](docs/git.md) | 구조·실행·배포·커밋 컨벤션 |
 | [commercial](docs/commercial.md) / [licenses](docs/licenses.md) | 상업화 규칙·서드파티 라이선스 |
 
+## 이용 안내
+
+dori의 모든 게임은 **오락 목적**입니다. 결과는 재미를 위한 무작위(또는 결정적) 값일 뿐이며,
+**금전·재물이 걸린 도박/내기, 사행 행위, 기만 등 비윤리적·불법적 목적에 사용하는 것을 금지**합니다.
+
 ## 라이선스
 
-**All Rights Reserved** — 무단 복제·재호스팅·상업적 이용을 금합니다. [LICENSE](LICENSE) 참고.
-서드파티 구성요소는 [docs/licenses.md](docs/licenses.md)에 기록되어 있습니다.
+**All Rights Reserved** — 무단 복제·재호스팅·상업적 이용을 금합니다. [LICENSE](LICENSE) 참고
+(도박·비윤리적 사용 금지 조항 포함). 서드파티 구성요소는 [docs/licenses.md](docs/licenses.md)에 기록되어 있습니다.
