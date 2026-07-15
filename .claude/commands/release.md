@@ -10,5 +10,8 @@ dori 릴리스 절차를 수행하라. 모든 커밋은 docs/git.md 컨벤션(Co
 4. **README.md 정합**: 게임 수·목록·특징이 현재 상태와 일치하는지 확인·갱신.
 5. **사이트 문구 정합**: index.html 메타(description/og/twitter/JSON-LD)와 assets/og.png의 게임 수·문구가 일치하는지 확인. og.png 문구가 바뀌면 스크래치패드의 make-og.ps1로 재생성 후 Read로 눈검수.
 6. **커밋 & 태깅**: 변경을 커밋·푸시한 뒤 `git tag -a vX.Y.Z -m "vX.Y.Z — 한 줄 요약"` → `git push origin vX.Y.Z`.
-7. **배포 확인**: 주요 변경 파일이 https://ff-1204.github.io/dori/ 에 반영됐는지 curl로 확인(약 20~40초 소요).
-8. **결과 보고**: 버전·핵심 변경·태그 링크를 요약해 보고한다.
+7. **GitHub Release 게시**: CHANGELOG의 해당 버전 섹션을 본문으로 릴리즈 노트를 태그에 게시한다.
+   토큰은 `printf "protocol=https\nhost=github.com\n" | git credential fill`의 password를 사용, 본문 JSON은 스크래치패드 파일로 작성 후
+   `curl -X POST -H "Authorization: token $token" https://api.github.com/repos/ff-1204/dori/releases -d @file.json` (`make_latest: "true"`).
+8. **배포 확인**: 주요 변경 파일이 https://ff-1204.github.io/dori/ 에 반영됐는지 curl로 확인(약 20~40초 소요).
+9. **결과 보고**: 버전·핵심 변경·태그/릴리즈 링크를 요약해 보고한다.
