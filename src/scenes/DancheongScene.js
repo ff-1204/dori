@@ -85,6 +85,18 @@ export default class DancheongScene extends MiniGame {
   buildOrb() {
     this.orb = this.add.container(this.cx, 620);
     this.orbHalves = this.add.graphics();
+    this.orb.add(this.orbHalves);
+    this.drawHalves();
+
+    // 대기 상태: 느린 회전
+    this.idleSpin = this.tweens.add({
+      targets: this.orb, angle: 360, duration: 14000, repeat: -1, ease: 'Linear',
+    });
+  }
+
+  // 반반(붉/청) 상태로 그리기
+  drawHalves() {
+    this.orbHalves.clear();
     this.orbHalves.fillStyle(RED, 1);
     this.orbHalves.slice(0, 0, 165, Phaser.Math.DegToRad(90), Phaser.Math.DegToRad(270), false);
     this.orbHalves.fillPath();
@@ -92,12 +104,6 @@ export default class DancheongScene extends MiniGame {
     this.orbHalves.slice(0, 0, 165, Phaser.Math.DegToRad(-90), Phaser.Math.DegToRad(90), false);
     this.orbHalves.fillPath();
     this.orbHalves.lineStyle(6, C.bg, 1).strokeCircle(0, 0, 165);
-    this.orb.add(this.orbHalves);
-
-    // 대기 상태: 느린 회전
-    this.idleSpin = this.tweens.add({
-      targets: this.orb, angle: 360, duration: 14000, repeat: -1, ease: 'Linear',
-    });
   }
 
   getQuestion() {
@@ -116,6 +122,10 @@ export default class DancheongScene extends MiniGame {
     this.askBtn.disableButton();
     this.resultText.setColor(css(C.subtext)).setText('...').setScale(1);
     Sfx.play('pop');
+
+    // 이전 결과를 이제야 지우고(버튼 누를 때까지 유지) 반반 상태로 복귀
+    if (this.mark) { this.mark.destroy(); this.mark = null; }
+    this.drawHalves();
 
     // 빌드업: 구슬이 점점 빨리 돌며 커진다(기대 → 긴장)
     this.idleSpin.pause();
@@ -142,12 +152,12 @@ export default class DancheongScene extends MiniGame {
     this.orb.setScale(0.9);
     this.tweens.add({ targets: this.orb, scale: 1, duration: 380, ease: EASE.bounce });
 
-    // 구슬 위에 결과 글자
-    const mark = this.add.text(0, 0, name, {
+    // 구슬 위에 결과 글자(다음 질문 전까지 유지)
+    this.mark = this.add.text(0, 0, name, {
       fontFamily: FONT, fontSize: '120px', color: css(C.bg), fontStyle: 'bold',
     }).setOrigin(0.5).setScale(0);
-    this.orb.add(mark);
-    this.tweens.add({ targets: mark, scale: 1, duration: 320, ease: EASE.popIn });
+    this.orb.add(this.mark);
+    this.tweens.add({ targets: this.mark, scale: 1, duration: 320, ease: EASE.popIn });
 
     this.burst(this.cx, 620, color, 36);
     this.colorFlash(color, 200);
@@ -163,22 +173,6 @@ export default class DancheongScene extends MiniGame {
     this.askBtn.enableButton();
     this.askBtn.setLabel('다시 묻기');
     this.unlock();
-
-    // 다음 질문 대기: 잠시 후 구슬을 반반 상태로 되돌린다
-    this.time.delayedCall(2600, () => {
-      if (!this.locked && this.orb && this.orb.active) {
-        mark.destroy();
-        this.orbHalves.clear();
-        this.orbHalves.fillStyle(RED, 1);
-        this.orbHalves.slice(0, 0, 165, Phaser.Math.DegToRad(90), Phaser.Math.DegToRad(270), false);
-        this.orbHalves.fillPath();
-        this.orbHalves.fillStyle(BLUE, 1);
-        this.orbHalves.slice(0, 0, 165, Phaser.Math.DegToRad(-90), Phaser.Math.DegToRad(90), false);
-        this.orbHalves.fillPath();
-        this.orbHalves.lineStyle(6, C.bg, 1).strokeCircle(0, 0, 165);
-        this.idleSpin.resume();
-      }
-    });
+    // 결과는 자동으로 사라지지 않는다 — '다시 묻기'를 누를 때까지 유지
   }
-
 }
