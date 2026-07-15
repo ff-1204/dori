@@ -2,7 +2,7 @@
 // 기본값은 한국인 선호 음식 트렌드 기반이며, 사용자가 추가/삭제할 수 있고 localStorage에 저장된다.
 // 정직한 매핑: 결과를 RNG로 먼저 정하고 포인터 칸에 정확히 멈추게 회전 각을 역산(game-mechanics A-1).
 import MiniGame from '../MiniGame.js';
-import { C, css, FONT, SLICE, EASE, RADIUS } from '../theme.js';
+import { C, css, FONT, EASE, RADIUS } from '../theme.js';
 import { makeButton } from '../ui.js';
 import { mealForPhase } from '../timeOfDay.js';
 import { Sfx } from '../sfx.js';
@@ -18,6 +18,16 @@ const MEALS = {
   // 야식: 조사(치킨 54.7% 압도적, 라면 31.1%, 떡볶이 20.6%, 족발·보쌈, 분식)
   latenight: { label: '야식', defaults: ['치킨', '라면', '떡볶이', '족발', '보쌈', '피자', '순대', '튀김', '곱창', '김밥'] },
 };
+
+// 🍟 이스터에그: 감자튀김은 시간대와 무관하게 항상 존재하며, 노란 칸은 감자튀김 전용.
+const FRY = '감자튀김';
+const FRY_COLOR = C.warning;
+const OTHER_COLORS = [C.primary, C.success, C.danger, 0xc77dff]; // 노랑 제외 순환
+
+function ensureFry(items) {
+  if (!items.includes(FRY)) items.push(FRY);
+  return items;
+}
 
 const keyFor = (mealKey) => `dori.roulette.${mealKey}`;
 
@@ -51,7 +61,8 @@ export default class RouletteScene extends MiniGame {
     // 시간대 → 식사 종류 → 메뉴(저장분 우선)
     this.mealKey = mealForPhase(this.timePhase && this.timePhase.key);
     this.meal = MEALS[this.mealKey];
-    this.items = loadItems(this.mealKey, this.meal.defaults);
+    this.items = ensureFry(loadItems(this.mealKey, this.meal.defaults));
+    this.makeFryTexture();
 
     // 제목은 포인터(원판 위 y≈214~266)와 겹치지 않게 충분히 위에 배치
     this.titleText = this.add.text(this.cx, 140, `${this.meal.label} 메뉴 룰렛`, {
@@ -79,6 +90,22 @@ export default class RouletteScene extends MiniGame {
     this.editBtn.on('pointerup', () => this.openEditor());
   }
 
+  // 🍟 파티클용 텍스처: 시스템 이모지를 렌더텍스처로 굽는다(외부 에셋 없음 → 라이선스 클린)
+  makeFryTexture() {
+    if (this.textures.exists('fries')) return;
+    const t = this.add.text(0, 0, '🍟', { fontSize: '44px' }).setVisible(false);
+    const rt = this.make.renderTexture({ width: 56, height: 56 }, false);
+    rt.draw(t, 4, 2);
+    rt.saveTexture('fries');
+    t.destroy();
+    rt.destroy();
+  }
+
+  // 칸 색: 감자튀김만 노란색(전용), 나머지는 노랑 제외 순환
+  colorFor(i) {
+    return this.items[i] === FRY ? FRY_COLOR : OTHER_COLORS[i % OTHER_COLORS.length];
+  }
+
   buildWheel() {
     this.n = this.items.length;
     this.sliceAngle = 360 / this.n;
@@ -90,7 +117,7 @@ export default class RouletteScene extends MiniGame {
     for (let i = 0; i < this.n; i += 1) {
       const start = Phaser.Math.DegToRad(i * this.sliceAngle);
       const end = Phaser.Math.DegToRad((i + 1) * this.sliceAngle);
-      g.fillStyle(SLICE[i % SLICE.length], 1);
+      g.fillStyle(this.colorFor(i), 1);
       g.beginPath();
       g.slice(0, 0, this.radius, start, end, false);
       g.closePath();
@@ -161,13 +188,23 @@ export default class RouletteScene extends MiniGame {
 
   reveal(winner) {
     // 색상 연결(color linkage): 결과 텍스트·플래시를 당첨 칸 색과 매칭 → 출처가 색으로 이어짐
-    const sliceColor = SLICE[winner % SLICE.length];
+    const sliceColor = this.colorFor(winner);
+    const isFry = this.items[winner] === FRY;
     this.resultText.setColor(css(sliceColor));
-    this.resultText.setText(`오늘 ${this.meal.label}은\n${this.items[winner]} !`);
+    this.resultText.setText(isFry
+      ? `오늘 ${this.meal.label}은\n🍟 감자튀김 !!`
+      : `오늘 ${this.meal.label}은\n${this.items[winner]} !`);
     this.resultText.setScale(0);
     this.tweens.add({ targets: this.resultText, scale: 1, duration: 320, ease: EASE.bounce });
     this.colorFlash(sliceColor, 180);
-    this.burst(this.cx, this.cy - this.radius, sliceColor, 26); // 당첨 칸(포인터) 위치에서 폭발
+    if (isFry) {
+      // 🍟 이스터에그: 감자튀김 파티클이 쏟아진다
+      this.friesBurst(this.cx, this.cy - this.radius);
+      this.friesBurst(this.cx, 930);
+      this.shake(0.007, 220);
+    } else {
+      this.burst(this.cx, this.cy - this.radius, sliceColor, 26); // 당첨 칸(포인터) 위치에서 폭발
+    }
     Sfx.play('win');
 
     this.spinBtn.enableButton();
@@ -256,13 +293,30 @@ export default class RouletteScene extends MiniGame {
   // 이 시간대만 기본 메뉴로 복원(다른 시간대 저장분은 그대로)
   resetItems() {
     try { localStorage.removeItem(keyFor(this.mealKey)); } catch (e) { /* 무시 */ }
-    this.items = [...this.meal.defaults];
+    this.items = ensureFry([...this.meal.defaults]);
     this.rebuildWheel();
     this.renderChips();
     this.flashNote(`${this.meal.label} 메뉴를 기본값으로 복원했어요`);
   }
 
+  // 🍟 이모지 파티클 폭발(이스터에그 전용)
+  friesBurst(x, y) {
+    const em = this.add.particles(x, y, 'fries', {
+      speed: { min: 180, max: 480 },
+      angle: { min: 0, max: 360 },
+      scale: { start: 1, end: 0.4 },
+      alpha: { start: 1, end: 0 },
+      rotate: { min: -180, max: 180 },
+      lifespan: { min: 600, max: 1100 },
+      gravityY: 800,
+      emitting: false,
+    }).setDepth(60);
+    em.explode(30);
+    this.time.delayedCall(1300, () => em.destroy());
+  }
+
   removeItem(name) {
+    if (name === FRY) { this.flashNote('감자튀김은 영원해요 🍟'); return; }
     if (this.items.length <= 2) { this.flashNote('최소 2개는 있어야 해요'); return; }
     this.items = this.items.filter((x) => x !== name);
     saveItems(this.mealKey, this.items);
