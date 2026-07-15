@@ -52,7 +52,8 @@ export default class RouletteScene extends MiniGame {
     this.meal = MEALS[this.mealKey];
     this.items = loadItems(this.mealKey, this.meal.defaults);
 
-    this.titleText = this.add.text(this.cx, 210, `${this.meal.label} 메뉴 룰렛`, {
+    // 제목은 포인터(원판 위 y≈214~266)와 겹치지 않게 충분히 위에 배치
+    this.titleText = this.add.text(this.cx, 140, `${this.meal.label} 메뉴 룰렛`, {
       fontFamily: FONT, fontSize: '48px', color: css(C.text), fontStyle: 'bold',
     }).setOrigin(0.5);
 
