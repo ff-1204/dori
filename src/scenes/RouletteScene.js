@@ -226,15 +226,16 @@ export default class RouletteScene extends MiniGame {
     let y = startY;
 
     const addChip = (labelStr, kind, onTap) => {
+      const outlineColor = kind === 'add' ? C.primary : kind === 'reset' ? C.warning : null;
       const t = this.add.text(0, 0, labelStr, {
         fontFamily: FONT, fontSize: '28px',
-        color: kind === 'add' ? css(C.primary) : css(C.text), fontStyle: 'bold',
+        color: outlineColor ? css(outlineColor) : css(C.text), fontStyle: 'bold',
       }).setOrigin(0.5);
       const w = Math.ceil(t.width) + 44;
       if (x + w > maxX) { x = startX; y += chipH + gap; }
 
       const g = this.add.graphics();
-      if (kind === 'add') g.lineStyle(2, C.primary, 1).strokeRoundedRect(0, 0, w, chipH, 14);
+      if (outlineColor) g.lineStyle(2, outlineColor, 1).strokeRoundedRect(0, 0, w, chipH, 14);
       else g.fillStyle(C.surfaceAlt, 1).fillRoundedRect(0, 0, w, chipH, 14);
       t.setPosition(w / 2, chipH / 2);
 
@@ -249,6 +250,16 @@ export default class RouletteScene extends MiniGame {
 
     this.items.forEach((name) => addChip(`${name}  ✕`, 'item', () => this.removeItem(name)));
     addChip('+ 추가', 'add', () => this.addItem());
+    addChip('↺ 기본값', 'reset', () => this.resetItems());
+  }
+
+  // 이 시간대만 기본 메뉴로 복원(다른 시간대 저장분은 그대로)
+  resetItems() {
+    try { localStorage.removeItem(keyFor(this.mealKey)); } catch (e) { /* 무시 */ }
+    this.items = [...this.meal.defaults];
+    this.rebuildWheel();
+    this.renderChips();
+    this.flashNote(`${this.meal.label} 메뉴를 기본값으로 복원했어요`);
   }
 
   removeItem(name) {
