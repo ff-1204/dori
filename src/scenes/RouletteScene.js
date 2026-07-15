@@ -171,15 +171,32 @@ export default class RouletteScene extends MiniGame {
     rt.destroy();
   }
 
-  // 칸 색: 메뉴 모드는 감자튀김만 노란색(전용), 숫자 모드는 전체 색 순환
-  colorFor(i) {
-    if (this.mode === 'number') return NUM_COLORS[i % NUM_COLORS.length];
-    return this.items[i] === FRY ? FRY_COLOR : OTHER_COLORS[i % OTHER_COLORS.length];
+  // 칸 색 배정: 인접 칸(마지막↔첫 칸 순환 포함)에 같은 색 금지.
+  // 메뉴 모드에서 노랑은 감자튀김 전용(팔레트에서 제외되어 자동 보장).
+  computeSliceColors() {
+    const n = this.items.length;
+    const palette = this.mode === 'number' ? NUM_COLORS : OTHER_COLORS;
+    const colors = new Array(n);
+    for (let i = 0; i < n; i += 1) {
+      if (this.mode === 'menu' && this.items[i] === FRY) { colors[i] = FRY_COLOR; continue; }
+      const avoid = new Set();
+      if (i > 0) avoid.add(colors[i - 1]);
+      if (i === n - 1) avoid.add(colors[0]); // 원형: 마지막 칸은 첫 칸과도 달라야
+      let c = palette[i % palette.length];
+      for (let k = 0; avoid.has(c) && k < palette.length; k += 1) {
+        c = palette[(i + k + 1) % palette.length];
+      }
+      colors[i] = c;
+    }
+    this.sliceColors = colors;
   }
+
+  colorFor(i) { return this.sliceColors[i]; }
 
   buildWheel() {
     this.n = this.items.length;
     this.sliceAngle = 360 / this.n;
+    this.computeSliceColors();
     const fontSize = this.n > 10 ? 24 : 30;
 
     this.wheel = this.add.container(this.cx, this.cy);
