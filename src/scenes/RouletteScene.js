@@ -130,7 +130,8 @@ export default class RouletteScene extends MiniGame {
       const mid = Phaser.Math.DegToRad((i + 0.5) * this.sliceAngle);
       const lx = Math.cos(mid) * this.radius * 0.62;
       const ly = Math.sin(mid) * this.radius * 0.62;
-      const label = this.add.text(lx, ly, name, {
+      const display = name === FRY ? `🍟 ${name}` : name;
+      const label = this.add.text(lx, ly, display, {
         fontFamily: FONT, fontSize: `${fontSize}px`, color: css(C.bg), fontStyle: 'bold',
       }).setOrigin(0.5);
       let rot = mid;
@@ -285,7 +286,10 @@ export default class RouletteScene extends MiniGame {
       x += w + gap;
     };
 
-    this.items.forEach((name) => addChip(`${name}  ✕`, 'item', () => this.removeItem(name)));
+    this.items.forEach((name) => {
+      const display = name === FRY ? `🍟 ${name}` : `${name}  ✕`; // 감자튀김은 삭제 불가 표시
+      addChip(display, 'item', () => this.removeItem(name));
+    });
     addChip('+ 추가', 'add', () => this.addItem());
     addChip('↺ 기본값', 'reset', () => this.resetItems());
   }
