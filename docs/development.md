@@ -19,7 +19,8 @@ dori/
 │   ├── main.js           # 게임 설정 + 씬 등록
 │   ├── theme.js          # 디자인 토큰(팔레트·간격·이징) — visual-polish 기준
 │   ├── ui.js             # 공통 UI(어포던스 버튼·뒤로가기)
-│   ├── MiniGame.js       # 미니게임 공통 베이스(FSM·시드 RNG·입력 잠금)
+│   ├── MiniGame.js       # 미니게임 공통 베이스(FSM·시드 RNG·입력 잠금·시간 분위기)
+│   ├── timeOfDay.js      # 시간대 분위기(서카디안) — affective-design 기준
 │   └── scenes/
 │       ├── BootScene.js      # 최초 초기화
 │       ├── PreloadScene.js   # 에셋 로딩 + 로딩 바

@@ -2,6 +2,7 @@
 // 미구현 게임은 '준비 중'으로 흐리게 표시(정직한 어포던스: 누를 수 없음을 드러냄).
 import { C, css, FONT, SP } from '../theme.js';
 import { makeButton } from '../ui.js';
+import { applyTimeAtmosphere } from '../timeOfDay.js';
 
 const GAMES = [
   {
@@ -36,12 +37,14 @@ export default class HubScene extends Phaser.Scene {
   create() {
     const { width } = this.scale;
     this.cameras.main.setBackgroundColor(C.bg);
+    const phase = applyTimeAtmosphere(this); // 시간대 분위기(생리적 패턴)
 
     // 타이틀(미학-사용성 효과: 첫인상에 투자)
     this.add.text(width / 2, 96, 'dori', {
       fontFamily: FONT, fontSize: '104px', color: css(C.text), fontStyle: 'bold',
     }).setOrigin(0.5);
-    this.add.text(width / 2, 168, '결정 · 뽑기 · 복불복 미니게임', {
+    // 시간대 인사말(감성) — 정보가 아닌 분위기 문구
+    this.add.text(width / 2, 168, phase.greeting, {
       fontFamily: FONT, fontSize: '32px', color: css(C.subtext),
     }).setOrigin(0.5);
 
