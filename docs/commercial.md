@@ -51,6 +51,29 @@
 - **일시정지 여지**: 광고 표시 중 게임이 멈추도록 `MiniGame`에 pause 훅을 추가할 여지를 남긴다.
 - **설정 분리**: `AdConfig`(enabled·빈도)로 on/off·튜닝.
 
+## 4-1. Google 광고 연결 계획
+
+| 제품 | 적합성 | 용도 |
+|------|--------|------|
+| **AdSense (디스플레이)** | ✅ 웹페이지 배너 | 허브 등 비플레이 화면 |
+| **H5 Games Ads** (AdSense/Ad Manager) | ✅ **HTML5 게임용** | 전면(interstitial)·**보상형(rewarded)** |
+| **AdMob** | ❌ | 모바일 **앱 전용**(웹 게임엔 부적합) |
+
+**전제 조건**
+- **커스텀 도메인 필요**: `github.io` 서브도메인은 AdSense 승인이 어렵다(도메인 소유 확인 + GitHub Pages 상업 약관) → §0대로 이전.
+- **개인정보처리방침 + 동의(CMP)**: EEA/영국 트래픽엔 **구글 인증 CMP** 필수(§2).
+- **승인 심사**: 콘텐츠·정책 통과.
+
+**준비해 둔 것(현재 미연결·비활성)**
+- `src/ads.js`: **H5 Games Ads `adBreak` API 형태**의 어댑터(`maybeShowInterstitial`·`showRewarded`). `AdConfig.enabled=false`, `provider='none'`으로 꺼져 있음.
+- `index.html`: H5 Games Ads 스크립트를 **주석 처리**로 넣어둠(로드 안 됨).
+
+**활성화 절차(나중에)**
+1. 커스텀 도메인 + 상업 허용 호스팅 이전, AdSense 승인, CMP 구비.
+2. `index.html`의 H5 Games Ads 스크립트 주석 해제 + `ca-pub-XXXX`를 실제 퍼블리셔 ID로 교체.
+3. `ads.js`의 `AdConfig.enabled=true`, `provider='google-h5'`, `client` 설정.
+4. 게임 종료/허브 복귀 지점에서 `maybeShowInterstitial()` 호출 배선(게임 pause/resume 연결).
+
 ## 5. 수익화 모델 (옵션)
 
 - 광고(배너/전면/보상형) · **광고 제거 IAP** · 프리미엄 게임팩.
