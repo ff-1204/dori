@@ -79,7 +79,7 @@ export default class RouletteScene extends MiniGame {
     this.setupItems();
     this.makeFryTexture();
 
-    // 제목은 포인터(원판 위 y≈214~266)와 겹치지 않게 충분히 위에 배치
+    // 제목은 포인터(원판 위 y≈214–266)와 겹치지 않게 충분히 위에 배치
     this.titleText = this.add.text(this.cx, 140, this.titleFor(), {
       fontFamily: FONT, fontSize: '48px', color: css(C.text), fontStyle: 'bold',
     }).setOrigin(0.5);
@@ -146,11 +146,11 @@ export default class RouletteScene extends MiniGame {
 
   promptNumberCount() {
     if (this.locked) return;
-    const input = window.prompt('숫자 개수 (2~16)');
+    const input = window.prompt('숫자 개수 (2–16)');
     if (input == null) return;
     const n = parseInt(input.trim(), 10);
     if (!n || n < 2 || n > 16) {
-      this.resultText.setColor(css(C.warning)).setText('2~16 사이로 입력해 주세요');
+      this.resultText.setColor(css(C.warning)).setText('2–16 사이로 입력해 주세요');
       return;
     }
     this.numberCount = n;

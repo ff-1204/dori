@@ -42,7 +42,7 @@ export default class PopUpScene extends MiniGame {
   }
 
   buildBarrel() {
-    // 통(y 480~830)
+    // 통(y 480–830)
     const g = this.add.graphics();
     g.fillStyle(BARREL, 1).fillRoundedRect(180, 480, 360, 350, 36);
     g.fillStyle(BARREL_DARK, 1);

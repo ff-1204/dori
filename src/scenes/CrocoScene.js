@@ -42,12 +42,12 @@ export default class CrocoScene extends MiniGame {
   }
 
   buildCroc() {
-    // 아래턱(고정): y 640~860
+    // 아래턱(고정): y 640–860
     const lower = this.add.graphics();
     lower.fillStyle(CROC, 1).fillRoundedRect(80, 640, 560, 220, 40);
     lower.fillStyle(CROC_DARK, 1).fillRoundedRect(80, 640, 560, 30, { tl: 40, tr: 40, bl: 0, br: 0 });
 
-    // 위턱(내려와서 무는 컨테이너): y 260~450 → 물면 +170
+    // 위턱(내려와서 무는 컨테이너): y 260–450 → 물면 +170
     this.upperJaw = this.add.container(0, 0);
     const upper = this.add.graphics();
     upper.fillStyle(CROC, 1).fillRoundedRect(80, 260, 560, 190, 40);
@@ -58,7 +58,7 @@ export default class CrocoScene extends MiniGame {
     this.upperJaw.add(upper);
     // (위턱 세모 장식 제거 — 누르는 버튼만으로 이빨을 표현)
 
-    // 누르는 이빨 12개(2줄 × 6개, 입 안 y 500~630) — 터치 타깃 88×72
+    // 누르는 이빨 12개(2줄 × 6개, 입 안 y 500–630) — 터치 타깃 88×72
     this.teeth = [];
     for (let i = 0; i < TEETH; i += 1) {
       const row = Math.floor(i / 6);

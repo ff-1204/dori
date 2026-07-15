@@ -42,7 +42,7 @@ export default class LadderScene extends MiniGame {
     const { width } = this.scale;
     this.cx = width / 2;
 
-    // 레이아웃(요소 점유 범위 검산: 제목116~164 / 이름286~314 / 사다리330~920 / 결과940~975 / 안내985~1015 / 버튼1050~1150 / 편집1191~1221)
+    // 레이아웃(요소 점유 범위 검산: 제목116–164 / 이름286–314 / 사다리330–920 / 결과940–975 / 안내985–1015 / 버튼1050–1150 / 편집1191–1221)
     this.topY = 330;
     this.bottomY = 920;
     this.leftX = 90;

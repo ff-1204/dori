@@ -1,4 +1,4 @@
-// 로또 번호 추첨 — 랜덤 뽑기. 1~45에서 6개(줄당), 최대 5줄.
+// 로또 번호 추첨 — 랜덤 뽑기. 1–45에서 6개(줄당), 최대 5줄.
 // 규칙: 추첨은 매 정각(매시 00분) 한 번 — 뽑은 번호는 다음 정각까지 기록·유지(localStorage).
 // 법·윤리: "모든 조합의 확률은 같다"를 화면에 고지(당첨 보장·확률 향상 암시 금지),
 //          재추첨 시각은 정적 표기(초읽기 카운트다운 금지 — 도박적 긴급함 배제).
@@ -193,7 +193,7 @@ export default class LottoScene extends MiniGame {
     this.lock();
     this.drawBtn.disableButton();
 
-    // 줄마다 1~45에서 비복원 6개(Fisher-Yates 셔플 후 앞 6개, 오름차순)
+    // 줄마다 1–45에서 비복원 6개(Fisher-Yates 셔플 후 앞 6개, 오름차순)
     this.lines = [];
     for (let li = 0; li < this.lineCount; li += 1) {
       const pool = Array.from({ length: 45 }, (_, i) => i + 1);

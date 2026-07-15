@@ -13,5 +13,5 @@ dori 릴리스 절차를 수행하라. 모든 커밋은 docs/git.md 컨벤션(Co
 7. **GitHub Release 게시**: CHANGELOG의 해당 버전 섹션을 본문으로 릴리즈 노트를 태그에 게시한다.
    토큰은 `printf "protocol=https\nhost=github.com\n" | git credential fill`의 password를 사용, 본문 JSON은 스크래치패드 파일로 작성 후
    `curl -X POST -H "Authorization: token $token" https://api.github.com/repos/ff-1204/dori/releases -d @file.json` (`make_latest: "true"`).
-8. **배포 확인**: 주요 변경 파일이 https://ff-1204.github.io/dori/ 에 반영됐는지 curl로 확인(약 20~40초 소요).
+8. **배포 확인**: 주요 변경 파일이 https://ff-1204.github.io/dori/ 에 반영됐는지 curl로 확인(약 20–40초 소요).
 9. **결과 보고**: 버전·핵심 변경·태그/릴리즈 링크를 요약해 보고한다.

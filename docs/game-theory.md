@@ -37,7 +37,7 @@
 // weights: [{item:'A', w:3}, {item:'B', w:1}] → A가 3배 확률
 function weightedPick(weights, rng) {
   const total = weights.reduce((s, x) => s + x.w, 0);
-  let r = rng.frac() * total;      // 0 ~ total
+  let r = rng.frac() * total;      // 0 – total
   for (const x of weights) {
     if ((r -= x.w) < 0) return x.item;
   }

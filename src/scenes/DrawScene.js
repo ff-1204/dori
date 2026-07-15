@@ -110,7 +110,7 @@ export default class DrawScene extends MiniGame {
   }
 
   buildBox() {
-    // 상자(y 560~740) — 카드가 여기서 튀어나온다
+    // 상자(y 560–740) — 카드가 여기서 튀어나온다
     this.box = this.add.container(this.cx, 650);
     const g = this.add.graphics();
     g.fillStyle(C.surface, 1).fillRoundedRect(-130, -90, 260, 180, RADIUS);
@@ -214,7 +214,7 @@ export default class DrawScene extends MiniGame {
       fontFamily: FONT, fontSize: '38px', color: css(C.text), fontStyle: 'bold',
     }).setOrigin(0.5));
 
-    this.editorNote = this.add.text(width / 2, py + 94, `항목 ${MIN_I}~${MAX_I}개 · 눌러서 삭제 · 6자 이내`, {
+    this.editorNote = this.add.text(width / 2, py + 94, `항목 ${MIN_I}–${MAX_I}개 · 눌러서 삭제 · 6자 이내`, {
       fontFamily: FONT, fontSize: '22px', color: css(C.subtext),
     }).setOrigin(0.5);
     this.editor.add(this.editorNote);
@@ -300,7 +300,7 @@ export default class DrawScene extends MiniGame {
     this.editorNote.setText(msg).setColor(css(C.warning));
     this.time.delayedCall(1200, () => {
       if (this.editorNote && this.editorNote.active) {
-        this.editorNote.setText(`항목 ${MIN_I}~${MAX_I}개 · 눌러서 삭제 · 6자 이내`).setColor(css(C.subtext));
+        this.editorNote.setText(`항목 ${MIN_I}–${MAX_I}개 · 눌러서 삭제 · 6자 이내`).setColor(css(C.subtext));
       }
     });
   }
