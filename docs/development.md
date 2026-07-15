@@ -21,6 +21,7 @@ dori/
 │   ├── ui.js             # 공통 UI(어포던스 버튼·뒤로가기)
 │   ├── MiniGame.js       # 미니게임 공통 베이스(FSM·시드 RNG·입력 잠금·시간 분위기)
 │   ├── timeOfDay.js      # 시간대 분위기(서카디안) — affective-design 기준
+│   ├── ads.js            # 광고 슬롯 스텁(no-op) — commercial 기준, 미연결
 │   └── scenes/
 │       ├── BootScene.js      # 최초 초기화
 │       ├── PreloadScene.js   # 에셋 로딩 + 로딩 바
