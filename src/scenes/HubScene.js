@@ -10,7 +10,7 @@ const MEAL_EMOJI = { breakfast: '🍳', lunch: '🍚', dinner: '🍗', latenight
 
 const SITE_URL = 'https://ff-1204.github.io/dori/';
 const SHARE_TITLE = 'dori — 결정 룰렛·사다리타기·복불복 미니게임';
-const SHARE_TEXT = '점심 메뉴 룰렛, 사다리타기로 결정 고민 끝!';
+const SHARE_TEXT = '뭐 먹지? 누가 쏘지? 고민은 짧게, 결정은 즐겁게.';
 
 const GAMES = [
   {
