@@ -173,6 +173,11 @@ export default class PinballScene extends MiniGame {
     this.ball.body.setGravityY(1500);
     this.ball.setVelocityX(this.rng.between(-20, 20)); // 미세 초기 흔들림(생동감)
 
+    // 끼임 감시: 최저 도달 y가 갱신되지 않으면 넛지로 탈출시킨다(핀-벽 틈 트랩 대비)
+    this.maxBallY = this.ball.y;
+    this.lastProgressAt = this.time.now;
+    this.nudgeCount = 0;
+
     this.physics.add.collider(this.ball, this.pegs, (ball, peg) => this.onPegHit(ball, peg));
   }
 
@@ -206,7 +211,26 @@ export default class PinballScene extends MiniGame {
       this.cameras.main.zoomTo(1.06, 220);
     }
 
+    // 끼임 감시: 1.2초간 아래로 진행이 없으면 틸트(넛지) — 화면에 보이는 정직한 탈출
+    if (this.ball.y > this.maxBallY + 4) {
+      this.maxBallY = this.ball.y;
+      this.lastProgressAt = this.time.now;
+    } else if (this.time.now - this.lastProgressAt > 1200) {
+      this.nudgeBall();
+    }
+
     if (this.ball.y > 920) this.resolve();
+  }
+
+  // 틸트 넛지: 중앙 쪽으로 살짝 튕겨 끼임에서 빼낸다. 3회로도 못 빠지면 그 자리 기준 확정(안전망).
+  nudgeBall() {
+    this.nudgeCount += 1;
+    this.lastProgressAt = this.time.now;
+    if (this.nudgeCount > 3) { this.resolve(); return; }
+    const dir = this.ball.x < this.cx ? 1 : -1;
+    this.ball.setVelocity(dir * this.rng.between(160, 240), -this.rng.between(120, 200));
+    this.shake(0.004, 120); // 기계를 살짝 친 듯한 연출 — 개입이 눈에 보이게(정직)
+    Sfx.play('pop');
   }
 
   resolve() {
