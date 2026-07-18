@@ -328,20 +328,27 @@ export default class HubScene extends Phaser.Scene {
     this.qrModal = null;
   }
 
+  // 토스트 — 알약형 카드(라운드·그림자·팔레트 토큰), 아래에서 떠오르며 등장
   toast(msg) {
-    if (this.toastText) this.toastText.destroy();
-    this.toastText = this.add.text(this.scale.width / 2, 1150, msg, {
-      fontFamily: FONT, fontSize: '28px', color: css(C.bg), fontStyle: 'bold',
-      backgroundColor: css(C.primary), padding: { x: 24, y: 12 },
-    }).setOrigin(0.5).setDepth(300).setAlpha(0);
-    this.tweens.add({ targets: this.toastText, alpha: 1, duration: 150 });
+    if (this.toastBox) this.toastBox.destroy();
+    const t = this.add.text(0, 0, msg, {
+      fontFamily: FONT, fontSize: '27px', color: css(C.text), fontStyle: 'bold',
+    }).setOrigin(0.5);
+    const w = Math.ceil(t.width) + 56;
+    const h = 64;
+    const g = this.add.graphics();
+    g.fillStyle(0x000000, 0.35).fillRoundedRect(-w / 2, -h / 2 + 4, w, h, h / 2); // 그림자(깊이)
+    g.fillStyle(C.surface, 1).fillRoundedRect(-w / 2, -h / 2, w, h, h / 2);       // 면(알약)
+    g.lineStyle(2, C.primary, 0.9).strokeRoundedRect(-w / 2, -h / 2, w, h, h / 2); // 강조 테두리
+    const box = this.add.container(this.scale.width / 2, 1160, [g, t]).setDepth(300).setAlpha(0);
+    this.toastBox = box;
+    this.tweens.add({ targets: box, alpha: 1, y: 1150, duration: 220, ease: 'Quad.easeOut' });
     this.time.delayedCall(1600, () => {
-      if (this.toastText && this.toastText.active) {
-        this.tweens.add({
-          targets: this.toastText, alpha: 0, duration: 250,
-          onComplete: () => { if (this.toastText) { this.toastText.destroy(); this.toastText = null; } },
-        });
-      }
+      if (this.toastBox !== box || !box.active) return; // 새 토스트가 떴으면 이 타이머는 무시
+      this.tweens.add({
+        targets: box, alpha: 0, y: 1156, duration: 260, ease: 'Quad.easeIn',
+        onComplete: () => { if (this.toastBox === box) this.toastBox = null; box.destroy(); },
+      });
     });
   }
 }
