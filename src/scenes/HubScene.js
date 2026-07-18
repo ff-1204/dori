@@ -10,8 +10,6 @@ import { Sfx } from '../sfx.js';
 const MEAL_EMOJI = { breakfast: '🍳', lunch: '🍚', dinner: '🍗', latenight: '🌙' };
 
 const SITE_URL = 'https://ff-1204.github.io/dori/';
-const SHARE_TITLE = 'dori — 결정 룰렛·사다리타기·복불복 미니게임';
-const SHARE_TEXT = '뭐 먹지? 누가 쏘지? 고민은 짧게, 결정은 즐겁게.';
 
 const GAMES = [
   {
@@ -250,7 +248,7 @@ export default class HubScene extends Phaser.Scene {
     qrBtn.on('pointerout', () => qrBtn.setColor(css(C.subtext)));
     qrBtn.on('pointerup', () => this.openQr());
 
-    const shareBtn = this.add.text(width - SP.md, SP.md + 6, '공유 ↗', {
+    const shareBtn = this.add.text(width - SP.md, SP.md + 6, '🔗 주소 복사', {
       fontFamily: FONT, fontSize: '30px', color: css(C.subtext), fontStyle: 'bold',
     }).setOrigin(1, 0).setInteractive({ useHandCursor: true });
     shareBtn.on('pointerover', () => shareBtn.setColor(css(C.primary)));
@@ -259,13 +257,7 @@ export default class HubScene extends Phaser.Scene {
   }
 
   async doShare() {
-    // 모바일: 네이티브 공유 시트 / 데스크톱: 주소 복사(정직한 피드백 토스트)
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: SHARE_TITLE, text: SHARE_TEXT, url: SITE_URL });
-      } catch (e) { /* 사용자가 취소 — 조용히 무시 */ }
-      return;
-    }
+    // 주소 복사만 — 어디서나 같은 동작(정직한 피드백 토스트)
     try {
       await navigator.clipboard.writeText(SITE_URL);
       this.toast('주소가 복사됐어요');
