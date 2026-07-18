@@ -223,13 +223,18 @@ export default class RouletteScene extends MiniGame {
       const label = this.add.text(lx, ly, display, {
         fontFamily: FONT, fontSize: `${fontSize}px`, color: css(C.bg), fontStyle: 'bold',
       }).setOrigin(0.5);
+      // 긴 이름은 칸 안에 들어가도록 폰트 자동 축소(반지름 방향 최대 폭 기준)
+      const maxW = 200;
+      if (label.width > maxW) {
+        label.setFontSize(Math.max(14, Math.floor((fontSize * maxW) / label.width)));
+      }
       let rot = mid;
       if (Math.cos(mid) < 0) rot += Math.PI;
       label.setRotation(rot);
-      // 🍟 숨은 치트 진입점(더블탭) — 이스터에그라 커서 힌트 없음
-      if (name === FRY && this.mode === 'menu') {
+      // 숨은 치트 진입점(더블탭, 모든 메뉴) — 이스터에그라 커서 힌트 없음
+      if (this.mode === 'menu') {
         label.setInteractive();
-        label.on('pointerup', () => this.onFryTap());
+        label.on('pointerup', () => this.onLabelTap(i));
       }
       this.wheel.add(label);
     });
@@ -279,21 +284,19 @@ export default class RouletteScene extends MiniGame {
     this.fryHint = [glow, spark];
   }
 
-  // 🍟 숨은 치트: 감자튀김 칸 더블탭 → 칸이 반짝이며 감자튀김 확정 스핀
-  onFryTap() {
+  // 숨은 치트: 아무 메뉴 라벨이나 더블탭 → 칸이 반짝이며 그 메뉴 확정 스핀
+  onLabelTap(i) {
     if (this.locked || this.mode !== 'menu') return;
     const now = this.time.now;
-    if (this.lastFryTap && now - this.lastFryTap < 350) {
-      this.lastFryTap = 0;
-      this.flashFrySlice(() => this.spin(true));
+    if (this.lastTap && this.lastTap.i === i && now - this.lastTap.t < 350) {
+      this.lastTap = null;
+      this.flashSlice(i, () => this.spin(i));
     } else {
-      this.lastFryTap = now;
+      this.lastTap = { i, t: now };
     }
   }
 
-  flashFrySlice(onDone) {
-    const i = this.items.indexOf(FRY);
-    if (i === -1) { onDone(); return; }
+  flashSlice(i, onDone) {
     Sfx.play('pop');
     const g = this.sliceOverlay(i);
     this.tweens.add({
@@ -309,7 +312,7 @@ export default class RouletteScene extends MiniGame {
     g.fillStyle(C.text, 1).fillTriangle(this.cx - 24, topY - 46, this.cx + 24, topY - 46, this.cx, topY + 6);
   }
 
-  spin(forceFry = false) {
+  spin(forceIdx = null) {
     if (this.locked) return;
     this.lock();
     this.spinBtn.disableButton();
@@ -322,7 +325,7 @@ export default class RouletteScene extends MiniGame {
       let pity = parseInt(loadStr(LS_SPINS, '0'), 10) || 0;
       pity += 1;
       const fryIdx = this.items.indexOf(FRY);
-      if (forceFry && fryIdx !== -1) winner = fryIdx; // 더블탭 치트
+      if (forceIdx !== null) winner = forceIdx; // 더블탭 치트(선택 메뉴 확정)
       else if (pity >= PITY && fryIdx !== -1) winner = fryIdx;
       else winner = this.rng.between(0, this.n - 1);
       // 감자튀김이 나오면(보증이든 자연이든) 카운터 리셋
