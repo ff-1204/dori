@@ -87,9 +87,10 @@ export default class HubScene extends Phaser.Scene {
     const leftX = SP.xl + colW / 2;
     const rightX = width - SP.xl - colW / 2;
     GAMES.forEach((group) => {
+      // 범주 라벨은 보조 정보 — 게임 버튼보다 시각 위계를 낮춘다(작게 + 살짝 흐리게)
       this.add.text(SP.xl, y, group.cat, {
-        fontFamily: FONT, fontSize: '34px', color: css(C.primary), fontStyle: 'bold',
-      }).setOrigin(0, 0.5);
+        fontFamily: FONT, fontSize: '28px', color: css(C.primary), fontStyle: 'bold',
+      }).setOrigin(0, 0.5).setAlpha(0.65);
       y += 52;
 
       // 룰렛 라벨은 현재 시간대의 식사로 표기(게임 내 동작과 일치 — 정직한 매핑)
