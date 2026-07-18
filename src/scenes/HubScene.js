@@ -171,6 +171,29 @@ export default class HubScene extends Phaser.Scene {
     install.on('pointerover', () => install.setColor(css(C.primary)));
     install.on('pointerout', () => install.setColor(css(C.subtext)));
     install.on('pointerup', () => this.installShortcut());
+
+    // 정적 페이지 링크(하단 바 위 한 줄) — 소개·게임 안내·개인정보처리방침(신뢰 신호, AdSense 요건)
+    const pages = [['소개', 'about.html'], ['게임 안내', 'guide.html'], ['개인정보처리방침', 'privacy.html']];
+    const parts = [];
+    pages.forEach(([label, href], i) => {
+      if (i) {
+        parts.push(this.add.text(0, by - 52, '·', {
+          fontFamily: FONT, fontSize: '22px', color: css(C.subtext),
+        }).setOrigin(0, 0.5).setAlpha(0.5));
+      }
+      const link = this.add.text(0, by - 52, label, {
+        fontFamily: FONT, fontSize: '22px', color: css(C.subtext),
+      }).setOrigin(0, 0.5).setAlpha(0.8).setInteractive({ useHandCursor: true });
+      link.on('pointerover', () => link.setColor(css(C.primary)));
+      link.on('pointerout', () => link.setColor(css(C.subtext)));
+      link.on('pointerup', () => { location.href = href; }); // 같은 탭 이동 — 브라우저 뒤로가기로 복귀
+      parts.push(link);
+    });
+    // 가운데 정렬: 전체 폭을 잰 뒤 왼쪽부터 배치
+    const gap = 14;
+    const total = parts.reduce((s, p) => s + p.width, 0) + gap * (parts.length - 1);
+    let lx = (width - total) / 2;
+    parts.forEach((p) => { p.setX(lx); lx += p.width + gap; });
   }
 
   async installShortcut() {
