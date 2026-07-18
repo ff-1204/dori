@@ -148,7 +148,8 @@ export default class PinballScene extends MiniGame {
     const ballD = 28 * s; // 공 지름(스케일 반영)
     const rowGap = (860 - 400) / 7;
     for (let row = 0; row < 8; row += 1) {
-      const n = this.rng.between(6, 8);
+      // 행당 핀 개수는 칸 수에 연동 — 칸이 늘면 갈림도 촘촘해진다
+      const n = this.rng.between(this.slots.length, this.slots.length + 2);
       const spacing = (605 - 115) / (n - 1);
       const minGap = ballD + 18 * s + 10; // 공 + 핀 + 여유
       const jitter = Math.floor(Math.min(18, (spacing - minGap) / 2));
