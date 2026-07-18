@@ -245,6 +245,7 @@ export default class PinballScene extends MiniGame {
     this.hitText.setText('');
     this.resultText.setColor(css(C.subtext)).setText('...').setScale(1);
     this.slowmoDone = false;
+    Sfx.play('pop'); // 출발
 
     this.ball = this.physics.add.image(this.dropX, 300, 'ball').setTint(C.text).setScale(this.ballScale());
     this.ball.body.setCircle(BALL_TEX_R); // 소스 픽셀 기준 — 동적 바디는 스케일 자동 반영(월드 r = BALL_R × 크기 스케일)
@@ -339,7 +340,7 @@ export default class PinballScene extends MiniGame {
     this.burst(slotX, 930, color, 36);
     this.colorFlash(color, 190);
     this.shake(0.006, 160);
-    Sfx.play('win');
+    Sfx.play(this.slots[idx] === '꽝' ? 'fail' : 'win'); // Peak를 결과에 맞게(꽝은 하강 개그 톤)
 
     this.resultText.setColor(css(color));
     this.resultText.setText(`${this.slots[idx]} !   (튕김 ×${this.hits})`);

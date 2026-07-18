@@ -153,6 +153,7 @@ export default class PopUpScene extends MiniGame {
     this.eyesNormal.setVisible(false);
     this.eyesX.setVisible(true);
     Sfx.play('bang');
+    this.time.delayedCall(350, () => Sfx.play('win')); // Peak-End: 펑 뒤 당첨 팡파르
     this.burst(this.cx, 452, C.warning, 40);
     this.colorFlash(C.warning, 220);
     this.shake(0.012, 260);
@@ -167,6 +168,7 @@ export default class PopUpScene extends MiniGame {
   }
 
   safe(i) {
+    Sfx.play('pop'); // 안도(마이크로 보상)
     const left = SLOTS - this.doneCount;
     this.hint.setColor(css(C.success));
     this.hint.setText(`세이프! 남은 구멍 ${left} · 트리거 확률 1/${left}`); // 정직한 확률

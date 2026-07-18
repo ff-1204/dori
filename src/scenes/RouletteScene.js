@@ -342,13 +342,20 @@ export default class RouletteScene extends MiniGame {
     const delta = ((targetMod - currentMod + 360) % 360) + 360 * spins;
     const finalAngle = this.wheelAngle + delta;
 
+    Sfx.play('pop'); // 출발
     const proxy = { a: this.wheelAngle };
+    let lastSlice = Math.floor(this.wheelAngle / this.sliceAngle);
     this.tweens.add({
       targets: proxy,
       a: finalAngle,
       duration: 3800,
       ease: EASE.spin,
-      onUpdate: () => { this.wheel.rotation = Phaser.Math.DegToRad(proxy.a); },
+      onUpdate: () => {
+        this.wheel.rotation = Phaser.Math.DegToRad(proxy.a);
+        // 칸 경계 통과마다 틱 — 감속(ease-out)과 함께 간격이 벌어지며 긴장이 자연히 쌓인다
+        const slice = Math.floor(proxy.a / this.sliceAngle);
+        if (slice !== lastSlice) { lastSlice = slice; Sfx.play('tick'); }
+      },
       onComplete: () => {
         this.wheelAngle = finalAngle;
         this.reveal(winner);

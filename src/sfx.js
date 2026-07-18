@@ -60,6 +60,10 @@ const SOUNDS = {
     noise({ dur: 0.3, gain: 0.3 });
     tone({ freq: 150, to: 55, dur: 0.3, type: 'sine', gain: 0.3 });
   },
+  fail: () => {                                                                  // 꽝(하강 개그 톤 — 유쾌하게)
+    tone({ freq: 330, to: 262, dur: 0.16, type: 'triangle', gain: 0.15 });
+    tone({ freq: 262, to: 175, dur: 0.24, type: 'triangle', gain: 0.15, delay: 0.15 });
+  },
 };
 
 export const Sfx = {

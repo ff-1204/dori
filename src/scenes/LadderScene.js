@@ -227,6 +227,8 @@ export default class LadderScene extends MiniGame {
     }
     const proxy = { d: 0 };
     let prev = { ...points[0] };
+    let lastSeg = 0; // 모서리(가로다리) 꺾임마다 틱 — 경로를 소리로 따라간다
+    Sfx.play('pop'); // 출발
     this.tweens.add({
       targets: proxy,
       d: total,
@@ -234,10 +236,12 @@ export default class LadderScene extends MiniGame {
       ease: 'Sine.easeInOut',
       onUpdate: () => {
         let cur = points[points.length - 1];
-        for (const s of segs) {
+        for (let si = 0; si < segs.length; si += 1) {
+          const s = segs[si];
           if (proxy.d <= s.start + s.len) {
             const t = s.len === 0 ? 1 : (proxy.d - s.start) / s.len;
             cur = { x: s.a.x + (s.b.x - s.a.x) * t, y: s.a.y + (s.b.y - s.a.y) * t };
+            if (si !== lastSeg) { lastSeg = si; Sfx.play('tick'); }
             break;
           }
         }

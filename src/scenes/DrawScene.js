@@ -134,9 +134,10 @@ export default class DrawScene extends MiniGame {
     this.drawBtn.disableButton();
     if (this.card) { this.card.destroy(); this.card = null; }
 
-    // 상자 흔들림(기대감 빌드업)
+    // 상자 흔들림(기대감 빌드업) — 덜컹거리는 틱과 함께
     this.tweens.add({
       targets: this.box, angle: { from: -5, to: 5 }, duration: 70, yoyo: true, repeat: 7, ease: 'Sine.easeInOut',
+      onRepeat: () => Sfx.play('tick'),
       onComplete: () => {
         this.box.setAngle(0);
         const idx = this.rng.pick(pool); // 비복원 풀에서 공정 추첨

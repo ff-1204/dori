@@ -125,6 +125,7 @@ export default class CrocoScene extends MiniGame {
       targets: this.upperJaw, y: 170, duration: 130, ease: 'Quad.easeIn',
       onComplete: () => {
         Sfx.play('bang');
+        this.time.delayedCall(350, () => Sfx.play('win')); // Peak-End: 쾅 뒤 당첨 팡파르
         this.burst(t.x, t.y, C.danger, 36);
         this.colorFlash(C.danger, 220);
         this.shake(0.014, 280);
@@ -139,6 +140,7 @@ export default class CrocoScene extends MiniGame {
   }
 
   safe(i) {
+    Sfx.play('pop'); // 안도(마이크로 보상)
     const left = TEETH - this.doneCount;
     this.hint.setColor(css(C.success));
     this.hint.setText(`세이프! 남은 이빨 ${left} · 함정 확률 1/${left}`); // 정직한 확률

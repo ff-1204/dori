@@ -94,6 +94,7 @@ export default class RussianScene extends MiniGame {
 
     const t = this.tryCount; // 이번에 발사되는 약실 인덱스
     // 실린더 회전(긴장 빌드업 — 시도가 쌓일수록 대기 시간이 살짝 길어진다)
+    Sfx.play('pop'); // 회전 시작(출발)
     const suspense = 300 + t * 130;
     this.tweens.add({
       targets: this.cylinder,
@@ -114,6 +115,7 @@ export default class RussianScene extends MiniGame {
       // 빵! — Peak 연출(위험색으로 색상 연결)
       dot.setFillStyle(C.danger);
       Sfx.play('bang');
+      this.time.delayedCall(350, () => Sfx.play('win')); // Peak-End: 빵 뒤 당첨 팡파르
       this.burst(this.cx, this.cy - 175, C.danger, 40);
       this.colorFlash(C.danger, 220);
       this.shake(0.012, 260);
