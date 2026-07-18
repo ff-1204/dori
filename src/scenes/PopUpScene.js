@@ -45,6 +45,11 @@ export default class PopUpScene extends MiniGame {
     // 통(y 480–830)
     const g = this.add.graphics();
     g.fillStyle(BARREL, 1).fillRoundedRect(180, 480, 360, 350, 36);
+    // 나무 판자 결(세로선)
+    g.lineStyle(3, BARREL_DARK, 0.5);
+    g.lineBetween(270, 496, 270, 826);
+    g.lineBetween(360, 492, 360, 828);
+    g.lineBetween(450, 496, 450, 826);
     g.fillStyle(BARREL_DARK, 1);
     g.fillRect(180, 540, 360, 14);
     g.fillRect(180, 700, 360, 14);
@@ -55,6 +60,9 @@ export default class PopUpScene extends MiniGame {
     const p = this.add.graphics();
     p.fillStyle(0xffcf9e, 1).fillCircle(0, 0, 46);            // 얼굴
     p.fillStyle(C.danger, 1).fillEllipse(0, -34, 96, 40);      // 두건
+    p.fillStyle(0xffffff, 0.85);                               // 두건 물방울 무늬
+    p.fillCircle(-24, -36, 5).fillCircle(0, -44, 5).fillCircle(24, -36, 5);
+    p.fillStyle(C.danger, 0.22).fillCircle(-28, 10, 9).fillCircle(28, 10, 9); // 볼터치
     p.lineStyle(4, C.bg, 1).strokeCircle(0, 14, 10);           // 입(놀란 O)
     this.pirate.add(p);
 

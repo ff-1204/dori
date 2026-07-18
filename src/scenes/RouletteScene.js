@@ -301,6 +301,7 @@ export default class RouletteScene extends MiniGame {
       g.fillPath();
     }
     g.lineStyle(6, C.bg, 1).strokeCircle(0, 0, this.radius);
+    g.lineStyle(4, C.surfaceAlt, 1).strokeCircle(0, 0, this.radius + 5); // 외곽 림(질감)
     this.wheel.add(g);
 
     this.items.forEach((name, i) => {
@@ -330,6 +331,8 @@ export default class RouletteScene extends MiniGame {
 
     const hub = this.add.circle(0, 0, 40, C.surface).setStrokeStyle(6, C.bg);
     this.wheel.add(hub);
+    const hubCap = this.add.circle(-9, -11, 13, 0xffffff, 0.10); // 허브 캡 광택
+    this.wheel.add(hubCap);
   }
 
   // 참고: 제외 목록 초기화는 호출자가 결정 — 모드 전환은 setupItems가 모드별로 복원하고,

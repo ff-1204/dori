@@ -475,10 +475,15 @@ export default class TeamScene extends MiniGame {
       fontFamily: FONT, fontSize: '40px', color: css(C.text), fontStyle: 'bold',
     }).setOrigin(0.5));
 
-    this.editorNote = this.add.text(width / 2, py + 100, '탭: 참여 → 👑 조장 → 쉬기 · ✕로 삭제', {
+    this.editorNote = this.add.text(width / 2, py + 96, '탭: 참여 → 👑 조장 → 쉬기 · ✕로 삭제', {
       fontFamily: FONT, fontSize: '24px', color: css(C.subtext),
     }).setOrigin(0.5);
     this.editor.add(this.editorNote);
+
+    // 규칙 공개: 참여 인원 < 조 수면 배정 불가(조 수가 자동으로 줄어든다)
+    this.editor.add(this.add.text(width / 2, py + 128, `참여 인원은 조 수(${this.groups}개) 이상이어야 배정할 수 있어요`, {
+      fontFamily: FONT, fontSize: '22px', color: css(C.warning),
+    }).setOrigin(0.5).setAlpha(0.9));
 
     this.chipsBox = this.add.container(0, 0);
     this.editor.add(this.chipsBox);

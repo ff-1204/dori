@@ -105,6 +105,12 @@ export default class DancheongScene extends MiniGame {
     const g = this.add.graphics();
     g.fillStyle(0x000000, 0.25).fillRoundedRect(-size / 2 + 4, -size / 2 + 10, size, size, 24); // 그림자
     g.fillStyle(color, 1).fillRoundedRect(-size / 2, -size / 2, size, size, 24);
+    // 내부 프레임 + 모서리 점(단청 문양 힌트 — 색패다운 마감)
+    g.lineStyle(3, C.bg, 0.28).strokeRoundedRect(-size / 2 + 12, -size / 2 + 12, size - 24, size - 24, 16);
+    g.fillStyle(C.bg, 0.28);
+    [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sy]) => {
+      g.fillCircle(sx * (size / 2 - 26), sy * (size / 2 - 26), 4);
+    });
     con.add(g);
     con.add(this.add.text(0, 0, glyph, {
       fontFamily: FONT, fontSize: '96px', color: css(C.bg), fontStyle: 'bold',

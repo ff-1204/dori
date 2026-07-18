@@ -46,16 +46,22 @@ export default class CrocoScene extends MiniGame {
     const lower = this.add.graphics();
     lower.fillStyle(CROC, 1).fillRoundedRect(80, 640, 560, 220, 40);
     lower.fillStyle(CROC_DARK, 1).fillRoundedRect(80, 640, 560, 30, { tl: 40, tr: 40, bl: 0, br: 0 });
+    lower.fillStyle(0xffffff, 0.10).fillRoundedRect(140, 760, 440, 64, 24); // 배 밴드(밝은 띠)
 
     // 위턱(내려와서 무는 컨테이너): y 260–450 → 물면 +170
     // 이빨보다 위 레이어(depth) — 닫힐 때 이빨이 입 안으로 자연히 가려진다
     this.upperJaw = this.add.container(0, 0).setDepth(10);
     const upper = this.add.graphics();
+    // 등 융기(정수리 혹) — 실루엣에 악어다움을 더한다
+    upper.fillStyle(CROC, 1).fillCircle(240, 262, 16).fillCircle(360, 256, 18).fillCircle(480, 262, 16);
     upper.fillStyle(CROC, 1).fillRoundedRect(80, 260, 560, 190, 40);
     upper.fillStyle(CROC_DARK, 1).fillRoundedRect(80, 420, 560, 30, { tl: 0, tr: 0, bl: 40, br: 40 });
-    // 눈
+    // 눈 + 광(생기)
     upper.fillStyle(0xffffff, 1).fillCircle(200, 300, 34).fillCircle(520, 300, 34);
     upper.fillStyle(C.bg, 1).fillCircle(200, 306, 14).fillCircle(520, 306, 14);
+    upper.fillStyle(0xffffff, 1).fillCircle(195, 300, 5).fillCircle(515, 300, 5);
+    // 콧구멍
+    upper.fillStyle(CROC_DARK, 1).fillCircle(340, 282, 7).fillCircle(380, 282, 7);
     this.upperJaw.add(upper);
     // (위턱 세모 장식 제거 — 누르는 버튼만으로 이빨을 표현)
 
