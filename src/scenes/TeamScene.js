@@ -495,20 +495,96 @@ export default class TeamScene extends MiniGame {
 
     this.roster.forEach((r, idx) => addChip(r, idx));
 
-    // + 추가 칩
-    const t = this.add.text(0, 0, '+ 추가', {
-      fontFamily: FONT, fontSize: '28px', color: css(C.primary), fontStyle: 'bold',
-    }).setOrigin(0.5);
-    const w = Math.ceil(t.width) + 44;
-    if (x + w > maxX) { x = startX; y += chipH + gap; }
-    const g = this.add.graphics();
-    g.lineStyle(2, C.primary, 1).strokeRoundedRect(0, 0, w, chipH, 14);
-    t.setPosition(w / 2, chipH / 2);
-    const chip = this.add.container(x, y, [g, t]);
-    const hit = this.add.rectangle(w / 2, chipH / 2, w, chipH, 0xffffff, 0).setInteractive({ useHandCursor: true });
-    hit.on('pointerup', () => this.addName());
-    chip.add(hit);
-    this.chipsBox.add(chip);
+    // 컨트롤 칩: 추가 · 명단 복사(내보내기) · 붙여넣기(가져오기)
+    const controls = [
+      { label: '+ 추가', color: C.primary, onTap: () => this.addName() },
+      { label: '📋 명단 복사', color: C.primary, onTap: () => this.copyRoster() },
+      { label: '📥 붙여넣기', color: C.warning, onTap: () => this.pasteRoster() },
+    ];
+    controls.forEach((c) => {
+      const t = this.add.text(0, 0, c.label, {
+        fontFamily: FONT, fontSize: '28px', color: css(c.color), fontStyle: 'bold',
+      }).setOrigin(0.5);
+      const w = Math.ceil(t.width) + 44;
+      if (x + w > maxX) { x = startX; y += chipH + gap; }
+      const g = this.add.graphics();
+      g.lineStyle(2, c.color, 1).strokeRoundedRect(0, 0, w, chipH, 14);
+      t.setPosition(w / 2, chipH / 2);
+      const chip = this.add.container(x, y, [g, t]);
+      const hit = this.add.rectangle(w / 2, chipH / 2, w, chipH, 0xffffff, 0).setInteractive({ useHandCursor: true });
+      hit.on('pointerup', c.onTap);
+      chip.add(hit);
+      this.chipsBox.add(chip);
+      x += w + gap;
+    });
+  }
+
+  // 명단 내보내기 — 그룹(조장/참여/쉼) 제목 아래 이름을 나열하는 순수 텍스트(특수문자 없음)
+  async copyRoster() {
+    if (this.roster.length === 0) { this.flashNote('명단이 비어 있어요'); return; }
+    const names = (s) => this.roster.filter((r) => r.s === s).map((r) => r.n);
+    const sections = [];
+    const leads = names('lead');
+    const ins = names('in');
+    const outs = names('out');
+    if (leads.length) sections.push(`조장\n${leads.join('\n')}`);
+    if (ins.length) sections.push(`참여\n${ins.join('\n')}`);
+    if (outs.length) sections.push(`쉼\n${outs.join('\n')}`);
+    try {
+      await navigator.clipboard.writeText(sections.join('\n\n'));
+      this.flashNote('명단이 복사됐어요 — 메모장 등에 붙여넣어 보관하세요');
+    } catch (e) {
+      this.flashNote('복사 실패 — 다시 시도해 주세요');
+    }
+  }
+
+  // 명단 가져오기 — 여러 줄 입력이 필요해 DOM 텍스트영역 오버레이 사용(prompt는 줄바꿈이 깨짐)
+  pasteRoster() {
+    if (this.pasteOverlay) return;
+    this.pasteOverlay = this.add.dom(this.cx, 620).createFromHTML(
+      '<div style="width:560px;background:#1d1f2b;border:2px solid #2a2f42;border-radius:16px;padding:20px;font-family:sans-serif;">'
+      + '<div style="color:#f2f3f7;font-size:24px;font-weight:bold;text-align:center;margin-bottom:12px;">명단 붙여넣기</div>'
+      + '<div style="color:#8b90a8;font-size:18px;text-align:center;margin-bottom:10px;">조장 · 참여 · 쉼 제목 아래에 이름을 한 줄씩 (제목 없으면 전원 참여)</div>'
+      + '<textarea id="dori-paste" rows="9" style="width:100%;box-sizing:border-box;font-size:22px;padding:12px;'
+      + 'border-radius:12px;border:2px solid #2a2f42;background:#12131c;color:#f2f3f7;outline:none;resize:none;"></textarea>'
+      + '<div style="display:flex;gap:12px;margin-top:14px;">'
+      + '<button id="dori-paste-ok" style="flex:1;padding:14px;font-size:22px;font-weight:bold;border:none;border-radius:12px;background:#6cc7ff;color:#12131c;">불러오기</button>'
+      + '<button id="dori-paste-cancel" style="flex:1;padding:14px;font-size:22px;border:none;border-radius:12px;background:#2a2f42;color:#f2f3f7;">취소</button>'
+      + '</div></div>',
+    ).setDepth(300);
+    const node = this.pasteOverlay.node;
+    node.querySelector('#dori-paste-ok').addEventListener('click', () => {
+      const text = node.querySelector('#dori-paste').value;
+      this.closePaste();
+      this.importRoster(text);
+    });
+    node.querySelector('#dori-paste-cancel').addEventListener('click', () => this.closePaste());
+    node.querySelector('#dori-paste').focus();
+  }
+
+  closePaste() {
+    if (this.pasteOverlay) { this.pasteOverlay.destroy(); this.pasteOverlay = null; }
+  }
+
+  // 파싱: '조장'·'참여'·'쉼' 단어가 나오면 그 아래 이름들이 해당 그룹(제목 전까지) — 표식 문자 불필요
+  importRoster(text) {
+    const HEADERS = { 조장: 'lead', 참여: 'in', 쉼: 'out' };
+    const tokens = String(text).split(/[\s,·]+/).map((t) => t.trim()).filter(Boolean);
+    const parsed = [];
+    let mode = 'in';
+    let skipped = 0;
+    tokens.forEach((tok) => {
+      if (HEADERS[tok]) { mode = HEADERS[tok]; return; }
+      const valid = tok.length <= NAME_MAX && !parsed.some((p) => p.n === tok) && parsed.length < ROSTER_MAX;
+      if (valid) parsed.push({ n: tok, s: mode });
+      else skipped += 1;
+    });
+    if (parsed.length === 0) { this.flashNote('가져올 이름이 없어요'); return; }
+    this.roster = parsed;
+    saveRoster(this.roster);
+    this.renderChips();
+    this.flashNote(`${parsed.length}명을 불러왔어요${skipped ? ` · ${skipped}건 제외(중복·4자 초과)` : ''}`);
+    Sfx.play('pop');
   }
 
   cycleState(idx) {
@@ -547,6 +623,7 @@ export default class TeamScene extends MiniGame {
   }
 
   closeEditor() {
+    this.closePaste();
     if (this.editor) { this.editor.destroy(); this.editor = null; }
     // 명단 변경을 화면에 반영: 조 수 상한 재검토 + 라벨·패널 갱신
     const maxByPeople = this.useRoster() ? this.activePeople().length : this.count;
