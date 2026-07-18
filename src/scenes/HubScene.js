@@ -150,12 +150,20 @@ export default class HubScene extends Phaser.Scene {
     });
 
     // 제작자 크레딧 → GitHub (자연스러운 외부 링크)
-    const credit = this.add.text(width / 2, by, 'made by ff-1204  ↗', {
+    const credit = this.add.text(width / 2 - 28, by, 'made by ff-1204  ↗', {
       fontFamily: FONT, fontSize: '26px', color: css(C.subtext),
     }).setOrigin(0.5).setInteractive({ useHandCursor: true });
     credit.on('pointerover', () => credit.setColor(css(C.primary)));
     credit.on('pointerout', () => credit.setColor(css(C.subtext)));
     credit.on('pointerup', () => window.open('https://github.com/ff-1204', '_blank'));
+
+    // ⭐ 저장소 바로가기 — 크레딧 옆, 스타 누르러 가는 문
+    const star = this.add.text(credit.x + credit.width / 2 + 34, by, '⭐', {
+      fontSize: '28px',
+    }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+    star.on('pointerover', () => star.setScale(1.15));
+    star.on('pointerout', () => star.setScale(1));
+    star.on('pointerup', () => window.open('https://github.com/ff-1204/dori', '_blank'));
 
     // 바로가기(PWA 설치) — 지원 브라우저는 즉시 설치, 아니면 방법 안내
     const install = this.add.text(width - SP.md, by, '📲 바로가기', {
