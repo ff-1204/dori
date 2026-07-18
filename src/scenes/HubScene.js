@@ -18,6 +18,7 @@ const GAMES = [
       { key: 'Roulette', name: '메뉴 룰렛', ready: true }, // 라벨·이모지는 시간대에 맞춰 동적 표기
       { key: 'Ladder', name: '🪜 사다리타기', ready: true },
       { key: 'Pinball', name: '🎯 랜덤 핀볼', ready: true },
+      { key: 'Team', name: '👥 조 배정', ready: true },
     ],
   },
   {

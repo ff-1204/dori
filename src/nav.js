@@ -3,7 +3,7 @@
 // '사이트 이탈'이 아니라 '허브로 복귀'가 되게 한다(허브에서는 평소처럼 나감).
 // 부가로 해시 딥링크(#roulette 등)로 특정 게임에 바로 진입할 수 있다.
 
-const GAME_KEYS = ['Roulette', 'Ladder', 'Pinball', 'Draw', 'Lotto', 'Russian', 'Croco', 'PopUp', 'Dancheong'];
+const GAME_KEYS = ['Roulette', 'Ladder', 'Pinball', 'Team', 'Draw', 'Lotto', 'Russian', 'Croco', 'PopUp', 'Dancheong'];
 
 let phaserGame = null;
 let pendingDeepLink = null;

@@ -45,7 +45,8 @@ dori/
 │       ├── CrocoScene.js     # 악어 이빨(트리거 슬롯)
 │       ├── PopUpScene.js     # 통아저씨(트리거 슬롯 + 발사)
 │       ├── DancheongScene.js # 단청(결정적 해시 오라클, HTML 입력 오버레이)
-│       └── LottoScene.js     # 로또 번호 추첨(정각 잠금·기록, 복사/공유)
+│       ├── LottoScene.js     # 로또 번호 추첨(정각 잠금·기록, 복사/공유)
+│       └── TeamScene.js      # 조 배정(번호 셔플 + N분할 라운드로빈)
 ├── docs/                 # 프로젝트 문서
 ├── CLAUDE.md             # Claude Code 작업 가이드
 ├── LICENSE               # 독점(All Rights Reserved)
