@@ -113,7 +113,7 @@ export default class PinballScene extends MiniGame {
     if (this.pegs) this.pegs.clear(true, true);
     else this.pegs = this.physics.add.staticGroup();
     for (let row = 0; row < 7; row += 1) {
-      const n = this.rng.between(5, 7);
+      const n = this.rng.between(6, 8);
       const spacing = (605 - 115) / (n - 1);
       const jitter = Math.floor(Math.min(18, (spacing - 56) / 2));
       // 가끔 안쪽 핀 하나를 빼서 '구멍'을 만든다(맵마다 성격이 달라짐)
@@ -130,6 +130,17 @@ export default class PinballScene extends MiniGame {
         peg.setScale(0);
         this.tweens.add({ targets: peg, scale: 1, duration: 200, delay: row * 30, ease: 'Back.easeOut' });
       }
+    }
+
+    // 결과 칸 중앙 위 고정 핀(칸당 1개) — 착지 직전 마지막 갈림. 랜덤 없이 항상 같은 위치.
+    const slotW = (RIGHT - LEFT) / SLOT_N;
+    for (let i = 0; i < SLOT_N; i += 1) {
+      const peg = this.pegs.create(LEFT + slotW * (i + 0.5), 860, 'peg');
+      peg.setTint(C.subtext);
+      peg.body.setCircle(9);
+      peg.lastHit = 0;
+      peg.setScale(0);
+      this.tweens.add({ targets: peg, scale: 1, duration: 200, delay: 7 * 30, ease: 'Back.easeOut' });
     }
   }
 
