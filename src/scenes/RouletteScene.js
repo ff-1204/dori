@@ -44,6 +44,25 @@ function saveStr(key, v) {
 
 const keyFor = (mealKey) => `dori.roulette.${mealKey}`;
 
+// 비복원 모드 저장(기기 내 localStorage — 전송 없음): 토글 상태 + 시간대별 제외 목록
+const LS_EXCLUDE = 'dori.roulette.exclude';
+const exKeyFor = (mealKey) => `dori.roulette.excluded.${mealKey}`;
+
+function loadExcluded(mealKey, items) {
+  try {
+    const raw = localStorage.getItem(exKeyFor(mealKey));
+    if (raw) {
+      const a = JSON.parse(raw);
+      if (Array.isArray(a)) return a.filter((n) => items.includes(n)); // 사라진 메뉴는 버림
+    }
+  } catch (e) { /* 무시 */ }
+  return [];
+}
+
+function saveExcluded(mealKey, set) {
+  try { localStorage.setItem(exKeyFor(mealKey), JSON.stringify([...set])); } catch (e) { /* 무시 */ }
+}
+
 function loadItems(mealKey, defaults) {
   try {
     const raw = localStorage.getItem(keyFor(mealKey));
@@ -93,8 +112,8 @@ export default class RouletteScene extends MiniGame {
     this.modeBtn.on('pointerup', () => this.toggleMode());
 
     // 비복원 모드: 나온 항목은 칸이 흐려지고 다음 스핀에서 제외(뽑기 상자와 같은 정직 원칙)
-    this.excludeMode = false;
-    this.excluded = new Set(); // 항목 이름 기준(세션 한정 — 재진입 시 초기화)
+    // 토글·제외 목록은 기기 내 저장(localStorage) — 재진입해도 이어진다(excluded는 setupItems에서 복원)
+    this.excludeMode = loadStr(LS_EXCLUDE, 'off') === 'on';
     this.excludeBtn = this.add.text(32, 200, '', {
       fontFamily: FONT, fontSize: '28px', color: css(C.subtext), fontStyle: 'bold',
     }).setOrigin(0, 0.5).setInteractive({ useHandCursor: true });
@@ -108,6 +127,7 @@ export default class RouletteScene extends MiniGame {
     this.buildWheel();
     this.buildPointer();
     this.updateFryHint(); // 진입 시 카운터가 이미 9면 바로 반짝임
+    this.applyExclusionDims(); // 저장된 제외 칸 흐림 복원
 
     this.resultText = this.add.text(this.cx, 930, this.defaultHint(), {
       fontFamily: FONT, fontSize: '38px', color: css(C.subtext), fontStyle: 'bold', align: 'center',
@@ -130,12 +150,14 @@ export default class RouletteScene extends MiniGame {
     });
   }
 
-  // 모드에 따른 항목 구성(숫자 모드엔 감자튀김 없음)
+  // 모드에 따른 항목 구성(숫자 모드엔 감자튀김 없음) + 제외 목록 복원(메뉴 모드만 저장)
   setupItems() {
     if (this.mode === 'number') {
       this.items = Array.from({ length: this.numberCount }, (_, i) => String(i + 1));
+      this.excluded = new Set(); // 숫자 모드는 세션 한정
     } else {
       this.items = ensureFry(loadItems(this.mealKey, this.meal.defaults));
+      this.excluded = new Set(loadExcluded(this.mealKey, this.items));
     }
   }
 
@@ -149,19 +171,28 @@ export default class RouletteScene extends MiniGame {
   toggleExclude() {
     if (this.locked) return;
     this.excludeMode = !this.excludeMode;
-    if (!this.excludeMode) this.cancelExclusions();
+    saveStr(LS_EXCLUDE, this.excludeMode ? 'on' : 'off');
+    if (!this.excludeMode) this.cancelExclusions(); // 끄면 목록도 비움(저장 포함)
+    else this.applyExclusionDims(); // 켜면 저장돼 있던 제외 표시 복원
     this.updateExcludeUi();
     Sfx.play('tap');
   }
 
-  // 제외 취소: 흐려진 칸을 전부 되살린다
+  // 제외 취소: 흐려진 칸을 전부 되살린다(저장분도 비움)
   cancelExclusions() {
     if (this.locked) return;
     this.excluded.clear();
+    if (this.mode === 'menu') saveExcluded(this.mealKey, this.excluded);
     (this.dimOverlays || []).forEach((o) => o.destroy());
     this.dimOverlays = [];
     (this.sliceLabels || []).forEach((l) => l.setAlpha(1));
     this.updateExcludeUi();
+  }
+
+  // 저장·복원된 제외 목록을 휠에 반영(칸 흐림)
+  applyExclusionDims() {
+    if (!this.excludeMode) return;
+    this.items.forEach((name, i) => { if (this.excluded.has(name)) this.dimSlice(i); });
   }
 
   updateExcludeUi() {
@@ -299,14 +330,22 @@ export default class RouletteScene extends MiniGame {
     this.wheel.add(hub);
   }
 
+  // 참고: 제외 목록 초기화는 호출자가 결정 — 모드 전환은 setupItems가 모드별로 복원하고,
+  // 메뉴 편집(추가/삭제/기본값)은 clearExclusions()로 명시적으로 비운다(공정성).
   rebuildWheel() {
     if (this.wheel) this.wheel.destroy();
-    this.fryHint = null; // 휠과 함께 파괴됨
+    this.fryHint = null; // 휠과 함께 파괴됨(제외 오버레이도 함께)
     this.wheelAngle = 0;
-    this.excluded.clear(); // 구성이 바뀌면 제외 기록도 초기화(오버레이는 휠과 함께 파괴됨)
     this.buildWheel();
     this.updateFryHint();
+    this.applyExclusionDims();
     this.updateExcludeUi();
+  }
+
+  // 메뉴 구성이 바뀔 때 제외 기록 초기화(뽑기 상자와 같은 공정성 정책)
+  clearExclusions() {
+    this.excluded.clear();
+    if (this.mode === 'menu') saveExcluded(this.mealKey, this.excluded);
   }
 
   // 특정 칸 위에 흰 오버레이(반짝임용) — 휠 컨테이너에 넣어 함께 회전
@@ -461,6 +500,7 @@ export default class RouletteScene extends MiniGame {
     // 비복원: 나온 항목을 제외 목록에 넣고 칸을 흐린다(남은 풀이 항상 보임 — 정직)
     if (this.excludeMode) {
       this.excluded.add(this.items[winner]);
+      if (this.mode === 'menu') saveExcluded(this.mealKey, this.excluded); // 기기 내 저장 — 재진입해도 유지
       this.dimSlice(winner);
       this.updateExcludeUi();
     }
@@ -558,6 +598,7 @@ export default class RouletteScene extends MiniGame {
   resetItems() {
     try { localStorage.removeItem(keyFor(this.mealKey)); } catch (e) { /* 무시 */ }
     this.items = ensureFry([...this.meal.defaults]);
+    this.clearExclusions();
     this.rebuildWheel();
     this.renderChips();
     this.flashNote(`${this.meal.label} 메뉴를 기본값으로 복원했어요`);
@@ -573,9 +614,10 @@ export default class RouletteScene extends MiniGame {
     }
     this.confirmResetAll = false;
     Object.keys(MEALS).forEach((k) => {
-      try { localStorage.removeItem(keyFor(k)); } catch (e) { /* 무시 */ }
+      try { localStorage.removeItem(keyFor(k)); localStorage.removeItem(exKeyFor(k)); } catch (e) { /* 무시 */ }
     });
     this.items = ensureFry([...this.meal.defaults]);
+    this.excluded.clear();
     this.rebuildWheel();
     this.renderChips();
     this.flashNote('아침·점심·저녁·야식 메뉴를 모두 초기화했어요');
@@ -602,6 +644,7 @@ export default class RouletteScene extends MiniGame {
     if (this.items.length <= 2) { this.flashNote('최소 2개는 있어야 해요'); return; }
     this.items = this.items.filter((x) => x !== name);
     saveItems(this.mealKey, this.items);
+    this.clearExclusions();
     this.rebuildWheel();
     this.renderChips();
   }
@@ -616,6 +659,7 @@ export default class RouletteScene extends MiniGame {
     if (this.items.length >= 16) { this.flashNote('최대 16개까지예요'); return; }
     this.items.push(name);
     saveItems(this.mealKey, this.items);
+    this.clearExclusions();
     this.rebuildWheel();
     this.renderChips();
   }

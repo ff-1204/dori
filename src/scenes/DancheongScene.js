@@ -12,6 +12,9 @@ import { Sfx } from '../sfx.js';
 const RED = C.danger;   // 붉
 const BLUE = C.primary; // 청
 
+// 마지막 질문 기억 — 기기 내 localStorage에만 저장(전송 없음), 재진입 시 입력창에 미리 채움
+const LS_QUESTION = 'dori.dancheong.question';
+
 const WINDOW_MS = 4 * 60 * 60 * 1000;
 const KST_OFFSET = 9 * 60 * 60 * 1000;
 
@@ -63,6 +66,12 @@ export default class DancheongScene extends MiniGame {
       + 'border:2px solid #2a2f42;background:#1d1f2b;color:#f2f3f7;outline:none;'
       + 'text-align:center;font-family:sans-serif;">',
     );
+    // 마지막 질문 복원(기기 내 저장분)
+    try {
+      const saved = localStorage.getItem(LS_QUESTION);
+      const el = this.inputEl.node.querySelector('input');
+      if (saved && el) el.value = saved;
+    } catch (e) { /* 무시 */ }
 
     this.buildTiles();
 
@@ -126,6 +135,7 @@ export default class DancheongScene extends MiniGame {
       return;
     }
     this.lock();
+    try { localStorage.setItem(LS_QUESTION, q.trim()); } catch (e) { /* 무시 */ }
     this.askBtn.disableButton();
     this.resultText.setColor(css(C.subtext)).setText('...').setScale(1);
     this.resetTiles(); // 이전 결과는 여기서 해제(버튼 누를 때까지 유지)
