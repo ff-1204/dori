@@ -48,10 +48,13 @@ export default class PinballScene extends MiniGame {
       fontFamily: FONT, fontSize: '26px', color: css(C.subtext), fontStyle: 'bold',
     }).setOrigin(1, 0.5);
 
-    // 오늘의 맵 표기 — 매일 자정(KST)에 새 맵이라는 규칙을 정적으로 안내(카운트다운 없음)
-    this.add.text(32, 200, '🗓 오늘의 맵 · 매일 자정에 새 맵', {
-      fontFamily: FONT, fontSize: '26px', color: css(C.subtext),
-    }).setOrigin(0, 0.5);
+    // 맵 섞기 — 핀 배치와 결과 칸 순서를 다시 굴린다(전부 보이는 상태에서 바뀜 = 정직)
+    this.shuffleBtn = this.add.text(width - 32, 140, '🔀 맵 섞기', {
+      fontFamily: FONT, fontSize: '28px', color: css(C.subtext), fontStyle: 'bold',
+    }).setOrigin(1, 0.5).setInteractive({ useHandCursor: true });
+    this.shuffleBtn.on('pointerover', () => this.shuffleBtn.setColor(css(C.primary)));
+    this.shuffleBtn.on('pointerout', () => this.shuffleBtn.setColor(css(C.subtext)));
+    this.shuffleBtn.on('pointerup', () => this.shuffleMap());
 
     this.physics.world.setBounds(LEFT, 0, RIGHT - LEFT, 1280);
 
@@ -82,29 +85,7 @@ export default class PinballScene extends MiniGame {
     wall.lineBetween(LEFT, 360, LEFT, 1000);
     wall.lineBetween(RIGHT, 360, RIGHT, 1000);
 
-    // 핀 — 오늘의 맵: KST 날짜를 시드로 한 결정적 랜덤 배치(단청과 같은 기법).
-    // 서버 없이 누구나 같은 날 = 같은 맵, KST 자정에 교체. 보드는 낙하 전 전부 보이므로 정직.
-    // 트랩 방지 제약: 핀 중심 x 115–605(벽과 틈 ≥ 36px), 행 내 중심 간격 ≥ 56px(공 지름 28 + 여유).
-    const day = Math.floor((Date.now() + 9 * 3600 * 1000) / 86400000);
-    const mapRng = new Phaser.Math.RandomDataGenerator([`dori-pinball-${day}`]);
-
-    this.pegs = this.physics.add.staticGroup();
-    for (let row = 0; row < 7; row += 1) {
-      const n = mapRng.between(5, 7);
-      const spacing = (605 - 115) / (n - 1);
-      const jitter = Math.floor(Math.min(18, (spacing - 56) / 2));
-      // 가끔 안쪽 핀 하나를 빼서 '구멍'을 만든다(맵마다 성격이 달라짐)
-      const skipIdx = n >= 6 && mapRng.frac() < 0.35 ? mapRng.between(1, n - 2) : -1;
-      for (let i = 0; i < n; i += 1) {
-        if (i === skipIdx) continue;
-        const x = Phaser.Math.Clamp(115 + i * spacing + mapRng.between(-jitter, jitter), 115, 605);
-        const y = 400 + row * 70 + mapRng.between(-12, 12);
-        const peg = this.pegs.create(x, y, 'peg');
-        peg.setTint(C.subtext);
-        peg.body.setCircle(9);
-        peg.lastHit = 0;
-      }
-    }
+    this.buildPegs();
 
     // 슬롯(색상 연결: 칸 색 = 결과 색)
     this.slotRects = [];
@@ -124,6 +105,46 @@ export default class PinballScene extends MiniGame {
       this.slotLabels.push(label);
       if (i > 0) div.lineBetween(LEFT + slotW * i, 895, LEFT + slotW * i, 995);
     }
+  }
+
+  // 핀 랜덤 배치 — 보드는 낙하 전 전부 보이므로 정직.
+  // 트랩 방지 제약: 핀 중심 x 115–605(벽과 틈 ≥ 36px), 행 내 중심 간격 ≥ 56px(공 지름 28 + 여유).
+  buildPegs() {
+    if (this.pegs) this.pegs.clear(true, true);
+    else this.pegs = this.physics.add.staticGroup();
+    for (let row = 0; row < 7; row += 1) {
+      const n = this.rng.between(5, 7);
+      const spacing = (605 - 115) / (n - 1);
+      const jitter = Math.floor(Math.min(18, (spacing - 56) / 2));
+      // 가끔 안쪽 핀 하나를 빼서 '구멍'을 만든다(맵마다 성격이 달라짐)
+      const skipIdx = n >= 6 && this.rng.frac() < 0.35 ? this.rng.between(1, n - 2) : -1;
+      for (let i = 0; i < n; i += 1) {
+        if (i === skipIdx) continue;
+        const x = Phaser.Math.Clamp(115 + i * spacing + this.rng.between(-jitter, jitter), 115, 605);
+        const y = 400 + row * 70 + this.rng.between(-12, 12);
+        const peg = this.pegs.create(x, y, 'peg');
+        peg.setTint(C.subtext);
+        peg.body.setCircle(9);
+        peg.lastHit = 0;
+        // 새 핀이 통통 나타나는 피드백(섞였음이 눈에 보이게)
+        peg.setScale(0);
+        this.tweens.add({ targets: peg, scale: 1, duration: 200, delay: row * 30, ease: 'Back.easeOut' });
+      }
+    }
+  }
+
+  // 맵 섞기: 핀 배치 재생성 + 결과 칸 순서 셔플(화면 표시만 — 저장 안 함, 재진입 시 저장분 복원)
+  shuffleMap() {
+    if (this.locked) return;
+    for (let i = this.slots.length - 1; i > 0; i -= 1) {
+      const j = this.rng.between(0, i);
+      [this.slots[i], this.slots[j]] = [this.slots[j], this.slots[i]];
+    }
+    this.refreshSlotLabels();
+    this.buildPegs();
+    this.resultText.setColor(css(C.subtext)).setText('위쪽을 끌어 위치를 정하고 떨어뜨리세요').setScale(1);
+    this.dropBtn.setLabel('떨어뜨리기');
+    Sfx.play('pop');
   }
 
   buildDropControl() {
