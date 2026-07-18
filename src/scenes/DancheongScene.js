@@ -61,17 +61,25 @@ export default class DancheongScene extends MiniGame {
 
     // 질문 입력창(HTML 오버레이 — 한글 IME 대응)
     this.inputEl = this.add.dom(this.cx, 290).createFromHTML(
-      '<input type="text" maxlength="24" placeholder="무엇이 궁금한가요?" '
+      '<input type="text" maxlength="24" enterkeyhint="go" placeholder="무엇이 궁금한가요?" '
       + 'style="width:480px;padding:18px 24px;font-size:28px;border-radius:16px;'
       + 'border:2px solid #2a2f42;background:#1d1f2b;color:#f2f3f7;outline:none;'
       + 'text-align:center;font-family:sans-serif;">',
     );
+    this.inputNode = this.inputEl.node.querySelector('input');
     // 마지막 질문 복원(기기 내 저장분)
     try {
       const saved = localStorage.getItem(LS_QUESTION);
-      const el = this.inputEl.node.querySelector('input');
-      if (saved && el) el.value = saved;
+      if (saved && this.inputNode) this.inputNode.value = saved;
     } catch (e) { /* 무시 */ }
+    // 모바일 자판 제어 — Phaser가 캔버스 터치에 preventDefault를 걸어 기본 blur가 막히므로 직접 처리:
+    // 입력창 밖(캔버스) 탭이면 자판을 내리고, Enter(모바일 '완료/이동')는 바로 묻기로 잇는다
+    if (this.inputNode) {
+      this.inputNode.addEventListener('keydown', (ev) => {
+        if (ev.key === 'Enter') { ev.preventDefault(); this.ask(); }
+      });
+      this.input.on('pointerdown', () => this.inputNode.blur());
+    }
 
     this.buildTiles();
 
@@ -129,8 +137,7 @@ export default class DancheongScene extends MiniGame {
   }
 
   getQuestion() {
-    const el = this.inputEl && this.inputEl.node && this.inputEl.node.querySelector('input');
-    return el ? el.value : '';
+    return this.inputNode ? this.inputNode.value : '';
   }
 
   ask() {
@@ -141,6 +148,7 @@ export default class DancheongScene extends MiniGame {
       return;
     }
     this.lock();
+    if (this.inputNode) this.inputNode.blur(); // 자판 내리기 — 답 공개 연출이 전체 화면에서 보이게
     try { localStorage.setItem(LS_QUESTION, q.trim()); } catch (e) { /* 무시 */ }
     this.askBtn.disableButton();
     this.resultText.setColor(css(C.subtext)).setText('...').setScale(1);
