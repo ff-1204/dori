@@ -71,7 +71,7 @@ dori를 광고 수익화까지 끌고 가는 **단계별 실행 문서**. 규칙
 3. DNS 전파 후 **Enforce HTTPS** 체크(Let's Encrypt 자동 발급)
 4. 계정 Settings → Pages에서 **TXT 레코드 도메인 검증**(도메인 탈취 방지 — 권장)
 - **남는 리스크**: GitHub Pages 약관의 상업 운영 제한은 회색지대로 유지 — 수익이 유의미해지면 옵션 B로 이전
-- 담당: 사용자(설정·DNS) + Claude(검증·코드 정합) | 상태 ✅ 2026-07-18 — DNS(A 4개) 반영·https 200·http→https 301·github.io→새 도메인 301 전부 확인. **잔여(권장)**: 계정 Settings → Pages에서 TXT 도메인 검증
+- 담당: 사용자(설정·DNS) + Claude(검증·코드 정합) | 상태 ✅ 2026-07-18 — DNS(A 4개) 반영·https 200·http→https 301·github.io→새 도메인 301·**TXT 도메인 검증 통과**까지 전부 완료
 
 ### 옵션 B: Cloudflare Pages 이전 (무료 — 수익화 본격화 시)
 
@@ -102,16 +102,16 @@ dori를 광고 수익화까지 끌고 가는 **단계별 실행 문서**. 규칙
 
 - [x] **개인정보처리방침 페이지**(`privacy.html`) 작성 — 수집 0 현황·localStorage 목록·호스팅 접속 기록·광고 도입 예정 고지·이용자 권리·연락처, 영문 요약 포함. 초안 완료(2026-07-18) — **사용자 검토 대기**(특히 공개 이메일 주소)
 - [x] **심사용 정적 페이지 세트** — `about.html`(소개·원칙·운영자·이용 안내) + `guide.html`(게임 10종 방법·규칙·활용 예) 작성, index.html noscript 링크 + sitemap.xml 4개 URL 등록. 초안 완료(2026-07-18)
-- [ ] **CMP(동의 관리)**: EEA·영국 트래픽 대응 — **Google 인증 CMP**(AdSense 내장 Privacy & messaging 권장, 무료) 설정
+- [ ] **CMP(동의 관리)**: EEA·영국 트래픽 대응 — **Google 인증 CMP**(AdSense 내장 Privacy & messaging 권장, 무료) 설정. **⚠ 선행 조건: 6단계 1번(AdSense 계정 생성)** — 콘솔 내 기능이라 계정 없이는 설정 불가. 계정 생성 후 콘솔 → Privacy & messaging → European regulations 메시지 만들기
 - [x] 허브 하단 바 위에 링크 줄 노출(소개 · 게임 안내 · 개인정보처리방침 — HubScene, 2026-07-18)
-- [ ] 아동 대상 여부 판단: 일반 이용자 대상(전연령 콘텐츠)이나 아동 주 타깃 아님 — 필요 시 비맞춤형 광고 설정 검토
+- [x] 아동 대상 여부 판단(2026-07-18 확정): **아동 주 타깃 아님** — 전연령 이용 가능 콘텐츠이나 결정 돕기·내기·회식 등 성인 일상 맥락이 중심이고 아동 유인 요소(캐릭터 IP·아동 톤)가 없음. AdSense 사이트 설정에서 "아동 대상(made for kids)" 미지정, 별도 비맞춤 강제 불필요 — 승인 후 콘솔에서 확인만
 - 담당: Claude(초안·링크) + 사용자(CMP 콘솔 설정) | 상태 ☐
 
 ## 6단계. AdSense 신청·심사
 
-1. [ ] AdSense 계정 생성(만 18세 이상, 본인 명의) → 사이트에 `NEWDOMAIN` 추가
-2. [ ] 소유권 확인 스니펫 삽입(Claude가 index.html에 반영)
-3. [ ] **`ads.txt`** 루트 배치: `google.com, pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0` (Claude)
+1. [x] AdSense 계정 — 기존 계정 사용(1인 1계정 원칙), 사이트에 `dori.io.kr` 추가 완료(2026-07-18)
+2. [x] 소유권 확인 스니펫 삽입 — `index.html`에 adsbygoogle 로더(ca-pub-2755020807980350) 활성 배치(2026-07-18). 게재 배선용 adBreak 셔틀은 주석 유지(7단계)
+3. [x] **`ads.txt`** 루트 배치: `google.com, pub-2755020807980350, DIRECT, f08c47fec0942fa0` (2026-07-18)
 4. [ ] 심사 통과 대기(수일–수주). 탈락 시 사유 보고 콘텐츠 보강 후 재신청
 5. [ ] 승인 후 **H5 Games Ads**(전면·보상형) 사용 신청/확인
 - 담당: 사용자(계정·신청) + Claude(파일 반영) | 상태 ☐

@@ -50,12 +50,15 @@
   }
   </script>
 
-  <!-- ===== 광고 연결 준비: Google H5 Games Ads (전면·보상형) =====
-       승인·동의(CMP)·커스텀 도메인 준비 후 아래 주석을 해제하고 ca-pub-XXXX를 실제 ID로 교체.
-       그리고 src/ads.js의 AdConfig.enabled=true, provider='google-h5'로 전환. (docs/commercial.md)
-  <script async data-ad-frequency-hint="30s"
-    src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX"
+  <!-- AdSense 소유권 확인·심사용 로더 — 승인 전에는 광고가 표시되지 않는다.
+       게재 배선(adBreak·빈도 제한)은 승인 후 7단계에서 활성화. (docs/commercial-plan.md) -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2755020807980350"
     crossorigin="anonymous"></script>
+
+  <!-- ===== 광고 게재 준비: Google H5 Games Ads (전면·보상형) =====
+       로더는 위에서 이미 로드 중. 승인·CMP 완료 후 아래 주석을 해제하고
+       위 로더 태그에 data-ad-frequency-hint="30s"를 추가한 뒤
+       src/ads.js의 AdConfig.enabled=true, provider='google-h5'로 전환. (docs/commercial.md)
   <script>
     window.adsbygoogle = window.adsbygoogle || [];
     window.adBreak = window.adConfig = function (o) { adsbygoogle.push(o); };
