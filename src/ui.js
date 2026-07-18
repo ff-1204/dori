@@ -47,11 +47,17 @@ export function makeButton(scene, opts) {
   return con;
 }
 
-// 좌상단 뒤로가기(안전 영역 24px 안쪽)
+// 좌상단 뒤로가기(안전 영역 24px 안쪽) — 아이콘만(⬅). 글자는 작아도
+// 히트 영역은 88×88(설계 단위)로 확장해 터치 타깃 규칙을 지킨다(responsive §7).
 export function makeBackButton(scene, onBack) {
-  const t = scene.add.text(SP.md, SP.md, '⬅ 메뉴', {
-    fontFamily: FONT, fontSize: '34px', color: css(C.subtext),
-  }).setOrigin(0, 0).setInteractive({ useHandCursor: true });
+  const t = scene.add.text(SP.md, SP.md, '⬅', {
+    fontFamily: FONT, fontSize: '40px', color: css(C.subtext),
+  }).setOrigin(0, 0);
+  t.setInteractive({
+    hitArea: new Phaser.Geom.Rectangle(-22, -16, 88, 88),
+    hitAreaCallback: Phaser.Geom.Rectangle.Contains,
+    useHandCursor: true,
+  });
   t.on('pointerover', () => t.setColor(css(C.text)));
   t.on('pointerout', () => t.setColor(css(C.subtext)));
   t.on('pointerup', () => onBack());
