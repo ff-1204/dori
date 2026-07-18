@@ -14,6 +14,10 @@ const SLOT_MAX = 10;
 const LEFT = 70;
 const RIGHT = 650;
 const BASE_SLOT_W = (RIGHT - LEFT) / 6; // 기준 칸 폭(6칸) — 공·핀 크기 스케일의 기준
+const BALL_R = 12;     // 공 반지름(기준) — 핀보다 작게
+const PEG_R = 16;      // 핀 반지름(기준) — 공보다 크게
+const BALL_TEX_R = 14; // 'ball' 텍스처 원본 반지름(28px)
+const PEG_TEX_R = 9;   // 'peg' 텍스처 원본 반지름(18px)
 
 function loadSlots() {
   try {
@@ -97,6 +101,11 @@ export default class PinballScene extends MiniGame {
     return Phaser.Math.Clamp(slotW / BASE_SLOT_W, 0.6, 1);
   }
 
+  // 공 스프라이트 스케일(텍스처 r14 → 기준 r12에 크기 스케일 적용)
+  ballScale() {
+    return this.sizeScale() * (BALL_R / BALL_TEX_R);
+  }
+
   // 슬롯(색상 연결: 칸 색 = 결과 색) — 칸 수 변경 시 재생성
   buildSlots() {
     if (this.slotBox) this.slotBox.destroy();
@@ -132,27 +141,29 @@ export default class PinballScene extends MiniGame {
     else this.pegs = this.physics.add.staticGroup();
     const s = this.sizeScale();
     // 정적 바디는 스케일을 자동 반영하지 않는다 — 스케일 적용 후 refreshBody, 원은 월드 픽셀로 지정
+    const pegScale = s * (PEG_R / PEG_TEX_R); // 텍스처 r9 → 기준 r16
     const makePeg = (x, y, delay) => {
       const peg = this.pegs.create(x, y, 'peg');
       peg.setTint(C.subtext);
-      peg.setScale(s).refreshBody();
-      peg.body.setCircle(9 * s);
-      peg.baseScale = s; // 히트 연출 복원용
+      peg.setScale(pegScale).refreshBody();
+      peg.body.setCircle(PEG_R * s);
+      peg.baseScale = pegScale; // 히트 연출 복원용
       peg.lastHit = 0;
       // 새 핀이 통통 나타나는 피드백(섞였음이 눈에 보이게) — 표시만 커지고 바디는 그대로
       peg.setScale(0);
-      this.tweens.add({ targets: peg, scale: s, duration: 200, delay, ease: 'Back.easeOut' });
+      this.tweens.add({ targets: peg, scale: pegScale, duration: 200, delay, ease: 'Back.easeOut' });
     };
 
     // 랜덤 8행: y 400–860(마지막 행이 결정칸 바로 위) — 모든 행 동일한 랜덤 규칙·크기
-    const ballD = 28 * s; // 공 지름(스케일 반영)
+    const ballD = 2 * BALL_R * s; // 공 지름(스케일 반영)
+    const minGap = ballD + 2 * PEG_R * s + 10; // 핀 중심 간격 하한: 공 + 핀 + 여유 → 핀 사이 틈 ≥ 공 지름 + 10
     const rowGap = (860 - 400) / 7;
     for (let row = 0; row < 8; row += 1) {
-      // 행당 핀 개수는 칸 수에 연동 — 칸이 늘면 갈림도 촘촘해진다
-      const n = this.rng.between(this.slots.length, this.slots.length + 2);
+      // 행당 핀 개수는 칸 수에 연동 — 칸이 늘면 갈림도 촘촘해진다(간격 하한이 허용하는 개수로 캡)
+      const nMax = Math.floor((605 - 115) / minGap) + 1;
+      const n = Math.max(2, Math.min(this.rng.between(this.slots.length, this.slots.length + 2), nMax));
       const spacing = (605 - 115) / (n - 1);
-      const minGap = ballD + 18 * s + 10; // 공 + 핀 + 여유
-      const jitter = Math.floor(Math.min(18, (spacing - minGap) / 2));
+      const jitter = Math.max(0, Math.floor(Math.min(18, (spacing - minGap) / 2)));
       // 가끔 안쪽 핀 하나를 빼서 '구멍'을 만든다(맵마다 성격이 달라짐)
       const skipIdx = n >= 6 && this.rng.frac() < 0.35 ? this.rng.between(1, n - 2) : -1;
       for (let i = 0; i < n; i += 1) {
@@ -180,7 +191,7 @@ export default class PinballScene extends MiniGame {
 
   buildDropControl() {
     // 고스트 공 + 화살표(주도성: 여기서 떨어진다는 정직한 시그니파이어)
-    this.ghost = this.add.image(this.dropX, 300, 'ball').setTint(C.primary).setAlpha(0.55).setScale(this.sizeScale());
+    this.ghost = this.add.image(this.dropX, 300, 'ball').setTint(C.primary).setAlpha(0.55).setScale(this.ballScale());
     this.arrow = this.add.graphics();
     this.drawArrow();
 
@@ -232,8 +243,8 @@ export default class PinballScene extends MiniGame {
     this.resultText.setColor(css(C.subtext)).setText('...').setScale(1);
     this.slowmoDone = false;
 
-    this.ball = this.physics.add.image(this.dropX, 300, 'ball').setTint(C.text).setScale(this.sizeScale());
-    this.ball.body.setCircle(14); // 소스 픽셀 기준 — 동적 바디는 스케일 자동 반영
+    this.ball = this.physics.add.image(this.dropX, 300, 'ball').setTint(C.text).setScale(this.ballScale());
+    this.ball.body.setCircle(BALL_TEX_R); // 소스 픽셀 기준 — 동적 바디는 스케일 자동 반영(월드 r = BALL_R × 크기 스케일)
     this.ball.setBounce(0.55);
     this.ball.setCollideWorldBounds(true);
     this.ball.body.setGravityY(1500);
@@ -313,7 +324,7 @@ export default class PinballScene extends MiniGame {
     this.ball = null;
     ball.disableBody(true, false);
     this.tweens.add({
-      targets: ball, x: slotX, y: 945, scale: this.sizeScale() * 0.8, duration: 160, ease: 'Quad.easeIn',
+      targets: ball, x: slotX, y: 945, scale: this.ballScale() * 0.8, duration: 160, ease: 'Quad.easeIn',
       onComplete: () => {
         this.tweens.add({ targets: ball, alpha: 0, duration: 350, delay: 500, onComplete: () => ball.destroy() });
       },
@@ -426,7 +437,7 @@ export default class PinballScene extends MiniGame {
     saveSlots(this.slots);
     this.buildSlots();
     this.buildPegs();
-    this.ghost.setScale(this.sizeScale());
+    this.ghost.setScale(this.ballScale());
     this.renderChips(this.edRect.px, this.edRect.py, this.edRect.pw);
   }
 
@@ -447,7 +458,7 @@ export default class PinballScene extends MiniGame {
     this.slots = [...DEFAULT_SLOTS];
     this.buildSlots();
     this.buildPegs();
-    this.ghost.setScale(this.sizeScale());
+    this.ghost.setScale(this.ballScale());
     this.renderChips(this.edRect.px, this.edRect.py, this.edRect.pw);
   }
 
