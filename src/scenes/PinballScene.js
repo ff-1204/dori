@@ -119,21 +119,36 @@ export default class PinballScene extends MiniGame {
     this.drawArrow();
 
     // 상단 조작 영역: 드래그로 위치 선택, 탭으로 즉시 낙하(빠른 라운드 = 도파민)
+    // 드래그는 씬 전역으로 추적 — 누른 채 영역 밖(아래)으로 끌어도 이어지고, 놓는 순간 낙하한다.
     const zone = this.add.rectangle(this.cx, 290, RIGHT - LEFT, 150, 0xffffff, 0)
       .setInteractive({ useHandCursor: true });
+    const follow = (p) => {
+      this.dropX = Phaser.Math.Clamp(p.x, LEFT + 24, RIGHT - 24);
+      this.ghost.x = this.dropX;
+      this.drawArrow();
+    };
+    zone.on('pointerdown', (p) => {
+      if (this.locked) return;
+      this.dragging = true;
+      follow(p);
+    });
     zone.on('pointermove', (p) => {
-      if (this.locked) return;
-      this.dropX = Phaser.Math.Clamp(p.x, LEFT + 24, RIGHT - 24);
-      this.ghost.x = this.dropX;
-      this.drawArrow();
+      if (this.locked || this.dragging) return;
+      follow(p); // 마우스 hover 미리보기(보조)
     });
-    zone.on('pointerup', (p) => {
+    this.input.on('pointermove', (p) => {
+      if (this.locked || !this.dragging) return;
+      follow(p);
+    });
+    const release = (p) => {
+      if (!this.dragging) return;
+      this.dragging = false;
       if (this.locked) return;
-      this.dropX = Phaser.Math.Clamp(p.x, LEFT + 24, RIGHT - 24);
-      this.ghost.x = this.dropX;
-      this.drawArrow();
+      follow(p);
       this.drop();
-    });
+    };
+    this.input.on('pointerup', release);
+    this.input.on('pointerupoutside', release);
   }
 
   drawArrow() {
