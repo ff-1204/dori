@@ -132,22 +132,22 @@ export default class PinballScene extends MiniGame {
     else this.pegs = this.physics.add.staticGroup();
     const s = this.sizeScale();
     // 정적 바디는 스케일을 자동 반영하지 않는다 — 스케일 적용 후 refreshBody, 원은 월드 픽셀로 지정
-    // r: 핀 반지름(기준 9, 마지막 행 작은 핀은 5)
-    const makePeg = (x, y, delay, r = 9) => {
-      const sv = s * (r / 9); // 텍스처 기준 반지름 9 → 원하는 반지름으로 축소
+    const makePeg = (x, y, delay) => {
       const peg = this.pegs.create(x, y, 'peg');
       peg.setTint(C.subtext);
-      peg.setScale(sv).refreshBody();
-      peg.body.setCircle(r * s);
-      peg.baseScale = sv; // 히트 연출 복원용(핀마다 크기가 다름)
+      peg.setScale(s).refreshBody();
+      peg.body.setCircle(9 * s);
+      peg.baseScale = s; // 히트 연출 복원용
       peg.lastHit = 0;
       // 새 핀이 통통 나타나는 피드백(섞였음이 눈에 보이게) — 표시만 커지고 바디는 그대로
       peg.setScale(0);
-      this.tweens.add({ targets: peg, scale: sv, duration: 200, delay, ease: 'Back.easeOut' });
+      this.tweens.add({ targets: peg, scale: s, duration: 200, delay, ease: 'Back.easeOut' });
     };
 
+    // 랜덤 8행: y 400–860(마지막 행이 결정칸 바로 위) — 모든 행 동일한 랜덤 규칙·크기
     const ballD = 28 * s; // 공 지름(스케일 반영)
-    for (let row = 0; row < 6; row += 1) {
+    const rowGap = (860 - 400) / 7;
+    for (let row = 0; row < 8; row += 1) {
       const n = this.rng.between(6, 8);
       const spacing = (605 - 115) / (n - 1);
       const minGap = ballD + 18 * s + 10; // 공 + 핀 + 여유
@@ -157,17 +157,9 @@ export default class PinballScene extends MiniGame {
       for (let i = 0; i < n; i += 1) {
         if (i === skipIdx) continue;
         const x = Phaser.Math.Clamp(115 + i * spacing + this.rng.between(-jitter, jitter), 115, 605);
-        const y = 400 + row * 70 + this.rng.between(-12, 12);
+        const y = 400 + row * rowGap + this.rng.between(-12, 12);
         makePeg(x, y, row * 30);
       }
-    }
-
-    // 마지막 행(랜덤 행 하나를 대체): 결정칸 중앙 + 칸 사이 경계에 '작은 핀'(r5) —
-    // 착지 직전 촘촘한 마지막 갈림. 랜덤 없이 항상 같은 위치.
-    const slotW = (RIGHT - LEFT) / this.slots.length;
-    const finalN = this.slots.length * 2 - 1; // 중앙 n개 + 경계 n−1개
-    for (let i = 0; i < finalN; i += 1) {
-      makePeg(LEFT + slotW * (i + 1) / 2, 860, 6 * 30, 5);
     }
   }
 
