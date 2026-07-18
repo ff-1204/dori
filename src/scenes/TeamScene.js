@@ -519,20 +519,21 @@ export default class TeamScene extends MiniGame {
     });
   }
 
-  // 명단 내보내기 — 그룹(조장/참여/쉼) 제목 아래 이름을 나열하는 순수 텍스트(특수문자 없음)
+  // 명단 내보내기 — 그룹(조장/참여/쉼) 제목 아래 이름을 나열하는 순수 텍스트(특수문자 없음).
+  // 비어 있는 그룹도 제목은 항상 포함 — 명단이 없어도 채워 쓸 수 있는 양식이 복사된다.
   async copyRoster() {
-    if (this.roster.length === 0) { this.flashNote('명단이 비어 있어요'); return; }
     const names = (s) => this.roster.filter((r) => r.s === s).map((r) => r.n);
-    const sections = [];
-    const leads = names('lead');
-    const ins = names('in');
-    const outs = names('out');
-    if (leads.length) sections.push(`조장\n${leads.join('\n')}`);
-    if (ins.length) sections.push(`참여\n${ins.join('\n')}`);
-    if (outs.length) sections.push(`쉼\n${outs.join('\n')}`);
+    const section = (title, list) => (list.length ? `${title}\n${list.join('\n')}` : title);
+    const text = [
+      section('조장', names('lead')),
+      section('참여', names('in')),
+      section('쉼', names('out')),
+    ].join('\n\n');
     try {
-      await navigator.clipboard.writeText(sections.join('\n\n'));
-      this.flashNote('명단이 복사됐어요 — 메모장 등에 붙여넣어 보관하세요');
+      await navigator.clipboard.writeText(text);
+      this.flashNote(this.roster.length
+        ? '명단이 복사됐어요 — 메모장 등에 붙여넣어 보관하세요'
+        : '빈 명단 양식이 복사됐어요 — 채워서 붙여넣기 하세요');
     } catch (e) {
       this.flashNote('복사 실패 — 다시 시도해 주세요');
     }
