@@ -53,7 +53,8 @@ function loadExcluded(mealKey, items) {
     const raw = localStorage.getItem(exKeyFor(mealKey));
     if (raw) {
       const a = JSON.parse(raw);
-      if (Array.isArray(a)) return a.filter((n) => items.includes(n)); // 사라진 메뉴는 버림
+      // 사라진 메뉴는 버림 + 🍟 감자튀김은 제외 불가(영원해요)
+      if (Array.isArray(a)) return a.filter((n) => items.includes(n) && n !== FRY);
     }
   } catch (e) { /* 무시 */ }
   return [];
@@ -492,13 +493,13 @@ export default class RouletteScene extends MiniGame {
     }
     Sfx.play('win');
 
-    this.spinBtn.enableButton();
-    this.spinBtn.setLabel('다시 돌리기');
+    this.spinBtn.enableButton(); // 라벨은 항상 '돌리기' 유지
     this.unlock();
     this.updateFryHint(); // 보증 카운터 9면 반짝임 시작, 감자튀김이 나왔으면 해제
 
     // 비복원: 나온 항목을 제외 목록에 넣고 칸을 흐린다(남은 풀이 항상 보임 — 정직)
-    if (this.excludeMode) {
+    // 🍟 감자튀김은 제외되지 않는다 — "감자튀김은 영원해요"(삭제 불가와 같은 규칙)
+    if (this.excludeMode && !(this.mode === 'menu' && this.items[winner] === FRY)) {
       this.excluded.add(this.items[winner]);
       if (this.mode === 'menu') saveExcluded(this.mealKey, this.excluded); // 기기 내 저장 — 재진입해도 유지
       this.dimSlice(winner);
