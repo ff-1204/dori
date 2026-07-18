@@ -4,12 +4,12 @@
 
 export const GUARD_ENABLED = true;
 
-// 허용 호스트. 커스텀 도메인으로 이전하면 여기에 추가한다.
+// 허용 호스트. www 등 서브도메인은 endsWith로 함께 허용된다.
 export const ALLOWED_HOSTS = [
-  'ff-1204.github.io',
+  'dori.io.kr',        // 공식 도메인(2026-07-18 연결)
+  'ff-1204.github.io', // 전환기 병행(GitHub이 커스텀 도메인으로 리다이렉트)
   'localhost',
   '127.0.0.1',
-  // 'yourdomain.com',
 ];
 
 export function isAllowedHost(host) {
@@ -32,7 +32,7 @@ export function enforceHostLock() {
     '<h1 style="font-size:28px;margin:0 0 12px">dori</h1>'
     + '<p style="color:#8b90a8;font-size:16px;line-height:1.7;margin:0">'
     + '공식 사이트에서만 플레이할 수 있습니다.<br>Play the official version at<br>'
-    + '<a style="color:#6cc7ff" href="https://ff-1204.github.io/dori/">ff-1204.github.io/dori</a>'
+    + '<a style="color:#6cc7ff" href="https://dori.io.kr/">dori.io.kr</a>'
     + '</p>';
   document.body.appendChild(box);
   return false;

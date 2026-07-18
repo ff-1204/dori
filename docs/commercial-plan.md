@@ -54,7 +54,7 @@ dori를 광고 수익화까지 끌고 가는 **단계별 실행 문서**. 규칙
 - **후보 TLD**: `.com`(1.5–2만원/년, 무난·신뢰) / `.games` `.fun`(2–4만원, 정체성) / `.kr`(2만원 안팎, 국내). 예: `dori.games`, `playdori.com`
 - **등록처**: Cloudflare Registrar(도매가 그대로 — 최저가, 해외카드 필요), 가비아·호스팅케이알(국내 결제 편의)
 - **유의**: 첫해 파격 할인은 **갱신가** 확인. WHOIS 개인정보 보호 옵션(대부분 무료) 켜기. 상표 검색(1단계)과 도메인명 충돌 확인
-- 담당: **사용자**(구매) → 구매 후 도메인명을 알려주면 다음 단계부터 Claude가 이어서 진행 | 상태 ☐
+- 담당: **사용자**(구매) → 구매 후 도메인명을 알려주면 다음 단계부터 Claude가 이어서 진행 | 상태 ✅ 2026-07-18 — **`dori.io.kr` 구매 완료**
 
 ## 3단계. 호스팅 — 옵션 A(최소 비용 시작) 또는 옵션 B(정석)
 
@@ -71,7 +71,7 @@ dori를 광고 수익화까지 끌고 가는 **단계별 실행 문서**. 규칙
 3. DNS 전파 후 **Enforce HTTPS** 체크(Let's Encrypt 자동 발급)
 4. 계정 Settings → Pages에서 **TXT 레코드 도메인 검증**(도메인 탈취 방지 — 권장)
 - **남는 리스크**: GitHub Pages 약관의 상업 운영 제한은 회색지대로 유지 — 수익이 유의미해지면 옵션 B로 이전
-- 담당: 사용자(설정·DNS) + Claude(검증·코드 정합) | 상태 ☐
+- 담당: 사용자(설정·DNS) + Claude(검증·코드 정합) | 상태 🔶 진행 중(2026-07-18) — Pages 커스텀 도메인 설정 완료(CNAME 커밋됨). **남음(사용자)**: 등록처 DNS(A 4개 + www CNAME) 반영 확인 → Enforce HTTPS 켜기 → TXT 도메인 검증
 
 ### 옵션 B: Cloudflare Pages 이전 (무료 — 수익화 본격화 시)
 
@@ -89,14 +89,14 @@ dori를 광고 수익화까지 끌고 가는 **단계별 실행 문서**. 규칙
 
 한 커밋으로 처리할 파일 목록 — 도메인을 `NEWDOMAIN`이라 하면:
 
-- [ ] `src/guard.js` — `ALLOWED_HOSTS`에 `NEWDOMAIN`(+`pages.dev` 프리뷰) 추가
-- [ ] `index.html` — canonical, og:url, og:image 절대주소, JSON-LD url
-- [ ] `src/scenes/HubScene.js` — `SITE_URL`(QR·주소 복사)
-- [ ] `src/scenes/TeamScene.js` — 조 편성 복사의 딥링크 URL
-- [ ] `sitemap.xml` / `robots.txt` — URL 교체
-- [ ] `README.md` / `docs/*` — 플레이 주소 교체
-- [ ] `assets/og.png` — 하단 주소 문구 재생성(스크립트 보유)
-- 담당: **Claude** | 상태 ☐
+- [x] `src/guard.js` — `ALLOWED_HOSTS`에 `dori.io.kr` 추가(www는 endsWith로 포함), 차단 화면 링크 교체. github.io는 전환기 병행 유지(`pages.dev`는 옵션 B 이전 시 추가)
+- [x] `index.html` — canonical, og:url, og:image 절대주소, JSON-LD url
+- [x] `src/scenes/HubScene.js` — `SITE_URL`(QR·주소 복사) + `LottoScene.js` `SITE_URL`(공유 문구 — 계획에 누락돼 있던 것 추가 반영)
+- [x] `src/scenes/TeamScene.js` — 조 편성 복사의 딥링크 URL
+- [x] `sitemap.xml` / `robots.txt` — URL 교체
+- [x] `README.md` / `CLAUDE.md` / `docs/*` — 플레이 주소 교체(CHANGELOG는 릴리스 당시 기록이라 유지)
+- [x] `assets/og.png` — 하단 주소 문구 `dori.io.kr`로 재생성(make-og.ps1)
+- 담당: **Claude** | 상태 ✅ 2026-07-18
 
 ## 5단계. 법적 준비 — 처리방침 + CMP + 심사용 정적 콘텐츠
 

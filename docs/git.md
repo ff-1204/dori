@@ -6,7 +6,7 @@
 
 - 원격: `https://github.com/ff-1204/dori.git`
 - 기본 브랜치: `main`
-- 배포: `main` 브랜치 루트 → GitHub Pages (`https://ff-1204.github.io/dori/`)
+- 배포: `main` 브랜치 루트 → GitHub Pages (`https://dori.io.kr/`)
 
 ## 커밋 메시지 컨벤션
 

@@ -9,7 +9,7 @@ import { Sfx } from '../sfx.js';
 // 시간대별 룰렛 이모지(라벨과 함께 바뀐다)
 const MEAL_EMOJI = { breakfast: '🍳', lunch: '🍚', dinner: '🍗', latenight: '🌙' };
 
-const SITE_URL = 'https://ff-1204.github.io/dori/';
+const SITE_URL = 'https://dori.io.kr/';
 
 const GAMES = [
   {

@@ -75,7 +75,7 @@ npx serve
 
 1. 변경 사항 커밋 ([git.md](./git.md) 컨벤션 준수)
 2. `git push`
-3. 약 20초 후 `https://ff-1204.github.io/dori/` 반영
+3. 약 20초 후 `https://dori.io.kr/` 반영
 
 ## 바로가기 (PWA)
 

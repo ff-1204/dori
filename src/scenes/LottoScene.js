@@ -12,7 +12,7 @@ const LS_KEY = 'dori.lotto';
 const MIN_LINES = 1;
 const MAX_LINES = 5;
 const LINE_LABELS = ['A', 'B', 'C', 'D', 'E'];
-const SITE_URL = 'https://ff-1204.github.io/dori/';
+const SITE_URL = 'https://dori.io.kr/';
 
 const HOUR_MS = 60 * 60 * 1000;
 const hourWindow = (now = Date.now()) => Math.floor(now / HOUR_MS);

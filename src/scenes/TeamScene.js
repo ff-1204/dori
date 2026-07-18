@@ -439,7 +439,7 @@ export default class TeamScene extends MiniGame {
       return `${i + 1}조  ${parts.join(' · ')}`;
     });
     const n = this.lastLists.reduce((a, l) => a + l.length, 0);
-    const text = `dori 조 배정 — ${n}명 → ${this.groups}조\n${lines.join('\n')}\nhttps://ff-1204.github.io/dori/#team`;
+    const text = `dori 조 배정 — ${n}명 → ${this.groups}조\n${lines.join('\n')}\nhttps://dori.io.kr/#team`;
     try {
       await navigator.clipboard.writeText(text);
       this.flashCopy('✓ 복사됐어요');
