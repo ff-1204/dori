@@ -4,6 +4,7 @@
 import { C } from './theme.js';
 import { makeBackButton } from './ui.js';
 import { applyTimeAtmosphere } from './timeOfDay.js';
+import { goBackToHub } from './nav.js';
 
 export default class MiniGame extends Phaser.Scene {
   constructor(key) {
@@ -13,15 +14,13 @@ export default class MiniGame extends Phaser.Scene {
   create() {
     this.locked = false;
     this.leaving = false; // 씬 전환 가드 — 연타로 scene.start가 중복 큐잉되면 씬이 겹치거나 크래시
+    this.navBack = false; // ⬅ 버튼 연타 가드(nav.js)
     // 매 진입 자동 시드 → 정직하게 매번 다른 결과(재현이 필요하면 시드를 주입)
     this.rng = new Phaser.Math.RandomDataGenerator();
     this.cameras.main.setBackgroundColor(C.bg);
     this.timePhase = applyTimeAtmosphere(this); // 시간대 분위기(생리적 패턴)
-    makeBackButton(this, () => {
-      if (this.leaving) return;
-      this.leaving = true;
-      this.scene.start('Hub');
-    });
+    // 뒤로가기: 히스토리를 경유해 브라우저/OS 뒤로가기와 동일 경로로 허브 복귀
+    makeBackButton(this, () => goBackToHub(this));
     this.onCreate();
   }
 

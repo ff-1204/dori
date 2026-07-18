@@ -3,6 +3,7 @@
 import { C, css, FONT, SP } from '../theme.js';
 import { makeButton } from '../ui.js';
 import { applyTimeAtmosphere, mealForPhase, MEAL_LABEL, greetingForPhase } from '../timeOfDay.js';
+import { pushGameState, consumeDeepLink } from '../nav.js';
 import { Sfx } from '../sfx.js';
 
 // 시간대별 룰렛 이모지(라벨과 함께 바뀐다)
@@ -123,12 +124,18 @@ export default class HubScene extends Phaser.Scene {
 
     this.buildTopBar();
     this.buildBottomBar();
+
+    // 해시 딥링크(#roulette 등)로 들어왔으면 해당 게임으로 바로 진입
+    const deepLink = consumeDeepLink();
+    if (deepLink) this.startGame(deepLink);
   }
 
-  // 게임 진입(전환 가드) — 첫 탭이 전환을 잡으면 이후 탭은 무시
+  // 게임 진입(전환 가드) — 첫 탭이 전환을 잡으면 이후 탭은 무시.
+  // 히스토리에 한 칸 쌓아 브라우저/OS 뒤로가기가 '허브 복귀'가 되게 한다(nav.js).
   startGame(key) {
     if (this.leaving) return;
     this.leaving = true;
+    pushGameState(key);
     this.scene.start(key);
   }
 

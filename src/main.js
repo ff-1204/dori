@@ -11,6 +11,7 @@ import PopUpScene from './scenes/PopUpScene.js';
 import DancheongScene from './scenes/DancheongScene.js';
 import LottoScene from './scenes/LottoScene.js';
 import { enforceHostLock } from './guard.js';
+import { initNav } from './nav.js';
 
 // 도메인 잠금: 허용 호스트가 아니면 게임을 시작하지 않는다(무단 재호스팅 억제).
 if (enforceHostLock()) {
@@ -35,6 +36,6 @@ if (enforceHostLock()) {
     ],
   };
 
-  // eslint-disable-next-line no-new
-  new Phaser.Game(config);
+  const game = new Phaser.Game(config);
+  initNav(game); // 브라우저/OS 뒤로가기 ↔ 씬 전환 통합(+ 해시 딥링크)
 }
