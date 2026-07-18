@@ -55,9 +55,22 @@ export default class PopUpScene extends MiniGame {
     const p = this.add.graphics();
     p.fillStyle(0xffcf9e, 1).fillCircle(0, 0, 46);            // 얼굴
     p.fillStyle(C.danger, 1).fillEllipse(0, -34, 96, 40);      // 두건
-    p.fillStyle(C.bg, 1).fillCircle(-16, -2, 7).fillCircle(16, -2, 7); // 눈
     p.lineStyle(4, C.bg, 1).strokeCircle(0, 14, 10);           // 입(놀란 O)
     this.pirate.add(p);
+
+    // 눈은 상태별 분리 — 평소(점) / 발사 후(X — 기절 연출)
+    this.eyesNormal = this.add.graphics();
+    this.eyesNormal.fillStyle(C.bg, 1).fillCircle(-16, -2, 7).fillCircle(16, -2, 7);
+    this.pirate.add(this.eyesNormal);
+
+    this.eyesX = this.add.graphics();
+    this.eyesX.lineStyle(5, C.bg, 1);
+    [-16, 16].forEach((ex) => {
+      this.eyesX.lineBetween(ex - 7, -9, ex + 7, 5);
+      this.eyesX.lineBetween(ex - 7, 5, ex + 7, -9);
+    });
+    this.eyesX.setVisible(false);
+    this.pirate.add(this.eyesX);
 
     // 칼 구멍 12개(4열 × 3줄, 통 표면) — 터치 타깃 84×90
     this.slots = [];
@@ -80,6 +93,8 @@ export default class PopUpScene extends MiniGame {
     this.doneCount = 0;
     this.launched = false;
     this.pirate.setPosition(this.cx, 452).setAngle(0).setAlpha(1).setScale(1);
+    this.eyesNormal.setVisible(true); // 눈 복원(멀쩡한 얼굴로 다시 숨음)
+    this.eyesX.setVisible(false);
     this.slots.forEach((s) => {
       s.used = false;
       s.hit.setInteractive({ useHandCursor: true });
@@ -134,7 +149,9 @@ export default class PopUpScene extends MiniGame {
     const s = this.slots[i];
     s.slit.clear();
     s.slit.fillStyle(C.danger, 1).fillRoundedRect(s.x - 30, s.y - 12, 60, 24, 10);
-    // 펑! 아저씨 발사(Peak — 위로 회전하며 날아간다)
+    // 펑! 아저씨 발사(Peak — 위로 회전하며 날아간다), 눈은 X(기절)
+    this.eyesNormal.setVisible(false);
+    this.eyesX.setVisible(true);
     Sfx.play('bang');
     this.burst(this.cx, 452, C.warning, 40);
     this.colorFlash(C.warning, 220);
