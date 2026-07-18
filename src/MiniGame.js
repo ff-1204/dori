@@ -18,6 +18,7 @@ export default class MiniGame extends Phaser.Scene {
     // 매 진입 자동 시드 → 정직하게 매번 다른 결과(재현이 필요하면 시드를 주입)
     this.rng = new Phaser.Math.RandomDataGenerator();
     this.cameras.main.setBackgroundColor(C.bg);
+    this.cameras.main.fadeIn(160, 18, 19, 28); // 씬 전환을 부드럽게(하드 컷 방지)
     this.timePhase = applyTimeAtmosphere(this); // 시간대 분위기(생리적 패턴)
     // 뒤로가기: 히스토리를 경유해 브라우저/OS 뒤로가기와 동일 경로로 허브 복귀
     makeBackButton(this, () => goBackToHub(this));

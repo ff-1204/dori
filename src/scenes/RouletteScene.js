@@ -502,6 +502,10 @@ export default class RouletteScene extends MiniGame {
     this.editor.add(done);
 
     this.renderChips();
+
+    // 팝 등장(주스) — 모달 공통 페이드
+    this.editor.setAlpha(0);
+    this.tweens.add({ targets: this.editor, alpha: 1, duration: 160, ease: 'Quad.easeOut' });
   }
 
   renderChips() {

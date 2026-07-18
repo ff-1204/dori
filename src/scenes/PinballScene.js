@@ -388,6 +388,10 @@ export default class PinballScene extends MiniGame {
       onClick: () => { this.editor.destroy(); this.editor = null; },
     });
     this.editor.add(done);
+
+    // 팝 등장(주스) — 모달 공통 페이드
+    this.editor.setAlpha(0);
+    this.tweens.add({ targets: this.editor, alpha: 1, duration: 160, ease: 'Quad.easeOut' });
   }
 
   renderChips(px, py, pw) {

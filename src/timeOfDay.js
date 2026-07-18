@@ -115,5 +115,9 @@ export function applyTimeAtmosphere(scene) {
   // 상단 글로우(시간대 색) → 하단 투명(배경색 노출)
   g.fillGradientStyle(phase.glow, phase.glow, C.bg, C.bg, phase.alpha, phase.alpha, 0, 0);
   g.fillRect(0, 0, width, height);
+  // 하단 비네트(깊이) — 아래로 갈수록 살짝 어두워져 상단 글로우와 짝을 이룬다
+  const v = scene.add.graphics().setDepth(-9);
+  v.fillGradientStyle(0x0a0b11, 0x0a0b11, 0x0a0b11, 0x0a0b11, 0, 0, 0.4, 0.4);
+  v.fillRect(0, Math.floor(height * 0.6), width, Math.ceil(height * 0.4));
   return phase;
 }

@@ -48,6 +48,7 @@ export default class HubScene extends Phaser.Scene {
     this.leaving = false; // 씬 전환 가드 — 버튼 연타·동시 탭으로 인한 중복 start 방지
     this.btnSeq = 0; // 버튼 순차 등장 카운터(씬 재진입 시 초기화)
     this.cameras.main.setBackgroundColor(C.bg);
+    this.cameras.main.fadeIn(160, 18, 19, 28); // 씬 전환을 부드럽게(하드 컷 방지)
     const phase = applyTimeAtmosphere(this); // 시간대 분위기(생리적 패턴)
 
     // 타이틀 "dori" — 그라디언트·그림자·강조선·은은한 호흡(미학-사용성 효과)
@@ -155,20 +156,12 @@ export default class HubScene extends Phaser.Scene {
     });
 
     // 제작자 크레딧 → GitHub (자연스러운 외부 링크)
-    const credit = this.add.text(width / 2 - 28, by, 'made by ff-1204  ↗', {
+    const credit = this.add.text(width / 2, by, 'made by ff-1204  ↗', {
       fontFamily: FONT, fontSize: '26px', color: css(C.subtext),
     }).setOrigin(0.5).setInteractive({ useHandCursor: true });
     credit.on('pointerover', () => credit.setColor(css(C.primary)));
     credit.on('pointerout', () => credit.setColor(css(C.subtext)));
     credit.on('pointerup', () => window.open('https://github.com/ff-1204', '_blank'));
-
-    // ⭐ 저장소 바로가기 — 크레딧 옆, 스타 누르러 가는 문
-    const star = this.add.text(credit.x + credit.width / 2 + 34, by, '⭐', {
-      fontSize: '28px',
-    }).setOrigin(0.5).setInteractive({ useHandCursor: true });
-    star.on('pointerover', () => star.setScale(1.15));
-    star.on('pointerout', () => star.setScale(1));
-    star.on('pointerup', () => window.open('https://github.com/ff-1204/dori', '_blank'));
 
     // 바로가기(PWA 설치) — 지원 브라우저는 즉시 설치, 아니면 방법 안내
     const install = this.add.text(width - SP.md, by, '📲 바로가기', {
@@ -235,6 +228,10 @@ export default class HubScene extends Phaser.Scene {
     }).setOrigin(0.5).setInteractive({ useHandCursor: true });
     close.on('pointerup', () => { this.guideModal.destroy(); this.guideModal = null; });
     this.guideModal.add(close);
+
+    // 팝 등장(주스) — QR 모달과 같은 페이드
+    this.guideModal.setAlpha(0);
+    this.tweens.add({ targets: this.guideModal, alpha: 1, duration: 180, ease: 'Quad.easeOut' });
   }
 
   // ===== 상단 바: QR(좌) · 공유(우) — 제목(중앙)과 좌표 겹침 없음 =====

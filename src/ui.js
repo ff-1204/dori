@@ -18,6 +18,10 @@ export function makeButton(scene, opts) {
   const g = scene.add.graphics();
   g.fillStyle(0x000000, 0.25).fillRoundedRect(-w / 2, -h / 2 + 6, w, h, RADIUS); // 그림자(깊이)
   g.fillStyle(fill, 1).fillRoundedRect(-w / 2, -h / 2, w, h, RADIUS);            // 면
+  // 상단 광택(입체감) — 위쪽 절반에 옅은 흰 하이라이트
+  g.fillStyle(0xffffff, 0.12).fillRoundedRect(-w / 2 + 3, -h / 2 + 3, w - 6, h / 2 - 4, {
+    tl: RADIUS - 3, tr: RADIUS - 3, bl: 0, br: 0,
+  });
   con.add(g);
 
   const t = scene.add.text(0, 0, label, {
