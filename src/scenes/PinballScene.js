@@ -48,6 +48,11 @@ export default class PinballScene extends MiniGame {
       fontFamily: FONT, fontSize: '26px', color: css(C.subtext), fontStyle: 'bold',
     }).setOrigin(1, 0.5);
 
+    // 오늘의 맵 표기 — 매일 자정(KST)에 새 맵이라는 규칙을 정적으로 안내(카운트다운 없음)
+    this.add.text(32, 200, '🗓 오늘의 맵 · 매일 자정에 새 맵', {
+      fontFamily: FONT, fontSize: '26px', color: css(C.subtext),
+    }).setOrigin(0, 0.5);
+
     this.physics.world.setBounds(LEFT, 0, RIGHT - LEFT, 1280);
 
     this.buildBoard();
@@ -77,14 +82,23 @@ export default class PinballScene extends MiniGame {
     wall.lineBetween(LEFT, 360, LEFT, 1000);
     wall.lineBetween(RIGHT, 360, RIGHT, 1000);
 
-    // 핀(교차 배열) — 정적 물리 바디
+    // 핀 — 오늘의 맵: KST 날짜를 시드로 한 결정적 랜덤 배치(단청과 같은 기법).
+    // 서버 없이 누구나 같은 날 = 같은 맵, KST 자정에 교체. 보드는 낙하 전 전부 보이므로 정직.
+    // 트랩 방지 제약: 핀 중심 x 115–605(벽과 틈 ≥ 36px), 행 내 중심 간격 ≥ 56px(공 지름 28 + 여유).
+    const day = Math.floor((Date.now() + 9 * 3600 * 1000) / 86400000);
+    const mapRng = new Phaser.Math.RandomDataGenerator([`dori-pinball-${day}`]);
+
     this.pegs = this.physics.add.staticGroup();
     for (let row = 0; row < 7; row += 1) {
-      const n = row % 2 === 0 ? 7 : 6;
-      const startX = row % 2 === 0 ? 100 : 143;
+      const n = mapRng.between(5, 7);
+      const spacing = (605 - 115) / (n - 1);
+      const jitter = Math.floor(Math.min(18, (spacing - 56) / 2));
+      // 가끔 안쪽 핀 하나를 빼서 '구멍'을 만든다(맵마다 성격이 달라짐)
+      const skipIdx = n >= 6 && mapRng.frac() < 0.35 ? mapRng.between(1, n - 2) : -1;
       for (let i = 0; i < n; i += 1) {
-        const x = startX + i * 86.6;
-        const y = 400 + row * 70;
+        if (i === skipIdx) continue;
+        const x = Phaser.Math.Clamp(115 + i * spacing + mapRng.between(-jitter, jitter), 115, 605);
+        const y = 400 + row * 70 + mapRng.between(-12, 12);
         const peg = this.pegs.create(x, y, 'peg');
         peg.setTint(C.subtext);
         peg.body.setCircle(9);
