@@ -2,7 +2,7 @@
 // 미구현 게임은 '준비 중'으로 흐리게 표시(정직한 어포던스: 누를 수 없음을 드러냄).
 import { C, css, FONT, SP } from '../theme.js';
 import { makeButton } from '../ui.js';
-import { applyTimeAtmosphere, mealForPhase, MEAL_LABEL } from '../timeOfDay.js';
+import { applyTimeAtmosphere, mealForPhase, MEAL_LABEL, greetingForPhase } from '../timeOfDay.js';
 import { Sfx } from '../sfx.js';
 
 // 시간대별 룰렛 이모지(라벨과 함께 바뀐다)
@@ -47,23 +47,24 @@ export default class HubScene extends Phaser.Scene {
   create() {
     const { width } = this.scale;
     this.leaving = false; // 씬 전환 가드 — 버튼 연타·동시 탭으로 인한 중복 start 방지
+    this.btnSeq = 0; // 버튼 순차 등장 카운터(씬 재진입 시 초기화)
     this.cameras.main.setBackgroundColor(C.bg);
     const phase = applyTimeAtmosphere(this); // 시간대 분위기(생리적 패턴)
 
     // 타이틀 "dori" — 그라디언트·그림자·강조선·은은한 호흡(미학-사용성 효과)
-    const title = this.add.text(width / 2, 108, 'dori', {
-      fontFamily: FONT, fontSize: '120px', fontStyle: 'bold', color: css(C.text),
+    const title = this.add.text(width / 2, 104, 'dori', {
+      fontFamily: FONT, fontSize: '104px', fontStyle: 'bold', color: css(C.text),
     }).setOrigin(0.5);
     title.setLetterSpacing(6);
-    title.setShadow(0, 8, '#000000', 18, false, true); // 깊이감
+    title.setShadow(0, 7, '#000000', 16, false, true); // 깊이감
     // 위(밝음)→아래(강조색) 세로 그라디언트
     const grad = title.context.createLinearGradient(0, 0, 0, title.height);
     grad.addColorStop(0, '#ffffff');
     grad.addColorStop(1, css(C.primary));
     title.setFill(grad);
 
-    // 강조선(장식)
-    this.add.rectangle(width / 2, 182, 96, 6, C.primary).setOrigin(0.5).setAlpha(0.9);
+    // 강조선(장식) — 타이틀 크기에 맞춰 비례 축소
+    this.add.rectangle(width / 2, 170, 84, 5, C.primary).setOrigin(0.5).setAlpha(0.9);
 
     // 등장(팝) 후 은은한 호흡 — 살짝 움직이는 화면이 비싸 보인다
     title.setScale(0.9).setAlpha(0);
@@ -76,13 +77,14 @@ export default class HubScene extends Phaser.Scene {
       },
     });
 
-    // 시간대 인사말(감성) — 정보가 아닌 분위기 문구
-    this.add.text(width / 2, 220, phase.greeting, {
-      fontFamily: FONT, fontSize: '32px', color: css(C.subtext),
-    }).setOrigin(0.5);
+    // 시간대 인사말(감성) — 10종 중 해시 선택(KST 1시간 창 회전, 모두 같은 문구), 은은히 떠오름
+    const greeting = this.add.text(width / 2, 212, greetingForPhase(phase), {
+      fontFamily: FONT, fontSize: '30px', color: css(C.subtext),
+    }).setOrigin(0.5).setAlpha(0);
+    this.tweens.add({ targets: greeting, alpha: 1, y: 208, duration: 600, delay: 250, ease: 'Quad.easeOut' });
 
-    // 범주별 게임 목록 — 2열 그리드(게임 수 확장 대응)
-    let y = 258;
+    // 범주별 게임 목록 — 2열 그리드(게임 수 확장 대응), 인사말과 여백을 두고 시작
+    let y = 288;
     const colW = 304;
     const leftX = SP.xl + colW / 2;
     const rightX = width - SP.xl - colW / 2;
@@ -100,7 +102,7 @@ export default class HubScene extends Phaser.Scene {
         const displayName = g.key === 'Roulette'
           ? `${MEAL_EMOJI[mealForPhase(phase.key)]} ${mealLabel} 룰렛`
           : g.name;
-        makeButton(this, {
+        const btn = makeButton(this, {
           x: idx % 2 === 0 ? leftX : rightX,
           y: y + Math.floor(idx / 2) * 92 + 40,
           w: colW,
@@ -110,6 +112,11 @@ export default class HubScene extends Phaser.Scene {
           onClick: g.ready ? () => this.startGame(g.key) : null,
           fontSize: 30,
         });
+        // 순차 등장(은은한 스태거) — 목록이 정돈되어 보인다
+        const finalAlpha = btn.alpha; // 준비 중(0.7) 버튼은 원래 알파로 복귀
+        btn.setAlpha(0);
+        this.tweens.add({ targets: btn, alpha: finalAlpha, duration: 250, delay: 120 + this.btnSeq * 40 });
+        this.btnSeq = (this.btnSeq || 0) + 1;
       });
       y += Math.ceil(group.items.length / 2) * 92 + SP.md;
     });
