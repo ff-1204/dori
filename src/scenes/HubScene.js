@@ -46,6 +46,7 @@ export default class HubScene extends Phaser.Scene {
 
   create() {
     const { width } = this.scale;
+    this.leaving = false; // 씬 전환 가드 — 버튼 연타·동시 탭으로 인한 중복 start 방지
     this.cameras.main.setBackgroundColor(C.bg);
     const phase = applyTimeAtmosphere(this); // 시간대 분위기(생리적 패턴)
 
@@ -105,7 +106,7 @@ export default class HubScene extends Phaser.Scene {
           h: 80,
           label: g.ready ? displayName : `${displayName} · 준비 중`,
           variant: g.ready ? 'primary' : 'disabled',
-          onClick: g.ready ? () => this.scene.start(g.key) : null,
+          onClick: g.ready ? () => this.startGame(g.key) : null,
           fontSize: 30,
         });
       });
@@ -114,6 +115,13 @@ export default class HubScene extends Phaser.Scene {
 
     this.buildTopBar();
     this.buildBottomBar();
+  }
+
+  // 게임 진입(전환 가드) — 첫 탭이 전환을 잡으면 이후 탭은 무시
+  startGame(key) {
+    if (this.leaving) return;
+    this.leaving = true;
+    this.scene.start(key);
   }
 
   // ===== 하단 바: 효과음(좌) · 크레딧(중앙) · 바로가기(우) =====
