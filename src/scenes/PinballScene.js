@@ -217,6 +217,7 @@ export default class PinballScene extends MiniGame {
       this.lastProgressAt = this.time.now;
     } else if (this.time.now - this.lastProgressAt > 1200) {
       this.nudgeBall();
+      if (!this.ball) return; // 넛지 한도 초과로 강제 확정됐으면 이 프레임 종료
     }
 
     if (this.ball.y > 920) this.resolve();
@@ -228,7 +229,7 @@ export default class PinballScene extends MiniGame {
     this.lastProgressAt = this.time.now;
     if (this.nudgeCount > 3) { this.resolve(); return; }
     const dir = this.ball.x < this.cx ? 1 : -1;
-    this.ball.setVelocity(dir * this.rng.between(160, 240), -this.rng.between(120, 200));
+    this.ball.setVelocity(dir * this.rng.between(200, 280), -this.rng.between(280, 400));
     this.shake(0.004, 120); // 기계를 살짝 친 듯한 연출 — 개입이 눈에 보이게(정직)
     Sfx.play('pop');
   }
