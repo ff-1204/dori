@@ -135,7 +135,7 @@ export default class PinballScene extends MiniGame {
   }
 
   // 핀 랜덤 배치 — 보드는 낙하 전 전부 보이므로 정직.
-  // 트랩 방지 제약: 핀 중심 x 115–605(벽과 틈 확보), 행 내 중심 간격 ≥ 공 지름 + 핀 지름 + 10(스케일 연동).
+  // 제약: 핀은 벽 바로 옆(틈 4px)까지 깔아 양끝 빈 통로 제거, 행 내 중심 간격 ≥ 공 지름 + 핀 지름 + 10(스케일 연동).
   buildPegs() {
     if (this.pegs) this.pegs.clear(true, true);
     else this.pegs = this.physics.add.staticGroup();
@@ -157,18 +157,21 @@ export default class PinballScene extends MiniGame {
     // 랜덤 8행: y 400–860(마지막 행이 결정칸 바로 위) — 모든 행 동일한 랜덤 규칙·크기
     const ballD = 2 * BALL_R * s; // 공 지름(스케일 반영)
     const minGap = ballD + 2 * PEG_R * s + 10; // 핀 중심 간격 하한: 공 + 핀 + 여유 → 핀 사이 틈 ≥ 공 지름 + 10
+    // 핀 x 범위: 벽 바로 옆까지(벽-핀 틈 4px < 공 지름 → 양끝 빈 통로 없음, 공은 끼지도 통과하지도 못함)
+    const lo = LEFT + PEG_R * s + 4;
+    const hi = RIGHT - PEG_R * s - 4;
     const rowGap = (860 - 400) / 7;
     for (let row = 0; row < 8; row += 1) {
       // 행당 핀 개수는 칸 수에 연동 — 칸이 늘면 갈림도 촘촘해진다(간격 하한이 허용하는 개수로 캡)
-      const nMax = Math.floor((605 - 115) / minGap) + 1;
+      const nMax = Math.floor((hi - lo) / minGap) + 1;
       const n = Math.max(2, Math.min(this.rng.between(this.slots.length, this.slots.length + 2), nMax));
-      const spacing = (605 - 115) / (n - 1);
+      const spacing = (hi - lo) / (n - 1);
       const jitter = Math.max(0, Math.floor(Math.min(18, (spacing - minGap) / 2)));
       // 가끔 안쪽 핀 하나를 빼서 '구멍'을 만든다(맵마다 성격이 달라짐)
       const skipIdx = n >= 6 && this.rng.frac() < 0.35 ? this.rng.between(1, n - 2) : -1;
       for (let i = 0; i < n; i += 1) {
         if (i === skipIdx) continue;
-        const x = Phaser.Math.Clamp(115 + i * spacing + this.rng.between(-jitter, jitter), 115, 605);
+        const x = Phaser.Math.Clamp(lo + i * spacing + this.rng.between(-jitter, jitter), lo, hi);
         const y = 400 + row * rowGap + this.rng.between(-12, 12);
         makePeg(x, y, row * 30);
       }
