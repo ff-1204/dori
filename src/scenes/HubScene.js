@@ -172,8 +172,8 @@ export default class HubScene extends Phaser.Scene {
     install.on('pointerout', () => install.setColor(css(C.subtext)));
     install.on('pointerup', () => this.installShortcut());
 
-    // 정적 페이지 링크(하단 바 위 한 줄) — 소개·게임 안내·개인정보처리방침(신뢰 신호, AdSense 요건)
-    const pages = [['소개', 'about.html'], ['게임 안내', 'guide.html'], ['개인정보처리방침', 'privacy.html']];
+    // 정적 페이지 링크(하단 바 위 한 줄) — 소개·사용 안내·개인정보처리방침(신뢰 신호, AdSense 요건)
+    const pages = [['소개', 'about.html'], ['사용 안내', 'guide.html'], ['개인정보처리방침', 'privacy.html']];
     const parts = [];
     pages.forEach(([label, href], i) => {
       if (i) {
