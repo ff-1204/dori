@@ -33,7 +33,7 @@ const GAMES = [
     items: [
       { key: 'Russian', name: '💥 러시안 룰렛', ready: true },
       { key: 'Croco', name: '🐊 악어 이빨', ready: true },
-      { key: 'PopUp', name: '🗡️ 통아저씨', ready: true },
+      { key: 'PopUp', name: '🗡️ 해적통', ready: true },
       { key: 'Dancheong', name: '🎴 단청', ready: true },
     ],
   },

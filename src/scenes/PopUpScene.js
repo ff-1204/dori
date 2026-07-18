@@ -1,5 +1,5 @@
-// 통아저씨(팝업 해적) — 복불복. 실물 완구의 디지털 재현(trend-research §3).
-// 칼 구멍 중 1개가 발사 트리거(비복원 시도) — 꽂으면 아저씨가 날아간다.
+// 해적통(팝업 해적, 구 '통아저씨' — 상표 선제 회피 개명 2026-07-18) — 복불복. 실물 완구의 디지털 재현(trend-research §3).
+// 칼 구멍 중 1개가 발사 트리거(비복원 시도) — 꽂으면 해적이 날아간다.
 // 정직한 긴장: 안전 칸에 가짜 연출 없음, 남은 칸 확률을 정직하게 표시.
 import MiniGame from '../MiniGame.js';
 import { C, css, FONT, EASE } from '../theme.js';
@@ -19,11 +19,11 @@ export default class PopUpScene extends MiniGame {
     const { width } = this.scale;
     this.cx = width / 2;
 
-    this.add.text(this.cx, 140, '통아저씨', {
+    this.add.text(this.cx, 140, '해적통', {
       fontFamily: FONT, fontSize: '48px', color: css(C.text), fontStyle: 'bold',
     }).setOrigin(0.5);
 
-    this.add.text(this.cx, 196, '칼을 꽂다 보면… 펑! 아저씨 발사', {
+    this.add.text(this.cx, 196, '칼을 꽂다 보면… 펑! 해적 발사', {
       fontFamily: FONT, fontSize: '26px', color: css(C.subtext),
     }).setOrigin(0.5);
 
@@ -55,7 +55,7 @@ export default class PopUpScene extends MiniGame {
     g.fillRect(180, 700, 360, 14);
     g.fillEllipse(this.cx, 484, 360, 44); // 테두리 림
 
-    // 아저씨(통 위에 반쯤 숨음) — 발사 대상
+    // 해적(통 위에 반쯤 숨음) — 발사 대상
     this.pirate = this.add.container(this.cx, 452);
     const p = this.add.graphics();
     p.fillStyle(0xffcf9e, 1).fillCircle(0, 0, 46);            // 얼굴
@@ -157,7 +157,7 @@ export default class PopUpScene extends MiniGame {
     const s = this.slots[i];
     s.slit.clear();
     s.slit.fillStyle(C.danger, 1).fillRoundedRect(s.x - 30, s.y - 12, 60, 24, 10);
-    // 펑! 아저씨 발사(Peak — 위로 회전하며 날아간다), 눈은 X(기절)
+    // 펑! 해적 발사(Peak — 위로 회전하며 날아간다), 눈은 X(기절)
     this.eyesNormal.setVisible(false);
     this.eyesX.setVisible(true);
     Sfx.play('bang');
