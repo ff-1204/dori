@@ -517,7 +517,9 @@ export default class RouletteScene extends MiniGame {
     let y = startY;
 
     const addChip = (labelStr, kind, onTap) => {
-      const outlineColor = kind === 'add' ? C.primary : kind === 'reset' ? C.warning : null;
+      const outlineColor = kind === 'add' ? C.primary
+        : kind === 'reset' ? C.warning
+        : kind === 'resetall' ? C.danger : null;
       const t = this.add.text(0, 0, labelStr, {
         fontFamily: FONT, fontSize: '28px',
         color: outlineColor ? css(outlineColor) : css(C.text), fontStyle: 'bold',
@@ -545,6 +547,7 @@ export default class RouletteScene extends MiniGame {
     });
     addChip('+ 추가', 'add', () => this.addItem());
     addChip('↺ 기본값', 'reset', () => this.resetItems());
+    addChip('⟲ 전체 초기화', 'resetall', () => this.resetAllItems());
   }
 
   // 이 시간대만 기본 메뉴로 복원(다른 시간대 저장분은 그대로)
@@ -554,6 +557,24 @@ export default class RouletteScene extends MiniGame {
     this.rebuildWheel();
     this.renderChips();
     this.flashNote(`${this.meal.label} 메뉴를 기본값으로 복원했어요`);
+  }
+
+  // 전체 초기화: 아침·점심·저녁·야식 4개 시간대 모두 기본값으로 — 파괴적 동작이라 두 번 눌러 확정
+  resetAllItems() {
+    if (!this.confirmResetAll) {
+      this.confirmResetAll = true;
+      this.flashNote('한 번 더 누르면 4개 시간대 전체 초기화');
+      this.time.delayedCall(1400, () => { this.confirmResetAll = false; });
+      return;
+    }
+    this.confirmResetAll = false;
+    Object.keys(MEALS).forEach((k) => {
+      try { localStorage.removeItem(keyFor(k)); } catch (e) { /* 무시 */ }
+    });
+    this.items = ensureFry([...this.meal.defaults]);
+    this.rebuildWheel();
+    this.renderChips();
+    this.flashNote('아침·점심·저녁·야식 메뉴를 모두 초기화했어요');
   }
 
   // 🍟 이모지 파티클 폭발(이스터에그 전용)
