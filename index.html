@@ -70,6 +70,11 @@
       background: #12131c;
       overflow: hidden;
     }
+    /* 레터박스(넓은 화면비의 캔버스 밖 영역): 빈 검은 띠 대신 은은한 비네트 —
+       캔버스(#12131c)보다 살짝 어둡게 해 게임 영역이 무대처럼 떠 보인다 */
+    body {
+      background: radial-gradient(120% 90% at 50% 40%, #171827 0%, #0d0e16 70%, #0a0b11 100%);
+    }
     /* 100vh는 모바일에서 하단 툴바 뒤 영역까지 포함해 캔버스가 잘림 — dvh로 실제 보이는 높이 사용 */
     #game { width: 100vw; height: 100vh; height: 100dvh; }
     canvas { display: block; }

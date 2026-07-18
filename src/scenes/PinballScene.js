@@ -259,7 +259,8 @@ export default class PinballScene extends MiniGame {
     this.lastProgressAt = this.time.now;
     this.nudgeCount = 0;
 
-    this.physics.add.collider(this.ball, this.pegs, (ball, peg) => this.onPegHit(ball, peg));
+    // 라운드마다 생성·종료 시 파괴(resolve) — 콜라이더가 월드에 누적되지 않게
+    this.pegCollider = this.physics.add.collider(this.ball, this.pegs, (ball, peg) => this.onPegHit(ball, peg));
   }
 
   onPegHit(ball, peg) {
@@ -324,6 +325,7 @@ export default class PinballScene extends MiniGame {
     this.physics.world.timeScale = 1;
     this.cameras.main.zoomTo(1, 250);
 
+    if (this.pegCollider) { this.pegCollider.destroy(); this.pegCollider = null; }
     const ball = this.ball;
     this.ball = null;
     ball.disableBody(true, false);
