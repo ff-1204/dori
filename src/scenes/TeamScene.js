@@ -74,6 +74,14 @@ export default class TeamScene extends MiniGame {
       x: this.cx, y: 1100, w: 360, h: 100, label: '조 짜기', variant: 'primary',
       onClick: () => this.assign(),
     });
+
+    // 조 편성 복사 — 결과가 나온 뒤에만 노출(로또 복사 버튼과 같은 패턴)
+    this.copyBtn = this.add.text(this.cx, 1206, '📋 조 편성 복사', {
+      fontFamily: FONT, fontSize: '30px', color: css(C.subtext),
+    }).setOrigin(0.5).setInteractive({ useHandCursor: true }).setVisible(false);
+    this.copyBtn.on('pointerover', () => this.copyBtn.setColor(css(C.primary)));
+    this.copyBtn.on('pointerout', () => this.copyBtn.setColor(css(C.subtext)));
+    this.copyBtn.on('pointerup', () => this.copyResult());
   }
 
   // ± 스테퍼 한 줄(가운데 라벨, 양옆 버튼 — 터치 타깃 88px)
@@ -127,6 +135,7 @@ export default class TeamScene extends MiniGame {
 
   resetHint() {
     this.hint.setColor(css(C.subtext)).setText('조 짜기를 누르면 번호가 조로 모여요').setScale(1);
+    if (this.copyBtn) this.copyBtn.setVisible(false); // 결과가 사라지면 복사도 숨김(정직)
   }
 
   // 조 패널 — 색상 연결(조 색 = 라벨·테두리·칩), 조 수에 맞춰 높이 자동
@@ -148,7 +157,7 @@ export default class TeamScene extends MiniGame {
       }).setOrigin(0, 0.5);
       this.panelBox.add(g);
       this.panelBox.add(label);
-      this.panels.push({ y, h, color, chips: [], expected: 0 });
+      this.panels.push({ y, h, color, chips: [], result: [], expected: 0 });
     }
   }
 
@@ -183,6 +192,7 @@ export default class TeamScene extends MiniGame {
     }
     this.panelBox.add(con);
     panel.chips.push(con);
+    panel.result.push({ num, isLeader });
     // 통통 등장(클러스터가 자라나는 느낌)
     con.setScale(0);
     this.tweens.add({ targets: con, scale: 1, duration: 200, ease: EASE.popIn });
@@ -199,6 +209,7 @@ export default class TeamScene extends MiniGame {
       p.expected = Math.floor(this.count / this.groups) + (i < this.count % this.groups ? 1 : 0);
     });
     this.hint.setColor(css(C.subtext)).setText('...').setScale(1);
+    this.copyBtn.setVisible(false);
     Sfx.play('pop'); // 출발
 
     const order = Array.from({ length: this.count }, (_, i) => i + 1);
@@ -231,6 +242,31 @@ export default class TeamScene extends MiniGame {
     });
     Sfx.play('win');
     this.assignBtn.enableButton();
+    this.copyBtn.setVisible(true);
     this.unlock();
+  }
+
+  // 조 편성을 텍스트로 복사(조장 👑 우선 + 오름차순 — 붙여넣기 가독)
+  async copyResult() {
+    const lines = this.panels.map((p, i) => {
+      const parts = [...p.result]
+        .sort((a, b) => (b.isLeader - a.isLeader) || (a.num - b.num))
+        .map((r) => (r.isLeader ? `👑${r.num}` : String(r.num)));
+      return `${i + 1}조  ${parts.join(' · ')}`;
+    });
+    const text = `dori 조 배정 — ${this.count}명 → ${this.groups}조\n${lines.join('\n')}\nhttps://ff-1204.github.io/dori/#team`;
+    try {
+      await navigator.clipboard.writeText(text);
+      this.flashCopy('✓ 복사됐어요');
+    } catch (e) {
+      this.flashCopy('복사 실패 — 다시 시도해 주세요');
+    }
+  }
+
+  flashCopy(msg) {
+    this.copyBtn.setText(msg);
+    this.time.delayedCall(1200, () => {
+      if (this.copyBtn.active) this.copyBtn.setText('📋 조 편성 복사');
+    });
   }
 }
