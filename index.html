@@ -70,7 +70,8 @@
       background: #12131c;
       overflow: hidden;
     }
-    #game { width: 100vw; height: 100vh; }
+    /* 100vh는 모바일에서 하단 툴바 뒤 영역까지 포함해 캔버스가 잘림 — dvh로 실제 보이는 높이 사용 */
+    #game { width: 100vw; height: 100vh; height: 100dvh; }
     canvas { display: block; }
   </style>
 </head>
