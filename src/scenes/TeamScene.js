@@ -13,6 +13,7 @@ const LS_COUNT = 'dori.team.count';
 const LS_GROUPS = 'dori.team.groups';
 const LS_LEADER = 'dori.team.leader';
 const LS_ROSTER = 'dori.team.roster';
+const LS_LAST = 'dori.team.last'; // 지난 편성 기록(기기 내 — 재진입 시 복원)
 const COUNT_MIN = 2;
 const COUNT_MAX = 60;
 const GROUP_MIN = 2;
@@ -57,6 +58,18 @@ function loadRoster() {
 
 function saveRoster(roster) {
   try { localStorage.setItem(LS_ROSTER, JSON.stringify(roster)); } catch (e) { /* 무시 */ }
+}
+
+// 지난 편성: { roster: bool, lists: [[{label, isLeader}...], ...] }
+function loadLast() {
+  try {
+    const raw = localStorage.getItem(LS_LAST);
+    if (raw) {
+      const v = JSON.parse(raw);
+      if (v && Array.isArray(v.lists) && v.lists.every((l) => Array.isArray(l))) return v;
+    }
+  } catch (e) { /* 무시 */ }
+  return null;
 }
 
 export default class TeamScene extends MiniGame {
@@ -117,6 +130,24 @@ export default class TeamScene extends MiniGame {
     this.copyBtn.on('pointerover', () => this.copyBtn.setColor(css(C.primary)));
     this.copyBtn.on('pointerout', () => this.copyBtn.setColor(css(C.subtext)));
     this.copyBtn.on('pointerup', () => this.copyResult());
+
+    this.restoreLast(); // 지난 편성이 있으면 그대로 보여준다
+  }
+
+  // 지난 편성 복원 — 저장된 조 수가 현재 설정과 같을 때만 표시(다르면 새 판에서 갱신)
+  restoreLast() {
+    const saved = loadLast();
+    if (!saved || saved.lists.length !== this.groups) return;
+    this.rosterRound = !!saved.roster;
+    const maxSize = Math.max(...saved.lists.map((l) => l.length), 1);
+    this.chipSpec = this.rosterRound ? NAME_CHIP : this.pickNumSpecFor(maxSize);
+    this.panels.forEach((p, i) => { p.expected = saved.lists[i].length; });
+    saved.lists.forEach((list, g) => list.forEach((item) => this.makeChip(this.panels[g], item)));
+    this.lastLists = saved.lists;
+    const sizes = saved.lists.map((l) => l.length);
+    const n = sizes.reduce((a, b) => a + b, 0);
+    this.hint.setColor(css(C.subtext)).setText(`지난 편성 · ${n}명 → ${this.groups}조 (${sizes.join('·')}명)`);
+    this.copyBtn.setVisible(true);
   }
 
   // ===== 명단 상태 =====
@@ -243,15 +274,18 @@ export default class TeamScene extends MiniGame {
     return { x, y };
   }
 
-  // 이번 판 인원 밀도에 맞는 숫자 칩 티어 선택(패널 높이에 들어가는 첫 티어)
-  pickNumSpec() {
-    const maxSize = Math.ceil(this.count / this.groups);
+  // 조당 최대 인원에 맞는 숫자 칩 티어 선택(패널 높이에 들어가는 첫 티어)
+  pickNumSpecFor(maxSize) {
     const avail = this.panels[0].h - 8;
     for (const t of NUM_TIERS) {
       const rows = Math.ceil(maxSize / t.perRow);
       if (rows * t.cellH - (t.cellH - t.d) <= avail) return t;
     }
     return NUM_TIERS[NUM_TIERS.length - 1];
+  }
+
+  pickNumSpec() {
+    return this.pickNumSpecFor(Math.ceil(this.count / this.groups));
   }
 
   // 칩 — 숫자는 원형, 이름은 알약형. 조원: 어두운 면+조 색 테두리 / 조장: 조 색 채움+👑
@@ -369,6 +403,8 @@ export default class TeamScene extends MiniGame {
 
   finish(lists) {
     this.lastLists = lists;
+    // 지난 편성 기록(기기 내 — 재진입 시 복원, 서버 전송 없음)
+    try { localStorage.setItem(LS_LAST, JSON.stringify({ roster: this.rosterRound, lists })); } catch (e) { /* 무시 */ }
     const sizes = this.panels.map((p) => p.chips.length);
     const n = sizes.reduce((a, b) => a + b, 0);
     this.hint.setColor(css(C.success));
