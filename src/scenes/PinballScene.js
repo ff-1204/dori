@@ -9,16 +9,18 @@ import { Sfx } from '../sfx.js';
 
 const LS_SLOTS = 'dori.pinball.slots';
 const DEFAULT_SLOTS = ['꽝', '2등', '1등', '3등', '2등', '꽝']; // 1·2·3등 + 꽝꽝(가장자리)
-const SLOT_N = 6;
+const SLOT_MIN = 4;
+const SLOT_MAX = 10;
 const LEFT = 70;
 const RIGHT = 650;
+const BASE_SLOT_W = (RIGHT - LEFT) / 6; // 기준 칸 폭(6칸) — 공·핀 크기 스케일의 기준
 
 function loadSlots() {
   try {
     const raw = localStorage.getItem(LS_SLOTS);
     if (raw) {
       const a = JSON.parse(raw);
-      if (Array.isArray(a) && a.length === SLOT_N) return a;
+      if (Array.isArray(a) && a.length >= SLOT_MIN && a.length <= SLOT_MAX) return a;
     }
   } catch (e) { /* 무시 */ }
   return [...DEFAULT_SLOTS];
@@ -85,22 +87,38 @@ export default class PinballScene extends MiniGame {
     wall.lineBetween(LEFT, 360, LEFT, 1000);
     wall.lineBetween(RIGHT, 360, RIGHT, 1000);
 
+    this.buildSlots();
     this.buildPegs();
+  }
 
-    // 슬롯(색상 연결: 칸 색 = 결과 색)
+  // 칸 수에 따른 공·핀 크기 스케일(6칸 기준 1, 칸이 좁아질수록 축소 — 최소 0.6)
+  sizeScale() {
+    const slotW = (RIGHT - LEFT) / this.slots.length;
+    return Phaser.Math.Clamp(slotW / BASE_SLOT_W, 0.6, 1);
+  }
+
+  // 슬롯(색상 연결: 칸 색 = 결과 색) — 칸 수 변경 시 재생성
+  buildSlots() {
+    if (this.slotBox) this.slotBox.destroy();
+    this.slotBox = this.add.container(0, 0);
     this.slotRects = [];
     this.slotLabels = [];
-    const slotW = (RIGHT - LEFT) / SLOT_N;
+    const n = this.slots.length;
+    const slotW = (RIGHT - LEFT) / n;
+    const fs = Math.min(26, Math.floor(slotW * 0.36)); // 좁은 칸은 라벨 축소
     const div = this.add.graphics();
     div.lineStyle(4, C.surfaceAlt, 1);
-    for (let i = 0; i < SLOT_N; i += 1) {
+    this.slotBox.add(div);
+    for (let i = 0; i < n; i += 1) {
       const x = LEFT + slotW * (i + 0.5);
       const color = SLICE[i % SLICE.length];
       const rect = this.add.rectangle(x, 945, slotW - 10, 96, color, 0.22)
         .setStrokeStyle(3, color, 0.9);
       const label = this.add.text(x, 945, this.slots[i], {
-        fontFamily: FONT, fontSize: '26px', color: css(color), fontStyle: 'bold',
+        fontFamily: FONT, fontSize: `${fs}px`, color: css(color), fontStyle: 'bold',
       }).setOrigin(0.5);
+      this.slotBox.add(rect);
+      this.slotBox.add(label);
       this.slotRects.push(rect);
       this.slotLabels.push(label);
       if (i > 0) div.lineBetween(LEFT + slotW * i, 895, LEFT + slotW * i, 995);
@@ -108,39 +126,48 @@ export default class PinballScene extends MiniGame {
   }
 
   // 핀 랜덤 배치 — 보드는 낙하 전 전부 보이므로 정직.
-  // 트랩 방지 제약: 핀 중심 x 115–605(벽과 틈 ≥ 36px), 행 내 중심 간격 ≥ 56px(공 지름 28 + 여유).
+  // 트랩 방지 제약: 핀 중심 x 115–605(벽과 틈 확보), 행 내 중심 간격 ≥ 공 지름 + 핀 지름 + 10(스케일 연동).
   buildPegs() {
     if (this.pegs) this.pegs.clear(true, true);
     else this.pegs = this.physics.add.staticGroup();
-    for (let row = 0; row < 7; row += 1) {
+    const s = this.sizeScale();
+    // 정적 바디는 스케일을 자동 반영하지 않는다 — 스케일 적용 후 refreshBody, 원은 월드 픽셀로 지정
+    // r: 핀 반지름(기준 9, 마지막 행 작은 핀은 5)
+    const makePeg = (x, y, delay, r = 9) => {
+      const sv = s * (r / 9); // 텍스처 기준 반지름 9 → 원하는 반지름으로 축소
+      const peg = this.pegs.create(x, y, 'peg');
+      peg.setTint(C.subtext);
+      peg.setScale(sv).refreshBody();
+      peg.body.setCircle(r * s);
+      peg.baseScale = sv; // 히트 연출 복원용(핀마다 크기가 다름)
+      peg.lastHit = 0;
+      // 새 핀이 통통 나타나는 피드백(섞였음이 눈에 보이게) — 표시만 커지고 바디는 그대로
+      peg.setScale(0);
+      this.tweens.add({ targets: peg, scale: sv, duration: 200, delay, ease: 'Back.easeOut' });
+    };
+
+    const ballD = 28 * s; // 공 지름(스케일 반영)
+    for (let row = 0; row < 6; row += 1) {
       const n = this.rng.between(6, 8);
       const spacing = (605 - 115) / (n - 1);
-      const jitter = Math.floor(Math.min(18, (spacing - 56) / 2));
+      const minGap = ballD + 18 * s + 10; // 공 + 핀 + 여유
+      const jitter = Math.floor(Math.min(18, (spacing - minGap) / 2));
       // 가끔 안쪽 핀 하나를 빼서 '구멍'을 만든다(맵마다 성격이 달라짐)
       const skipIdx = n >= 6 && this.rng.frac() < 0.35 ? this.rng.between(1, n - 2) : -1;
       for (let i = 0; i < n; i += 1) {
         if (i === skipIdx) continue;
         const x = Phaser.Math.Clamp(115 + i * spacing + this.rng.between(-jitter, jitter), 115, 605);
         const y = 400 + row * 70 + this.rng.between(-12, 12);
-        const peg = this.pegs.create(x, y, 'peg');
-        peg.setTint(C.subtext);
-        peg.body.setCircle(9);
-        peg.lastHit = 0;
-        // 새 핀이 통통 나타나는 피드백(섞였음이 눈에 보이게)
-        peg.setScale(0);
-        this.tweens.add({ targets: peg, scale: 1, duration: 200, delay: row * 30, ease: 'Back.easeOut' });
+        makePeg(x, y, row * 30);
       }
     }
 
-    // 결과 칸 중앙 위 고정 핀(칸당 1개) — 착지 직전 마지막 갈림. 랜덤 없이 항상 같은 위치.
-    const slotW = (RIGHT - LEFT) / SLOT_N;
-    for (let i = 0; i < SLOT_N; i += 1) {
-      const peg = this.pegs.create(LEFT + slotW * (i + 0.5), 860, 'peg');
-      peg.setTint(C.subtext);
-      peg.body.setCircle(9);
-      peg.lastHit = 0;
-      peg.setScale(0);
-      this.tweens.add({ targets: peg, scale: 1, duration: 200, delay: 7 * 30, ease: 'Back.easeOut' });
+    // 마지막 행(랜덤 행 하나를 대체): 결정칸 중앙 + 칸 사이 경계에 '작은 핀'(r5) —
+    // 착지 직전 촘촘한 마지막 갈림. 랜덤 없이 항상 같은 위치.
+    const slotW = (RIGHT - LEFT) / this.slots.length;
+    const finalN = this.slots.length * 2 - 1; // 중앙 n개 + 경계 n−1개
+    for (let i = 0; i < finalN; i += 1) {
+      makePeg(LEFT + slotW * (i + 1) / 2, 860, 6 * 30, 5);
     }
   }
 
@@ -160,7 +187,7 @@ export default class PinballScene extends MiniGame {
 
   buildDropControl() {
     // 고스트 공 + 화살표(주도성: 여기서 떨어진다는 정직한 시그니파이어)
-    this.ghost = this.add.image(this.dropX, 300, 'ball').setTint(C.primary).setAlpha(0.55);
+    this.ghost = this.add.image(this.dropX, 300, 'ball').setTint(C.primary).setAlpha(0.55).setScale(this.sizeScale());
     this.arrow = this.add.graphics();
     this.drawArrow();
 
@@ -212,8 +239,8 @@ export default class PinballScene extends MiniGame {
     this.resultText.setColor(css(C.subtext)).setText('...').setScale(1);
     this.slowmoDone = false;
 
-    this.ball = this.physics.add.image(this.dropX, 300, 'ball').setTint(C.text);
-    this.ball.body.setCircle(14);
+    this.ball = this.physics.add.image(this.dropX, 300, 'ball').setTint(C.text).setScale(this.sizeScale());
+    this.ball.body.setCircle(14); // 소스 픽셀 기준 — 동적 바디는 스케일 자동 반영
     this.ball.setBounce(0.55);
     this.ball.setCollideWorldBounds(true);
     this.ball.body.setGravityY(1500);
@@ -232,11 +259,11 @@ export default class PinballScene extends MiniGame {
     if (now - peg.lastHit < 90) return;
     peg.lastHit = now;
 
-    // 핀 히트 피드백: 플래시 + 팝(도파민 마이크로 보상)
+    // 핀 히트 피드백: 플래시 + 팝(도파민 마이크로 보상) — 핀별 기본 크기 기준 상대 팝
     peg.setTint(C.primary);
     this.tweens.add({
-      targets: peg, scale: 1.5, duration: 70, yoyo: true, ease: 'Quad.easeOut',
-      onComplete: () => { if (peg.active) { peg.setTint(C.subtext); peg.setScale(1); } },
+      targets: peg, scale: peg.baseScale * 1.5, duration: 70, yoyo: true, ease: 'Quad.easeOut',
+      onComplete: () => { if (peg.active) { peg.setTint(C.subtext); peg.setScale(peg.baseScale); } },
     });
 
     // 실물리 잔떨림(플링코 특유의 예측불가) — 화면에 그대로 보이는 정직한 랜덤
@@ -281,8 +308,8 @@ export default class PinballScene extends MiniGame {
   }
 
   resolve() {
-    const slotW = (RIGHT - LEFT) / SLOT_N;
-    const idx = Phaser.Math.Clamp(Math.floor((this.ball.x - LEFT) / slotW), 0, SLOT_N - 1);
+    const slotW = (RIGHT - LEFT) / this.slots.length;
+    const idx = Phaser.Math.Clamp(Math.floor((this.ball.x - LEFT) / slotW), 0, this.slots.length - 1);
     const color = SLICE[idx % SLICE.length];
     const slotX = LEFT + slotW * (idx + 0.5);
 
@@ -293,7 +320,7 @@ export default class PinballScene extends MiniGame {
     this.ball = null;
     ball.disableBody(true, false);
     this.tweens.add({
-      targets: ball, x: slotX, y: 945, scale: 0.8, duration: 160, ease: 'Quad.easeIn',
+      targets: ball, x: slotX, y: 945, scale: this.sizeScale() * 0.8, duration: 160, ease: 'Quad.easeIn',
       onComplete: () => {
         this.tweens.add({ targets: ball, alpha: 0, duration: 350, delay: 500, onComplete: () => ball.destroy() });
       },
@@ -317,7 +344,7 @@ export default class PinballScene extends MiniGame {
     this.unlock();
   }
 
-  // ===== 칸 편집(라벨만, 6칸 고정 — 물리 균등성 유지) =====
+  // ===== 칸 편집(이름 변경 + 칸 수 4–10개, 크기 스케일 연동) =====
   openEditor() {
     if (this.editor || this.locked) return;
     const { width, height } = this.scale;
@@ -326,7 +353,8 @@ export default class PinballScene extends MiniGame {
     const dim = this.add.rectangle(0, 0, width, height, 0x000000, 0.72).setOrigin(0).setInteractive();
     this.editor.add(dim);
 
-    const px = 40; const py = 300; const pw = 640; const ph = 600;
+    const px = 40; const py = 260; const pw = 640; const ph = 760;
+    this.edRect = { px, py, pw };
     const panel = this.add.graphics();
     panel.fillStyle(C.surface, 1).fillRoundedRect(px, py, pw, ph, RADIUS);
     panel.lineStyle(2, C.surfaceAlt, 1).strokeRoundedRect(px, py, pw, ph, RADIUS);
@@ -336,7 +364,7 @@ export default class PinballScene extends MiniGame {
       fontFamily: FONT, fontSize: '36px', color: css(C.text), fontStyle: 'bold',
     }).setOrigin(0.5));
 
-    this.editorNote = this.add.text(width / 2, py + 100, '칸 수는 6개 고정 · 4자 이내', {
+    this.editorNote = this.add.text(width / 2, py + 100, `칸 ${SLOT_MIN}–${SLOT_MAX}개 · 이름 4자 이내`, {
       fontFamily: FONT, fontSize: '22px', color: css(C.subtext),
     }).setOrigin(0.5);
     this.editor.add(this.editorNote);
@@ -376,24 +404,67 @@ export default class PinballScene extends MiniGame {
       this.chipsBox.add(hit);
     });
 
-    // 기본값 복원
-    const rx = startX + 0;
-    const ry = py + 150 + 2 * (chipH + gap) + 12;
-    const rg = this.add.graphics();
-    rg.lineStyle(2, C.warning, 1).strokeRoundedRect(rx, ry, 200, 60, 14);
-    const rt = this.add.text(rx + 100, ry + 30, '↺ 기본값', {
-      fontFamily: FONT, fontSize: '26px', color: css(C.warning), fontStyle: 'bold',
-    }).setOrigin(0.5);
-    const rhit = this.add.rectangle(rx + 100, ry + 30, 200, 60, 0xffffff, 0).setInteractive({ useHandCursor: true });
-    rhit.on('pointerup', () => {
-      try { localStorage.removeItem(LS_SLOTS); } catch (e) { /* 무시 */ }
-      this.slots = [...DEFAULT_SLOTS];
-      this.refreshSlotLabels();
-      this.renderChips(px, py, pw);
+    // 컨트롤 행(칸 그리드 아래): ＋ 칸 추가 · − 칸 빼기 · ↺ 기본값
+    const rows = Math.ceil(this.slots.length / 3);
+    const cy = py + 150 + rows * (chipH + gap) + 12;
+    const controls = [
+      { label: '＋ 칸 추가', color: C.primary, onTap: () => this.addSlot() },
+      { label: '− 칸 빼기', color: C.primary, onTap: () => this.removeSlot() },
+      { label: '↺ 기본값', color: C.warning, onTap: () => this.resetSlots() },
+    ];
+    controls.forEach((c, i) => {
+      const x = startX + i * (chipW + gap);
+      const g = this.add.graphics();
+      g.lineStyle(2, c.color, 1).strokeRoundedRect(x, cy, chipW, 60, 14);
+      const t = this.add.text(x + chipW / 2, cy + 30, c.label, {
+        fontFamily: FONT, fontSize: '26px', color: css(c.color), fontStyle: 'bold',
+      }).setOrigin(0.5);
+      const hit = this.add.rectangle(x + chipW / 2, cy + 30, chipW, 60, 0xffffff, 0)
+        .setInteractive({ useHandCursor: true });
+      hit.on('pointerup', c.onTap);
+      this.chipsBox.add(g);
+      this.chipsBox.add(t);
+      this.chipsBox.add(hit);
     });
-    this.chipsBox.add(rg);
-    this.chipsBox.add(rt);
-    this.chipsBox.add(rhit);
+  }
+
+  // 칸 수 변경 후 보드·크기 일괄 반영
+  applySlotCount() {
+    saveSlots(this.slots);
+    this.buildSlots();
+    this.buildPegs();
+    this.ghost.setScale(this.sizeScale());
+    this.renderChips(this.edRect.px, this.edRect.py, this.edRect.pw);
+  }
+
+  addSlot() {
+    if (this.slots.length >= SLOT_MAX) { this.flashNote(`최대 ${SLOT_MAX}칸까지예요`); return; }
+    this.slots.push('꽝');
+    this.applySlotCount();
+  }
+
+  removeSlot() {
+    if (this.slots.length <= SLOT_MIN) { this.flashNote(`최소 ${SLOT_MIN}칸은 있어야 해요`); return; }
+    this.slots.pop();
+    this.applySlotCount();
+  }
+
+  resetSlots() {
+    try { localStorage.removeItem(LS_SLOTS); } catch (e) { /* 무시 */ }
+    this.slots = [...DEFAULT_SLOTS];
+    this.buildSlots();
+    this.buildPegs();
+    this.ghost.setScale(this.sizeScale());
+    this.renderChips(this.edRect.px, this.edRect.py, this.edRect.pw);
+  }
+
+  flashNote(msg) {
+    this.editorNote.setText(msg).setColor(css(C.warning));
+    this.time.delayedCall(1200, () => {
+      if (this.editorNote && this.editorNote.active) {
+        this.editorNote.setText(`칸 ${SLOT_MIN}–${SLOT_MAX}개 · 이름 4자 이내`).setColor(css(C.subtext));
+      }
+    });
   }
 
   renameSlot(i) {
@@ -404,7 +475,7 @@ export default class PinballScene extends MiniGame {
     this.slots[i] = s;
     saveSlots(this.slots);
     this.refreshSlotLabels();
-    if (this.editor) { const { x, y, w } = { x: 40, y: 300, w: 640 }; this.renderChips(x, y, w); }
+    if (this.editor) this.renderChips(this.edRect.px, this.edRect.py, this.edRect.pw);
   }
 
   refreshSlotLabels() {
