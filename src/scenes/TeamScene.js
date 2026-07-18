@@ -672,12 +672,17 @@ export default class TeamScene extends MiniGame {
   closeEditor() {
     this.closePaste();
     if (this.editor) { this.editor.destroy(); this.editor = null; }
-    // 명단 변경을 화면에 반영: 조 수 상한 재검토 + 라벨·패널 갱신
+    // 명단 변경 반영: 조 수 상한 재검토
     const maxByPeople = this.useRoster() ? this.activePeople().length : this.count;
-    this.groups = Phaser.Math.Clamp(this.groups, GROUP_MIN, Math.max(GROUP_MIN, Math.min(GROUP_MAX, maxByPeople)));
-    saveStr(LS_GROUPS, this.groups);
+    const clamped = Phaser.Math.Clamp(this.groups, GROUP_MIN, Math.max(GROUP_MIN, Math.min(GROUP_MAX, maxByPeople)));
+    const groupsChanged = clamped !== this.groups;
+    if (groupsChanged) { this.groups = clamped; saveStr(LS_GROUPS, this.groups); }
     this.refreshLabels();
-    this.buildPanels();
-    this.resetHint();
+    // 화면의 지난 편성은 그대로 유지 — 패널을 다시 그려야 할 때만 재구성 후 기록을 즉시 복원
+    if (groupsChanged || !this.lastLists) {
+      this.buildPanels();
+      this.resetHint();
+      this.restoreLast();
+    }
   }
 }
