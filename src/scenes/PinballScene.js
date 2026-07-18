@@ -42,6 +42,7 @@ export default class PinballScene extends MiniGame {
   onCreate() {
     const { width } = this.scale;
     this.cx = width / 2;
+    this.editor = null; // 재진입 시 stale 참조 초기화(편집 연 채 나간 경우)
     this.slots = loadSlots();
     this.hits = 0;
     this.dropX = this.cx;

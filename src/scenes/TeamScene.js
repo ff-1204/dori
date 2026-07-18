@@ -80,6 +80,10 @@ export default class TeamScene extends MiniGame {
   onCreate() {
     const { width } = this.scale;
     this.cx = width / 2;
+    // 씬 재진입 시 이전 판의 오버레이 참조 초기화(열어둔 채 나가면 stale 참조가 남는다)
+    this.editor = null;
+    this.pasteOverlay = null;
+    this.lastLists = null;
     this.count = loadInt(LS_COUNT, 8, COUNT_MIN, COUNT_MAX);
     this.groups = loadInt(LS_GROUPS, 2, GROUP_MIN, GROUP_MAX);
     if (this.groups > this.count) this.groups = GROUP_MIN;
@@ -134,10 +138,16 @@ export default class TeamScene extends MiniGame {
     this.restoreLast(); // 지난 편성이 있으면 그대로 보여준다
   }
 
-  // 지난 편성 복원 — 저장된 조 수가 현재 설정과 같을 때만 표시(다르면 새 판에서 갱신)
+  // 지난 편성 복원 — 조 수가 달라져 있으면 지난 편성 기준으로 동기화(기억 우선)
   restoreLast() {
     const saved = loadLast();
-    if (!saved || saved.lists.length !== this.groups) return;
+    if (!saved || saved.lists.length < GROUP_MIN || saved.lists.length > GROUP_MAX) return;
+    if (saved.lists.length !== this.groups) {
+      this.groups = saved.lists.length;
+      saveStr(LS_GROUPS, this.groups);
+      this.refreshLabels();
+      this.buildPanels();
+    }
     this.rosterRound = !!saved.roster;
     const maxSize = Math.max(...saved.lists.map((l) => l.length), 1);
     this.chipSpec = this.rosterRound ? NAME_CHIP : this.pickNumSpecFor(maxSize);

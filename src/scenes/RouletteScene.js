@@ -87,6 +87,7 @@ export default class RouletteScene extends MiniGame {
   onCreate() {
     const { width } = this.scale;
     this.cx = width / 2;
+    this.editor = null; // 재진입 시 stale 참조 초기화(편집 연 채 나간 경우)
     this.cy = 560;
     this.radius = 300;
     this.wheelAngle = 0;
