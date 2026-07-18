@@ -48,7 +48,8 @@ export default class CrocoScene extends MiniGame {
     lower.fillStyle(CROC_DARK, 1).fillRoundedRect(80, 640, 560, 30, { tl: 40, tr: 40, bl: 0, br: 0 });
 
     // 위턱(내려와서 무는 컨테이너): y 260–450 → 물면 +170
-    this.upperJaw = this.add.container(0, 0);
+    // 이빨보다 위 레이어(depth) — 닫힐 때 이빨이 입 안으로 자연히 가려진다
+    this.upperJaw = this.add.container(0, 0).setDepth(10);
     const upper = this.add.graphics();
     upper.fillStyle(CROC, 1).fillRoundedRect(80, 260, 560, 190, 40);
     upper.fillStyle(CROC_DARK, 1).fillRoundedRect(80, 420, 560, 30, { tl: 0, tr: 0, bl: 40, br: 40 });
@@ -116,11 +117,11 @@ export default class CrocoScene extends MiniGame {
 
   chomp(i) {
     this.bitten = true;
-    // 함정 이빨은 빨간색으로 표시(색상 연결: 위험색) — 어떤 이빨이었는지 정직하게 공개
+    // 함정 이빨은 빨간색으로 칠해 두고(색상 연결: 위험색), 입을 다시 열 때 공개한다
     const t = this.teeth[i];
     t.g.setAlpha(1);
     t.g.fillStyle(C.danger, 1).fillRoundedRect(t.x - 32, t.y - 30, 64, 56, 12);
-    // 위턱이 쾅 닫힌다(Peak)
+    // 위턱이 쾅 닫힌다(Peak) — depth 정렬로 이빨 전부가 입 안에 가려진다
     this.tweens.add({
       targets: this.upperJaw, y: 170, duration: 130, ease: 'Quad.easeIn',
       onComplete: () => {
@@ -133,7 +134,8 @@ export default class CrocoScene extends MiniGame {
         this.hint.setText(`앙!! ${this.doneCount}번째에서 물렸다 — 벌칙 🎉`);
         this.hint.setScale(0);
         this.tweens.add({ targets: this.hint, scale: 1, duration: 340, ease: EASE.bounce });
-        this.tweens.add({ targets: this.upperJaw, y: 150, duration: 300, delay: 250, ease: EASE.bounce });
+        // 잠시 꽉 물고 있다가 입을 다시 열며 빨간 함정 이빨 공개(실물 완구 동작 + 정직한 공개)
+        this.tweens.add({ targets: this.upperJaw, y: 0, duration: 420, delay: 600, ease: 'Back.easeOut' });
         this.unlock();
       },
     });
