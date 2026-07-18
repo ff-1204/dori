@@ -47,6 +47,8 @@ function noise({ dur = 0.28, gain = 0.28, delay = 0 }) {
   src.start(t0);
 }
 
+// 라우드니스 기준: 이벤트 사운드(pop/win/bang/fail)는 gain ≈ 0.14–0.16으로 통일,
+// 마이크로 피드백(tap/tick)만 의도적으로 작게 — 특정 소리(빵/쾅)만 튀지 않게 유지한다.
 const SOUNDS = {
   tap: () => tone({ freq: 700, dur: 0.05, type: 'square', gain: 0.07 }),        // 버튼/누르기
   tick: () => tone({ freq: 1250, dur: 0.03, type: 'square', gain: 0.05 }),      // 핀 히트/찰칵
@@ -56,9 +58,9 @@ const SOUNDS = {
     tone({ freq: 659, dur: 0.1, type: 'triangle', gain: 0.16, delay: 0.09 });
     tone({ freq: 784, dur: 0.16, type: 'triangle', gain: 0.16, delay: 0.18 });
   },
-  bang: () => {                                                                  // 빵/쾅/펑
-    noise({ dur: 0.3, gain: 0.3 });
-    tone({ freq: 150, to: 55, dur: 0.3, type: 'sine', gain: 0.3 });
+  bang: () => {                                                                  // 빵/쾅/펑 — 노이즈+저음 겹침이라 개별 gain은 더 낮게
+    noise({ dur: 0.25, gain: 0.14 });
+    tone({ freq: 150, to: 55, dur: 0.28, type: 'sine', gain: 0.14 });
   },
   fail: () => {                                                                  // 꽝(하강 개그 톤 — 유쾌하게)
     tone({ freq: 330, to: 262, dur: 0.16, type: 'triangle', gain: 0.15 });
