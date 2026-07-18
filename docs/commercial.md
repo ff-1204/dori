@@ -1,6 +1,7 @@
 # 상업화 규칙 (Commercialization) — 광고·수익화 대비
 
 상업적으로 배포·수익화(광고 포함)할 수 있도록 지키는 규칙.
+**실행 순서·진행 상태는 [commercial-plan.md](./commercial-plan.md)**에서 관리한다.
 
 > **상위 원칙**: [design-principles.md](./design-principles.md)(게이미피케이션·어포던스, **정직함**)를 우선한다.
 > 수익화도 **윤리 가드레일 안에서** — 다크 패턴·오클릭 유도·기만 광고 금지.
