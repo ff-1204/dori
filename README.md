@@ -40,7 +40,6 @@
 - **Phaser 3** (CDN) + 바닐라 JS ES 모듈 — 빌드 도구 없음
 - **GitHub Pages** 배포 — `main` 푸시 후 약 20초면 반영
 - 에셋 대부분 코드 생성(도형·이모지 텍스처·Web Audio 합성음)
-- 로컬 실행: `python -m http.server 8000` (ES 모듈은 정적 서버 필요)
 
 ## 문서
 
