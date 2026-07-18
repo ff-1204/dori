@@ -92,6 +92,19 @@ export default class RouletteScene extends MiniGame {
     this.modeBtn.on('pointerout', () => this.modeBtn.setColor(css(C.subtext)));
     this.modeBtn.on('pointerup', () => this.toggleMode());
 
+    // 비복원 모드: 나온 항목은 칸이 흐려지고 다음 스핀에서 제외(뽑기 상자와 같은 정직 원칙)
+    this.excludeMode = false;
+    this.excluded = new Set(); // 항목 이름 기준(세션 한정 — 재진입 시 초기화)
+    this.excludeBtn = this.add.text(32, 200, '', {
+      fontFamily: FONT, fontSize: '28px', color: css(C.subtext), fontStyle: 'bold',
+    }).setOrigin(0, 0.5).setInteractive({ useHandCursor: true });
+    this.excludeBtn.on('pointerup', () => this.toggleExclude());
+    this.cancelBtn = this.add.text(width - 32, 200, '', {
+      fontFamily: FONT, fontSize: '28px', color: css(C.warning), fontStyle: 'bold',
+    }).setOrigin(1, 0.5).setInteractive({ useHandCursor: true });
+    this.cancelBtn.on('pointerup', () => this.cancelExclusions());
+    this.updateExcludeUi();
+
     this.buildWheel();
     this.buildPointer();
     this.updateFryHint(); // 진입 시 카운터가 이미 9면 바로 반짝임
@@ -131,6 +144,46 @@ export default class RouletteScene extends MiniGame {
   defaultHint() { return this.mode === 'number' ? '돌려서 숫자를 정하세요' : '돌려서 메뉴를 정하세요'; }
 
   editLabel() { return this.mode === 'number' ? '# 숫자 개수' : '✎ 메뉴 편집'; }
+
+  // ===== 비복원 모드 =====
+  toggleExclude() {
+    if (this.locked) return;
+    this.excludeMode = !this.excludeMode;
+    if (!this.excludeMode) this.cancelExclusions();
+    this.updateExcludeUi();
+    Sfx.play('tap');
+  }
+
+  // 제외 취소: 흐려진 칸을 전부 되살린다
+  cancelExclusions() {
+    if (this.locked) return;
+    this.excluded.clear();
+    (this.dimOverlays || []).forEach((o) => o.destroy());
+    this.dimOverlays = [];
+    (this.sliceLabels || []).forEach((l) => l.setAlpha(1));
+    this.updateExcludeUi();
+  }
+
+  updateExcludeUi() {
+    this.excludeBtn.setText(this.excludeMode ? '☑ 나온 건 제외' : '☐ 나온 건 제외');
+    this.excludeBtn.setColor(css(this.excludeMode ? C.primary : C.subtext));
+    const n = this.excluded.size;
+    this.cancelBtn.setVisible(this.excludeMode && n > 0);
+    this.cancelBtn.setText(`↺ 제외 취소 (${n})`);
+  }
+
+  // 흐림 처리: 칸 위에 어두운 오버레이 + 라벨 흐림(휠과 함께 회전)
+  dimSlice(i) {
+    const g = this.add.graphics();
+    g.fillStyle(C.bg, 0.62);
+    g.beginPath();
+    g.slice(0, 0, this.radius, Phaser.Math.DegToRad(i * this.sliceAngle), Phaser.Math.DegToRad((i + 1) * this.sliceAngle), false);
+    g.closePath();
+    g.fillPath();
+    this.wheel.add(g);
+    this.dimOverlays.push(g);
+    if (this.sliceLabels[i]) this.sliceLabels[i].setAlpha(0.4);
+  }
 
   toggleMode() {
     if (this.locked) return;
@@ -199,6 +252,8 @@ export default class RouletteScene extends MiniGame {
     this.sliceAngle = 360 / this.n;
     this.computeSliceColors();
     const fontSize = this.n > 10 ? 24 : 30;
+    this.sliceLabels = [];
+    this.dimOverlays = [];
 
     this.wheel = this.add.container(this.cx, this.cy);
 
@@ -237,6 +292,7 @@ export default class RouletteScene extends MiniGame {
         label.on('pointerup', () => this.onLabelTap(i));
       }
       this.wheel.add(label);
+      this.sliceLabels.push(label);
     });
 
     const hub = this.add.circle(0, 0, 40, C.surface).setStrokeStyle(6, C.bg);
@@ -247,8 +303,10 @@ export default class RouletteScene extends MiniGame {
     if (this.wheel) this.wheel.destroy();
     this.fryHint = null; // 휠과 함께 파괴됨
     this.wheelAngle = 0;
+    this.excluded.clear(); // 구성이 바뀌면 제외 기록도 초기화(오버레이는 휠과 함께 파괴됨)
     this.buildWheel();
     this.updateFryHint();
+    this.updateExcludeUi();
   }
 
   // 특정 칸 위에 흰 오버레이(반짝임용) — 휠 컨테이너에 넣어 함께 회전
@@ -287,6 +345,7 @@ export default class RouletteScene extends MiniGame {
   // 숨은 치트: 아무 메뉴 라벨이나 더블탭 → 칸이 반짝이며 그 메뉴 확정 스핀
   onLabelTap(i) {
     if (this.locked || this.mode !== 'menu') return;
+    if (this.excludeMode && this.excluded.has(this.items[i])) return; // 제외된 칸은 무시
     const now = this.time.now;
     if (this.lastTap && this.lastTap.i === i && now - this.lastTap.t < 350) {
       this.lastTap = null;
@@ -314,6 +373,13 @@ export default class RouletteScene extends MiniGame {
 
   spin(forceIdx = null) {
     if (this.locked) return;
+    // 비복원: 남은 풀 계산 — 모두 나왔으면 스핀 대신 안내(정직: 빈 풀에서 돌리지 않는다)
+    const pool = this.items.map((_, i) => i)
+      .filter((i) => !this.excludeMode || !this.excluded.has(this.items[i]));
+    if (pool.length === 0) {
+      this.resultText.setColor(css(C.warning)).setText('전부 나왔어요!\n↺ 제외 취소로 되돌리기').setScale(1);
+      return;
+    }
     this.lock();
     this.spinBtn.disableButton();
     this.resultText.setColor(css(C.subtext));
@@ -325,14 +391,15 @@ export default class RouletteScene extends MiniGame {
       let pity = parseInt(loadStr(LS_SPINS, '0'), 10) || 0;
       pity += 1;
       const fryIdx = this.items.indexOf(FRY);
+      const fryAvailable = fryIdx !== -1 && pool.includes(fryIdx);
       if (forceIdx !== null) winner = forceIdx; // 더블탭 치트(선택 메뉴 확정)
-      else if (pity >= PITY && fryIdx !== -1) winner = fryIdx;
-      else winner = this.rng.between(0, this.n - 1);
+      else if (pity >= PITY && fryAvailable) winner = fryIdx;
+      else winner = pool[this.rng.between(0, pool.length - 1)];
       // 감자튀김이 나오면(보증이든 자연이든) 카운터 리셋
       if (this.items[winner] === FRY) pity = 0;
       saveStr(LS_SPINS, String(pity));
     } else {
-      winner = this.rng.between(0, this.n - 1);
+      winner = pool[this.rng.between(0, pool.length - 1)];
     }
     const winnerCenter = (winner + 0.5) * this.sliceAngle;
 
@@ -390,6 +457,13 @@ export default class RouletteScene extends MiniGame {
     this.spinBtn.setLabel('다시 돌리기');
     this.unlock();
     this.updateFryHint(); // 보증 카운터 9면 반짝임 시작, 감자튀김이 나왔으면 해제
+
+    // 비복원: 나온 항목을 제외 목록에 넣고 칸을 흐린다(남은 풀이 항상 보임 — 정직)
+    if (this.excludeMode) {
+      this.excluded.add(this.items[winner]);
+      this.dimSlice(winner);
+      this.updateExcludeUi();
+    }
   }
 
   // ===== 메뉴 편집 =====
