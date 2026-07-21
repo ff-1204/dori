@@ -48,8 +48,10 @@ export default class PinballScene extends MiniGame {
     this.hits = 0;
     this.dropX = this.cx;
 
-    this.add.text(this.cx, 140, '랜덤 핀볼', {
-      fontFamily: FONT, fontSize: '48px', color: css(C.text), fontStyle: 'bold',
+    // 레이아웃(검산): 헤더 y48(⬅·제목 40px) / 문구124–156 / 카운터187–213(우) / 낙하 조작215–365 / 핀400–860 / 칸895–995 / 섞기·편집1007–1033 / 버튼1054–1154
+    // 룰렛·사다리와 같은 패턴: 헤더 행 + 상단 문구 + 게임판 + 판 아래 구성 컨트롤 + 주 버튼(위계 40>32>26)
+    this.add.text(this.cx, 48, '랜덤 핀볼', {
+      fontFamily: FONT, fontSize: '40px', color: css(C.text), fontStyle: 'bold',
     }).setOrigin(0.5);
 
     this.hitText = this.add.text(width - 32, 200, '', {
@@ -57,9 +59,10 @@ export default class PinballScene extends MiniGame {
     }).setOrigin(1, 0.5);
 
     // 맵 섞기 — 핀 배치와 결과 칸 순서를 다시 굴린다(전부 보이는 상태에서 바뀜 = 정직)
-    this.shuffleBtn = this.add.text(width - 32, 140, '🔀 맵 섞기', {
-      fontFamily: FONT, fontSize: '28px', color: css(C.subtext), fontStyle: 'bold',
-    }).setOrigin(1, 0.5).setInteractive({ useHandCursor: true });
+    // 판 구성 컨트롤이라 칸 편집과 함께 게임판 바로 아래에 나란히 배치
+    this.shuffleBtn = this.add.text(this.cx - 130, 1020, '🔀 맵 섞기', {
+      fontFamily: FONT, fontSize: '26px', color: css(C.subtext), fontStyle: 'bold',
+    }).setOrigin(0.5).setInteractive({ useHandCursor: true });
     this.shuffleBtn.on('pointerover', () => this.shuffleBtn.setColor(css(C.primary)));
     this.shuffleBtn.on('pointerout', () => this.shuffleBtn.setColor(css(C.subtext)));
     this.shuffleBtn.on('pointerup', () => this.shuffleMap());
@@ -69,17 +72,18 @@ export default class PinballScene extends MiniGame {
     this.buildBoard();
     this.buildDropControl();
 
-    this.resultText = this.add.text(this.cx, 1025, '위쪽을 끌어 위치를 정하고 떨어뜨리세요', {
-      fontFamily: FONT, fontSize: '30px', color: css(C.subtext), fontStyle: 'bold',
+    // 안내·결과 공용 문구 — 상단(헤더와 조작 영역 사이)
+    this.resultText = this.add.text(this.cx, 140, '위쪽을 끌어 위치를 정하고 떨어뜨리세요', {
+      fontFamily: FONT, fontSize: '32px', color: css(C.subtext), fontStyle: 'bold',
     }).setOrigin(0.5);
 
     this.dropBtn = makeButton(this, {
-      x: this.cx, y: 1100, w: 380, h: 100, label: '떨어뜨리기', variant: 'primary',
+      x: this.cx, y: 1104, w: 380, h: 100, label: '떨어뜨리기', variant: 'primary',
       onClick: () => this.drop(),
     });
 
-    this.editBtn = this.add.text(this.cx, 1206, '✎ 칸 편집', {
-      fontFamily: FONT, fontSize: '30px', color: css(C.subtext),
+    this.editBtn = this.add.text(this.cx + 130, 1020, '✎ 칸 편집', {
+      fontFamily: FONT, fontSize: '26px', color: css(C.subtext), fontStyle: 'bold',
     }).setOrigin(0.5).setInteractive({ useHandCursor: true });
     this.editBtn.on('pointerover', () => this.editBtn.setColor(css(C.primary)));
     this.editBtn.on('pointerout', () => this.editBtn.setColor(css(C.subtext)));

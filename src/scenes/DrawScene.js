@@ -39,8 +39,10 @@ export default class DrawScene extends MiniGame {
     this.items = loadItems();
     this.drawn = new Set(); // 비복원: 뽑힌 원본 인덱스
 
-    this.add.text(this.cx, 140, '뽑기 상자', {
-      fontFamily: FONT, fontSize: '48px', color: css(C.text), fontStyle: 'bold',
+    // 레이아웃(검산): 헤더 y48(⬅·제목 40px) / 문구124–156 / 풀 칩202–394 / 상자560–740(카드 팝 450) / 편집·되돌리기989–1015 / 버튼1054–1154
+    // 룰렛·사다리와 같은 패턴: 헤더 행 + 상단 문구 + 게임판 + 판 아래 컨트롤 + 주 버튼(위계 40>32>26)
+    this.add.text(this.cx, 48, '뽑기 상자', {
+      fontFamily: FONT, fontSize: '40px', color: css(C.text), fontStyle: 'bold',
     }).setOrigin(0.5);
 
     this.chipLayer = this.add.container(0, 0);
@@ -48,25 +50,26 @@ export default class DrawScene extends MiniGame {
 
     this.buildBox();
 
-    this.hint = this.add.text(this.cx, 1000, '뽑기를 누르면 하나가 나와요 (뽑힌 건 제외)', {
-      fontFamily: FONT, fontSize: '28px', color: css(C.subtext), fontStyle: 'bold',
+    // 안내·결과 공용 문구 — 상단. '(뽑힌 건 제외)'는 풀 칩이 시각적으로 보여주므로 문구에선 생략(32px 폭 확보)
+    this.hint = this.add.text(this.cx, 140, '뽑기를 누르면 하나가 나와요', {
+      fontFamily: FONT, fontSize: '32px', color: css(C.subtext), fontStyle: 'bold',
     }).setOrigin(0.5);
 
     this.drawBtn = makeButton(this, {
-      x: this.cx, y: 1100, w: 360, h: 100, label: '뽑기', variant: 'primary',
+      x: this.cx, y: 1104, w: 360, h: 100, label: '뽑기', variant: 'primary',
       onClick: () => this.draw(),
     });
 
-    // 보조 액션: 편집 / 전부 되돌리기
-    this.editBtn = this.add.text(this.cx - 150, 1206, '✎ 편집', {
-      fontFamily: FONT, fontSize: '30px', color: css(C.subtext),
+    // 보조 액션: 편집 / 전부 되돌리기 — 상자 아래 나란히
+    this.editBtn = this.add.text(this.cx - 150, 1002, '✎ 편집', {
+      fontFamily: FONT, fontSize: '26px', color: css(C.subtext), fontStyle: 'bold',
     }).setOrigin(0.5).setInteractive({ useHandCursor: true });
     this.editBtn.on('pointerover', () => this.editBtn.setColor(css(C.primary)));
     this.editBtn.on('pointerout', () => this.editBtn.setColor(css(C.subtext)));
     this.editBtn.on('pointerup', () => this.openEditor());
 
-    this.resetBtn = this.add.text(this.cx + 150, 1206, '↺ 전부 되돌리기', {
-      fontFamily: FONT, fontSize: '30px', color: css(C.subtext),
+    this.resetBtn = this.add.text(this.cx + 150, 1002, '↺ 전부 되돌리기', {
+      fontFamily: FONT, fontSize: '26px', color: css(C.subtext), fontStyle: 'bold',
     }).setOrigin(0.5).setInteractive({ useHandCursor: true });
     this.resetBtn.on('pointerover', () => this.resetBtn.setColor(css(C.warning)));
     this.resetBtn.on('pointerout', () => this.resetBtn.setColor(css(C.subtext)));
@@ -188,7 +191,7 @@ export default class DrawScene extends MiniGame {
     this.drawn.clear();
     if (this.card) { this.card.destroy(); this.card = null; }
     this.renderPool();
-    this.hint.setColor(css(C.subtext)).setText('뽑기를 누르면 하나가 나와요 (뽑힌 건 제외)').setScale(1);
+    this.hint.setColor(css(C.subtext)).setText('뽑기를 누르면 하나가 나와요').setScale(1);
     this.drawBtn.setLabel('뽑기');
   }
 
@@ -297,7 +300,7 @@ export default class DrawScene extends MiniGame {
     if (this.card) { this.card.destroy(); this.card = null; }
     this.renderPool();
     this.renderEditorChips();
-    this.hint.setColor(css(C.subtext)).setText('뽑기를 누르면 하나가 나와요 (뽑힌 건 제외)').setScale(1);
+    this.hint.setColor(css(C.subtext)).setText('뽑기를 누르면 하나가 나와요').setScale(1);
     this.drawBtn.setLabel('뽑기');
   }
 
