@@ -46,9 +46,10 @@ export default class LadderScene extends MiniGame {
     this.editor = null; // 재진입 시 stale 참조 초기화
     this.inputOverlay = null;
 
-    // 레이아웃(요소 점유 범위 검산: 제목116–164 / 이름286–314 / 사다리330–920 / 결과940–975 / 안내991–1029 / 버튼1050–1150 / 편집1191–1221)
-    this.topY = 330;
-    this.bottomY = 920;
+    // 레이아웃(검산): 헤더 y48(⬅·제목 40px) / 문구124–156 / 이름174–246(라벨 210) / 사다리250–890 / 결과905–945(라벨 925) / 편집989–1015 / 버튼1054–1154
+    // 룰렛과 같은 패턴: 헤더 행 + 상단 문구 + 게임판 + 판 아래 편집 + 주 버튼(크기 위계 40>32>26)
+    this.topY = 250;
+    this.bottomY = 890;
     this.leftX = 90;
     this.rightX = 630;
 
@@ -59,26 +60,28 @@ export default class LadderScene extends MiniGame {
     this.started = false;
     this.traced = new Set();
 
-    this.add.text(this.cx, 140, '사다리타기', {
-      fontFamily: FONT, fontSize: '48px', color: css(C.text), fontStyle: 'bold',
+    // 제목 — 뒤로가기(⬅)와 같은 헤더 행(룰렛과 동일)
+    this.add.text(this.cx, 48, '사다리타기', {
+      fontFamily: FONT, fontSize: '40px', color: css(C.text), fontStyle: 'bold',
     }).setOrigin(0.5);
 
     this.boardLayer = this.add.container(0, 0);   // 세로줄 + 다리
     this.traceLayer = this.add.container(0, 0);   // 경로(색상 연결)
     this.labelLayer = this.add.container(0, 0);   // 이름/결과 라벨
 
-    // 안내·결과 문구는 메뉴 룰렛과 같은 배치 — 보드 아래·버튼 위에 크게 하나(설정·진행·결과 공용)
-    this.hint = this.add.text(this.cx, 1010, HINT_SETUP, {
-      fontFamily: FONT, fontSize: '38px', color: css(C.subtext), fontStyle: 'bold',
+    // 안내·결과 문구 — 룰렛과 동일하게 상단(헤더와 게임판 사이) 한 곳(설정·진행·결과 공용)
+    this.hint = this.add.text(this.cx, 140, HINT_SETUP, {
+      fontFamily: FONT, fontSize: '32px', color: css(C.subtext), fontStyle: 'bold',
     }).setOrigin(0.5);
 
     this.mainBtn = makeButton(this, {
-      x: this.cx, y: 1100, w: 360, h: 100, label: '시작', variant: 'primary',
+      x: this.cx, y: 1104, w: 360, h: 100, label: '시작', variant: 'primary',
       onClick: () => this.startOrShuffle(),
     });
 
-    this.editBtn = this.add.text(this.cx, 1206, '✎ 참가자·결과 편집', {
-      fontFamily: FONT, fontSize: '30px', color: css(C.subtext),
+    // 게임판 바로 아래 — 판 구성 컨트롤은 판에 붙인다(룰렛의 ✎ 메뉴 편집과 동일)
+    this.editBtn = this.add.text(this.cx, 1002, '✎ 참가자·결과 편집', {
+      fontFamily: FONT, fontSize: '26px', color: css(C.subtext), fontStyle: 'bold',
     }).setOrigin(0.5).setInteractive({ useHandCursor: true });
     this.editBtn.on('pointerover', () => this.editBtn.setColor(css(C.primary)));
     this.editBtn.on('pointerout', () => this.editBtn.setColor(css(C.subtext)));
@@ -136,10 +139,10 @@ export default class LadderScene extends MiniGame {
     // 이름(참가자 색 = 색상 연결 시작점) — 눌러서 출발(주도성)
     this.nameLabels = [];
     this.names.forEach((name, i) => {
-      const t = this.add.text(this.colX(i), 300, name, {
+      const t = this.add.text(this.colX(i), 210, name, {
         fontFamily: FONT, fontSize: `${nameSize}px`, color: css(PLAYER[i]), fontStyle: 'bold',
       }).setOrigin(0.5);
-      const hit = this.add.rectangle(this.colX(i), 300, 100, 72, 0xffffff, 0)
+      const hit = this.add.rectangle(this.colX(i), 210, 100, 72, 0xffffff, 0)
         .setInteractive({ useHandCursor: true });
       hit.on('pointerup', () => this.onNameTap(i));
       this.labelLayer.add(t);
@@ -150,10 +153,10 @@ export default class LadderScene extends MiniGame {
     // 결과 라벨(하단) — 참가자와 동일하게 시작 전 더블탭으로 수정
     this.resultLabels = [];
     this.results.forEach((r, i) => {
-      const t = this.add.text(this.colX(i), 955, r, {
+      const t = this.add.text(this.colX(i), 925, r, {
         fontFamily: FONT, fontSize: `${n >= 6 ? 22 : 26}px`, color: css(C.subtext), fontStyle: 'bold',
       }).setOrigin(0.5);
-      const hit = this.add.rectangle(this.colX(i), 955, 100, 64, 0xffffff, 0)
+      const hit = this.add.rectangle(this.colX(i), 925, 100, 64, 0xffffff, 0)
         .setInteractive({ useHandCursor: true });
       hit.on('pointerup', () => this.onResultTap(i));
       this.labelLayer.add(t);
