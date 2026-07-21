@@ -404,8 +404,10 @@ export default class PinballScene extends MiniGame {
     if (this.editor || this.locked) return;
     const { width, height } = this.scale;
 
+    // 모달은 위층(boardCam)에 배정 — main에 두면 보드 객체(위층)가 모달을 덮는다.
+    // 편집은 낙하 중(locked) 열 수 없으므로 boardCam 줌과 겹칠 일 없음.
     this.editor = this.add.container(0, 0).setDepth(100);
-    this.boardCam.ignore(this.editor); // 모달은 UI — main 카메라 전용
+    this.cameras.main.ignore(this.editor);
     const dim = this.add.rectangle(0, 0, width, height, 0x000000, 0.72).setOrigin(0).setInteractive();
     this.editor.add(dim);
 
