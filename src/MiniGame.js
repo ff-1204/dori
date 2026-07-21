@@ -21,7 +21,7 @@ export default class MiniGame extends Phaser.Scene {
     this.cameras.main.fadeIn(160, 18, 19, 28); // 씬 전환을 부드럽게(하드 컷 방지)
     this.timePhase = applyTimeAtmosphere(this); // 시간대 분위기(생리적 패턴)
     // 뒤로가기: 히스토리를 경유해 브라우저/OS 뒤로가기와 동일 경로로 허브 복귀
-    makeBackButton(this, () => goBackToHub(this));
+    this.backBtn = makeBackButton(this, () => goBackToHub(this)); // 참조 보관(멀티 카메라 ignore용)
     this.onCreate();
   }
 
@@ -50,6 +50,7 @@ export default class MiniGame extends Phaser.Scene {
     }).setDepth(50);
     em.explode(count);
     this.time.delayedCall(900, () => em.destroy());
+    return em; // 멀티 카메라 씬에서 카메라 배정(ignore)에 쓸 수 있게 반환
   }
 
   shake(intensity = 0.008, duration = 180) {

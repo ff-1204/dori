@@ -119,5 +119,6 @@ export function applyTimeAtmosphere(scene) {
   const v = scene.add.graphics().setDepth(-9);
   v.fillGradientStyle(0x0a0b11, 0x0a0b11, 0x0a0b11, 0x0a0b11, 0, 0, 0.4, 0.4);
   v.fillRect(0, Math.floor(height * 0.6), width, Math.ceil(height * 0.4));
+  scene.atmosphereLayers = [g, v]; // 멀티 카메라 씬에서 배경 이중 렌더 방지(ignore)용 참조
   return phase;
 }

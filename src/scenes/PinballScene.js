@@ -51,7 +51,7 @@ export default class PinballScene extends MiniGame {
     // 레이아웃(검산): 헤더 y48(⬅·제목 40px) / 문구124–156 /(여백 35)/ 낙하 조작191–341 / 핀376–836 / 칸871–971 /(여백 36)/ 섞기·편집1007–1033 / 버튼1054–1154
     // 보드 블록은 문구·컨트롤 링크 사이 상하 여백 균등(35/36) — 카운터(우, 187–213)는 투명 조작 영역과 겹쳐도 무방(표시 전용)
     // 룰렛·사다리와 같은 패턴: 헤더 행 + 상단 문구 + 게임판 + 판 아래 구성 컨트롤 + 주 버튼(위계 40>32>26)
-    this.add.text(this.cx, 48, '랜덤 핀볼', {
+    this.titleText = this.add.text(this.cx, 48, '랜덤 핀볼', {
       fontFamily: FONT, fontSize: '40px', color: css(C.text), fontStyle: 'bold',
     }).setOrigin(0.5);
 
@@ -89,6 +89,32 @@ export default class PinballScene extends MiniGame {
     this.editBtn.on('pointerover', () => this.editBtn.setColor(css(C.primary)));
     this.editBtn.on('pointerout', () => this.editBtn.setColor(css(C.subtext)));
     this.editBtn.on('pointerup', () => this.openEditor());
+
+    this.setupBoardCam();
+  }
+
+  // 보드 전용 카메라 — 슬로모 확대(zoomTo)를 핀볼판에만 적용한다.
+  // 보드 객체는 main에서 ignore(생성 지점마다), UI·배경은 boardCam에서 ignore(여기서 일괄).
+  setupBoardCam() {
+    const { width, height } = this.scale;
+    this.boardCam = this.cameras.add(0, 0, width, height);
+    this.boardCam.fadeIn(160, 18, 19, 28); // main과 같은 씬 전환 페이드
+    this.boardCam.ignore([
+      ...(this.atmosphereLayers || []),
+      this.backBtn, this.titleText, this.resultText, this.hitText,
+      this.shuffleBtn, this.editBtn, this.dropBtn,
+    ]);
+  }
+
+  // 슬로모 줌은 보드 카메라만 — UI·문구는 그대로
+  colorFlash(color, duration = 170) {
+    // 최상단(boardCam)에서 플래시해야 화면 전체를 덮는다(main 플래시는 보드 아래에 깔림)
+    this.boardCam.flash(duration, (color >> 16) & 0xff, (color >> 8) & 0xff, color & 0xff);
+  }
+
+  shake(intensity = 0.008, duration = 180) {
+    super.shake(intensity, duration);
+    this.boardCam.shake(duration, intensity); // 보드도 함께 흔들려야 물리적 타격감이 맞는다
   }
 
   buildBoard() {
@@ -97,6 +123,7 @@ export default class PinballScene extends MiniGame {
     wall.lineStyle(4, C.surfaceAlt, 1);
     wall.lineBetween(LEFT, 336, LEFT, 976);
     wall.lineBetween(RIGHT, 336, RIGHT, 976);
+    this.cameras.main.ignore(wall); // 보드 카메라 전용
 
     this.buildSlots();
     this.buildPegs();
@@ -139,6 +166,7 @@ export default class PinballScene extends MiniGame {
       this.slotLabels.push(label);
       if (i > 0) div.lineBetween(LEFT + slotW * i, 871, LEFT + slotW * i, 971);
     }
+    this.cameras.main.ignore(this.slotBox); // 보드 카메라 전용
   }
 
   // 핀 랜덤 배치 — 보드는 낙하 전 전부 보이므로 정직.
@@ -183,6 +211,7 @@ export default class PinballScene extends MiniGame {
         makePeg(x, y, row * 30);
       }
     }
+    this.cameras.main.ignore(this.pegs.getChildren()); // 보드 카메라 전용(섞을 때마다 재등록)
   }
 
   // 맵 섞기: 핀 배치 재생성 + 결과 칸 순서 셔플(화면 표시만 — 저장 안 함, 재진입 시 저장분 복원)
@@ -204,6 +233,7 @@ export default class PinballScene extends MiniGame {
     this.ghost = this.add.image(this.dropX, 276, 'ball').setTint(C.primary).setAlpha(0.55).setScale(this.ballScale());
     this.arrow = this.add.graphics();
     this.drawArrow();
+    this.cameras.main.ignore([this.ghost, this.arrow]); // 보드 카메라 전용
 
     // 상단 조작 영역: 드래그로 위치 선택, 탭으로 즉시 낙하(빠른 라운드 = 도파민)
     // 드래그는 씬 전역으로 추적 — 누른 채 영역 밖(아래)으로 끌어도 이어지고, 놓는 순간 낙하한다.
@@ -255,6 +285,7 @@ export default class PinballScene extends MiniGame {
     Sfx.play('pop'); // 출발
 
     this.ball = this.physics.add.image(this.dropX, 276, 'ball').setTint(C.text).setScale(this.ballScale());
+    this.cameras.main.ignore(this.ball); // 보드 카메라 전용
     this.ball.body.setCircle(BALL_TEX_R); // 소스 픽셀 기준 — 동적 바디는 스케일 자동 반영(월드 r = BALL_R × 크기 스케일)
     this.ball.setBounce(0.55);
     this.ball.setCollideWorldBounds(true);
@@ -297,7 +328,7 @@ export default class PinballScene extends MiniGame {
     if (!this.slowmoDone && this.ball.y > 736) {
       this.slowmoDone = true;
       this.physics.world.timeScale = 2.1;
-      this.cameras.main.zoomTo(1.06, 220);
+      this.boardCam.zoomTo(1.06, 220); // 확대는 핀볼판만(UI·문구는 그대로)
     }
 
     // 끼임 감시: 1.2초간 아래로 진행이 없으면 틸트(넛지) — 화면에 보이는 정직한 탈출
@@ -330,7 +361,7 @@ export default class PinballScene extends MiniGame {
     const slotX = LEFT + slotW * (idx + 0.5);
 
     this.physics.world.timeScale = 1;
-    this.cameras.main.zoomTo(1, 250);
+    this.boardCam.zoomTo(1, 250);
 
     if (this.pegCollider) { this.pegCollider.destroy(); this.pegCollider = null; }
     const ball = this.ball;
@@ -346,7 +377,7 @@ export default class PinballScene extends MiniGame {
     // Peak-End: 착지 순간에 연출 집중(색상 연결)
     const rect = this.slotRects[idx];
     this.tweens.add({ targets: rect, scaleX: 1.12, scaleY: 1.25, duration: 140, yoyo: true, ease: 'Quad.easeOut' });
-    this.burst(slotX, 906, color, 36);
+    this.cameras.main.ignore(this.burst(slotX, 906, color, 36)); // 착지 파티클도 보드 카메라로
     this.colorFlash(color, 190);
     this.shake(0.006, 160);
     Sfx.play(this.slots[idx] === '꽝' ? 'fail' : 'win'); // Peak를 결과에 맞게(꽝은 하강 개그 톤)
@@ -367,6 +398,7 @@ export default class PinballScene extends MiniGame {
     const { width, height } = this.scale;
 
     this.editor = this.add.container(0, 0).setDepth(100);
+    this.boardCam.ignore(this.editor); // 모달은 UI — main 카메라 전용
     const dim = this.add.rectangle(0, 0, width, height, 0x000000, 0.72).setOrigin(0).setInteractive();
     this.editor.add(dim);
 
