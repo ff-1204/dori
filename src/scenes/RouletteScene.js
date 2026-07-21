@@ -29,11 +29,8 @@ function ensureFry(items) {
   return items;
 }
 
-// 모드/보증/숫자 설정 (모드는 저장하지 않음 — 재진입 시 항상 기본 '메뉴' 모드)
-const LS_NUM = 'dori.roulette.numberCount'; // 숫자 모드 칸 수
-const LS_SPINS = 'dori.roulette.spins';     // 🍟 보증 카운터(메뉴 모드 전용)
-const PITY = 10;                            // 10번째 스핀은 감자튀김 보증(공개 규칙 — docs/game.md)
-const NUM_COLORS = [C.primary, C.success, C.warning, C.danger, 0xc77dff]; // 숫자 모드는 노랑 포함 순환
+const LS_SPINS = 'dori.roulette.spins'; // 🍟 보증 카운터
+const PITY = 10;                        // 10번째 스핀은 감자튀김 보증(공개 규칙 — docs/game.md)
 
 function loadStr(key, fallback) {
   try { return localStorage.getItem(key) ?? fallback; } catch (e) { return fallback; }
@@ -102,26 +99,16 @@ export default class RouletteScene extends MiniGame {
     this.radius = 300;
     this.wheelAngle = 0;
 
-    // 시간대 → 식사 종류 → 메뉴(저장분 우선) / 모드(메뉴·숫자) 복원
+    // 시간대 → 식사 종류 → 메뉴(저장분 우선)
     this.mealKey = mealForPhase(this.timePhase && this.timePhase.key);
     this.meal = MEALS[this.mealKey];
-    this.mode = 'menu'; // 재진입 시 항상 기본(메뉴) 모드로 시작
-    this.numberCount = Phaser.Math.Clamp(parseInt(loadStr(LS_NUM, '6'), 10) || 6, 2, 16);
     this.setupItems();
     this.makeFryTexture();
 
     // 제목은 포인터(원판 위 y≈214–266)와 겹치지 않게 충분히 위에 배치
-    this.titleText = this.add.text(this.cx, 140, this.titleFor(), {
+    this.titleText = this.add.text(this.cx, 140, `${this.meal.label} 메뉴 룰렛`, {
       fontFamily: FONT, fontSize: '48px', color: css(C.text), fontStyle: 'bold',
     }).setOrigin(0.5);
-
-    // 모드 토글(메뉴 ↔ 숫자) — 우측 상단
-    this.modeBtn = this.add.text(width - 32, 140, this.mode === 'menu' ? '🔢 숫자로' : '🍽 메뉴로', {
-      fontFamily: FONT, fontSize: '28px', color: css(C.subtext), fontStyle: 'bold',
-    }).setOrigin(1, 0.5).setInteractive({ useHandCursor: true });
-    this.modeBtn.on('pointerover', () => this.modeBtn.setColor(css(C.primary)));
-    this.modeBtn.on('pointerout', () => this.modeBtn.setColor(css(C.subtext)));
-    this.modeBtn.on('pointerup', () => this.toggleMode());
 
     // 비복원 모드: 나온 항목은 칸이 흐려지고 다음 스핀에서 제외(뽑기 상자와 같은 정직 원칙)
     // 토글·제외 목록은 기기 내 저장(localStorage) — 재진입해도 이어진다(excluded는 setupItems에서 복원)
@@ -141,7 +128,7 @@ export default class RouletteScene extends MiniGame {
     this.updateFryHint(); // 진입 시 카운터가 이미 9면 바로 반짝임
     this.applyExclusionDims(); // 저장된 제외 칸 흐림 복원
 
-    this.resultText = this.add.text(this.cx, 930, this.defaultHint(), {
+    this.resultText = this.add.text(this.cx, 930, '돌려서 메뉴를 정하세요', {
       fontFamily: FONT, fontSize: '38px', color: css(C.subtext), fontStyle: 'bold', align: 'center',
     }).setOrigin(0.5);
 
@@ -150,34 +137,19 @@ export default class RouletteScene extends MiniGame {
       onClick: () => this.spin(),
     });
 
-    // 보조 액션: 메뉴 모드=편집 / 숫자 모드=개수 설정
-    this.editBtn = this.add.text(this.cx, 1206, this.editLabel(), {
+    this.editBtn = this.add.text(this.cx, 1206, '✎ 메뉴 편집', {
       fontFamily: FONT, fontSize: '30px', color: css(C.subtext),
     }).setOrigin(0.5).setInteractive({ useHandCursor: true });
     this.editBtn.on('pointerover', () => this.editBtn.setColor(css(C.primary)));
     this.editBtn.on('pointerout', () => this.editBtn.setColor(css(C.subtext)));
-    this.editBtn.on('pointerup', () => {
-      if (this.mode === 'menu') this.openEditor();
-      else this.promptNumberCount();
-    });
+    this.editBtn.on('pointerup', () => this.openEditor());
   }
 
-  // 모드에 따른 항목 구성(숫자 모드엔 감자튀김 없음) + 제외 목록 복원(메뉴 모드만 저장)
+  // 메뉴(저장분 우선) + 제외 목록 복원
   setupItems() {
-    if (this.mode === 'number') {
-      this.items = Array.from({ length: this.numberCount }, (_, i) => String(i + 1));
-      this.excluded = new Set(); // 숫자 모드는 세션 한정
-    } else {
-      this.items = ensureFry(loadItems(this.mealKey, this.meal.defaults));
-      this.excluded = new Set(loadExcluded(this.mealKey, this.items));
-    }
+    this.items = ensureFry(loadItems(this.mealKey, this.meal.defaults));
+    this.excluded = new Set(loadExcluded(this.mealKey, this.items));
   }
-
-  titleFor() { return this.mode === 'number' ? '숫자 룰렛' : `${this.meal.label} 메뉴 룰렛`; }
-
-  defaultHint() { return this.mode === 'number' ? '돌려서 숫자를 정하세요' : '돌려서 메뉴를 정하세요'; }
-
-  editLabel() { return this.mode === 'number' ? '# 숫자 개수' : '✎ 메뉴 편집'; }
 
   // ===== 비복원 모드 =====
   toggleExclude() {
@@ -194,7 +166,7 @@ export default class RouletteScene extends MiniGame {
   cancelExclusions() {
     if (this.locked) return;
     this.excluded.clear();
-    if (this.mode === 'menu') saveExcluded(this.mealKey, this.excluded);
+    saveExcluded(this.mealKey, this.excluded);
     (this.dimOverlays || []).forEach((o) => o.destroy());
     this.dimOverlays = [];
     (this.sliceLabels || []).forEach((l) => l.setAlpha(1));
@@ -237,39 +209,6 @@ export default class RouletteScene extends MiniGame {
     if (this.sliceLabels[i]) this.sliceLabels[i].setAlpha(0.4);
   }
 
-  toggleMode() {
-    if (this.locked) return;
-    this.mode = this.mode === 'menu' ? 'number' : 'menu';
-    this.setupItems();
-    this.rebuildWheel();
-    this.titleText.setText(this.titleFor());
-    this.modeBtn.setText(this.mode === 'menu' ? '🔢 숫자로' : '🍽 메뉴로');
-    this.editBtn.setText(this.editLabel());
-    this.resultText.setColor(css(C.subtext)).setText(this.defaultHint()).setScale(1);
-    this.spinBtn.setLabel('돌리기');
-  }
-
-  promptNumberCount() {
-    if (this.locked) return;
-    openTextInput(this, {
-      title: '숫자 개수', hint: '2–16 사이로 입력해 주세요',
-      inputmode: 'numeric', maxLength: 2,
-      onSubmit: (raw) => {
-        const n = parseInt(raw.trim(), 10);
-        if (!n || n < 2 || n > 16) {
-          this.resultText.setColor(css(C.warning)).setText('2–16 사이로 입력해 주세요');
-          return;
-        }
-        this.numberCount = n;
-        saveStr(LS_NUM, String(n));
-        this.setupItems();
-        this.rebuildWheel();
-        this.resultText.setColor(css(C.subtext)).setText(this.defaultHint()).setScale(1);
-        this.spinBtn.setLabel('돌리기');
-      },
-    });
-  }
-
   // 🍟 파티클용 텍스처: 시스템 이모지를 렌더텍스처로 굽는다(외부 에셋 없음 → 라이선스 클린)
   makeFryTexture() {
     if (this.textures.exists('fries')) return;
@@ -282,13 +221,13 @@ export default class RouletteScene extends MiniGame {
   }
 
   // 칸 색 배정: 인접 칸(마지막↔첫 칸 순환 포함)에 같은 색 금지.
-  // 메뉴 모드에서 노랑은 감자튀김 전용(팔레트에서 제외되어 자동 보장).
+  // 노랑은 감자튀김 전용(팔레트에서 제외되어 자동 보장).
   computeSliceColors() {
     const n = this.items.length;
-    const palette = this.mode === 'number' ? NUM_COLORS : OTHER_COLORS;
+    const palette = OTHER_COLORS;
     const colors = new Array(n);
     for (let i = 0; i < n; i += 1) {
-      if (this.mode === 'menu' && this.items[i] === FRY) { colors[i] = FRY_COLOR; continue; }
+      if (this.items[i] === FRY) { colors[i] = FRY_COLOR; continue; }
       const avoid = new Set();
       if (i > 0) avoid.add(colors[i - 1]);
       if (i === n - 1) avoid.add(colors[0]); // 원형: 마지막 칸은 첫 칸과도 달라야
@@ -344,10 +283,8 @@ export default class RouletteScene extends MiniGame {
       if (Math.cos(mid) < 0) rot += Math.PI;
       label.setRotation(rot);
       // 숨은 치트 진입점(더블탭, 모든 메뉴) — 이스터에그라 커서 힌트 없음
-      if (this.mode === 'menu') {
-        label.setInteractive();
-        label.on('pointerup', () => this.onLabelTap(i));
-      }
+      label.setInteractive();
+      label.on('pointerup', () => this.onLabelTap(i));
       this.wheel.add(label);
       this.sliceLabels.push(label);
     });
@@ -373,7 +310,7 @@ export default class RouletteScene extends MiniGame {
   // 메뉴 구성이 바뀔 때 제외 기록 초기화(뽑기 상자와 같은 공정성 정책)
   clearExclusions() {
     this.excluded.clear();
-    if (this.mode === 'menu') saveExcluded(this.mealKey, this.excluded);
+    saveExcluded(this.mealKey, this.excluded);
   }
 
   // 특정 칸 위에 흰 오버레이(반짝임용) — 휠 컨테이너에 넣어 함께 회전
@@ -389,7 +326,7 @@ export default class RouletteScene extends MiniGame {
   // 🍟 보증 예고: 9번째 스핀 뒤(카운터 9)부터 감자튀김 칸이 은은하게 반짝인다(정직한 힌트)
   updateFryHint() {
     const pity = parseInt(loadStr(LS_SPINS, '0'), 10) || 0;
-    const need = this.mode === 'menu' && pity >= PITY - 1 && this.items.indexOf(FRY) !== -1;
+    const need = pity >= PITY - 1 && this.items.indexOf(FRY) !== -1;
     if (!need) {
       if (this.fryHint) { this.fryHint.forEach((o) => o.destroy()); this.fryHint = null; }
       return;
@@ -408,7 +345,7 @@ export default class RouletteScene extends MiniGame {
 
   // 숨은 치트: 아무 메뉴 라벨이나 더블탭 → 칸이 반짝이며 그 메뉴 확정 스핀
   onLabelTap(i) {
-    if (this.locked || this.mode !== 'menu') return;
+    if (this.locked) return;
     if (this.excludeMode && this.excluded.has(this.items[i])) return; // 제외된 칸은 무시
     const now = this.time.now;
     if (this.lastTap && this.lastTap.i === i && now - this.lastTap.t < 350) {
@@ -449,22 +386,18 @@ export default class RouletteScene extends MiniGame {
     this.resultText.setColor(css(C.subtext));
     this.resultText.setText('...');
 
+    // 🍟 보증(피티): 10번째 스핀은 감자튀김 확정 — 공개 규칙(docs/game.md)
+    let pity = parseInt(loadStr(LS_SPINS, '0'), 10) || 0;
+    pity += 1;
+    const fryIdx = this.items.indexOf(FRY);
+    const fryAvailable = fryIdx !== -1 && pool.includes(fryIdx);
     let winner;
-    if (this.mode === 'menu') {
-      // 🍟 보증(피티): 10번째 스핀은 감자튀김 확정 — 공개 규칙(docs/game.md)
-      let pity = parseInt(loadStr(LS_SPINS, '0'), 10) || 0;
-      pity += 1;
-      const fryIdx = this.items.indexOf(FRY);
-      const fryAvailable = fryIdx !== -1 && pool.includes(fryIdx);
-      if (forceIdx !== null) winner = forceIdx; // 더블탭 치트(선택 메뉴 확정)
-      else if (pity >= PITY && fryAvailable) winner = fryIdx;
-      else winner = pool[this.rng.between(0, pool.length - 1)];
-      // 감자튀김이 나오면(보증이든 자연이든) 카운터 리셋
-      if (this.items[winner] === FRY) pity = 0;
-      saveStr(LS_SPINS, String(pity));
-    } else {
-      winner = pool[this.rng.between(0, pool.length - 1)];
-    }
+    if (forceIdx !== null) winner = forceIdx; // 더블탭 치트(선택 메뉴 확정)
+    else if (pity >= PITY && fryAvailable) winner = fryIdx;
+    else winner = pool[this.rng.between(0, pool.length - 1)];
+    // 감자튀김이 나오면(보증이든 자연이든) 카운터 리셋
+    if (this.items[winner] === FRY) pity = 0;
+    saveStr(LS_SPINS, String(pity));
     const winnerCenter = (winner + 0.5) * this.sliceAngle;
 
     const spins = 4;
@@ -497,11 +430,10 @@ export default class RouletteScene extends MiniGame {
   reveal(winner) {
     // 색상 연결(color linkage): 결과 텍스트·플래시를 당첨 칸 색과 매칭 → 출처가 색으로 이어짐
     const sliceColor = this.colorFor(winner);
-    const isFry = this.mode === 'menu' && this.items[winner] === FRY;
-    let text;
-    if (isFry) text = `오늘 ${this.meal.label}은\n🍟 감자튀김 !!`;
-    else if (this.mode === 'number') text = `결과는\n${this.items[winner]} !`;
-    else text = `오늘 ${this.meal.label}은\n${this.items[winner]} !`;
+    const isFry = this.items[winner] === FRY;
+    const text = isFry
+      ? `오늘 ${this.meal.label}은\n🍟 감자튀김 !!`
+      : `오늘 ${this.meal.label}은\n${this.items[winner]} !`;
     this.resultText.setColor(css(sliceColor));
     this.resultText.setText(text);
     this.resultText.setScale(0);
@@ -523,9 +455,9 @@ export default class RouletteScene extends MiniGame {
 
     // 비복원: 나온 항목을 제외 목록에 넣고 칸을 흐린다(남은 풀이 항상 보임 — 정직)
     // 🍟 감자튀김은 제외되지 않는다 — "감자튀김은 영원해요"(삭제 불가와 같은 규칙)
-    if (this.excludeMode && !(this.mode === 'menu' && this.items[winner] === FRY)) {
+    if (this.excludeMode && this.items[winner] !== FRY) {
       this.excluded.add(this.items[winner]);
-      if (this.mode === 'menu') saveExcluded(this.mealKey, this.excluded); // 기기 내 저장 — 재진입해도 유지
+      saveExcluded(this.mealKey, this.excluded); // 기기 내 저장 — 재진입해도 유지
       this.dimSlice(winner);
       this.updateExcludeUi();
     }
@@ -737,7 +669,7 @@ export default class RouletteScene extends MiniGame {
     this.stopClearBlink();
     closeTextInput(this);
     if (this.editor) { this.editor.destroy(); this.editor = null; }
-    this.resultText.setColor(css(C.subtext)).setText(this.defaultHint()).setScale(1);
+    this.resultText.setColor(css(C.subtext)).setText('돌려서 메뉴를 정하세요').setScale(1);
     this.spinBtn.setLabel('돌리기');
   }
 }
