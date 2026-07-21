@@ -108,6 +108,10 @@ export default class DrawScene extends MiniGame {
       if (used) { g.setAlpha(0.5); t.setAlpha(0.55); }
       this.chipLayer.add(g);
       this.chipLayer.add(t);
+      // 더블탭 = 이름 수정(숨은 어포던스 — 한 번 탭하면 힌트 안내)
+      const hit = this.add.rectangle(x, y, chipW, chipH, 0xffffff, 0).setInteractive({ useHandCursor: true });
+      hit.on('pointerup', () => this.onItemTap(i));
+      this.chipLayer.add(hit);
     });
 
     this.rows = rows;
@@ -219,7 +223,7 @@ export default class DrawScene extends MiniGame {
       fontFamily: FONT, fontSize: '38px', color: css(C.text), fontStyle: 'bold',
     }).setOrigin(0.5));
 
-    this.editorNote = this.add.text(width / 2, py + 94, `항목 ${MIN_I}–${MAX_I}개 · 눌러서 삭제 · 6자 이내`, {
+    this.editorNote = this.add.text(width / 2, py + 94, `항목 ${MIN_I}–${MAX_I}개 · 눌러서 삭제 · 이름은 칩 더블탭으로 수정`, {
       fontFamily: FONT, fontSize: '22px', color: css(C.subtext),
     }).setOrigin(0.5);
     this.editor.add(this.editorNote);
@@ -269,16 +273,49 @@ export default class DrawScene extends MiniGame {
     chip('↺ 기본값', { outline: true, color: C.warning }, () => this.resetItems());
   }
 
+  // 'N번' 자동 추가(빈 번호 중 가장 작은 수) — 이름은 풀 칩 더블탭으로 수정(사다리와 같은 패턴)
   addItem() {
+    let k = 1;
+    while (this.items.includes(`${k}번`)) k += 1;
+    this.items.push(`${k}번`);
+    this.afterEdit();
+  }
+
+  // 풀 칩 더블탭 → 이름 수정(수정하면 뽑기 기록 초기화 — 기존 편집 공정성 정책과 동일)
+  onItemTap(i) {
+    if (this.locked) return;
+    const now = this.time.now;
+    if (this.lastItemTap && this.lastItemTap.i === i && now - this.lastItemTap.t < 350) {
+      this.lastItemTap = null;
+      this.renameItem(i);
+    } else {
+      this.lastItemTap = { i, t: now };
+      this.toastHint('더블탭: 이름 수정');
+    }
+  }
+
+  renameItem(i) {
     openTextInput(this, {
-      title: '항목 추가', hint: '6자 이내', maxLength: 6,
+      title: '이름 수정', hint: '6자 이내', maxLength: 6,
       onSubmit: (raw) => {
         const s = raw.trim();
-        if (!s) return;
-        if (this.items.includes(s)) { this.flashEditorNote('이미 있는 항목이에요'); return; }
-        this.items.push(s);
+        if (!s || s === this.items[i]) return;
+        if (this.items.includes(s)) { this.toastHint('이미 있는 이름이에요'); return; }
+        this.items[i] = s;
         this.afterEdit();
       },
+    });
+  }
+
+  // 잠깐 경고를 보였다가 원래 문구(결과 포함)로 복원 — flashHint와 달리 되돌아온다
+  toastHint(msg) {
+    if (!this.toastPrev) this.toastPrev = { text: this.hint.text, color: this.hint.style.color };
+    this.hint.setColor(css(C.warning)).setText(msg).setScale(1);
+    this.time.delayedCall(1200, () => {
+      if (this.hint.active && this.toastPrev) {
+        this.hint.setColor(this.toastPrev.color).setText(this.toastPrev.text).setScale(1);
+        this.toastPrev = null;
+      }
     });
   }
 
@@ -299,7 +336,7 @@ export default class DrawScene extends MiniGame {
     this.drawn.clear(); // 풀이 바뀌면 뽑기 기록 초기화(공정성)
     if (this.card) { this.card.destroy(); this.card = null; }
     this.renderPool();
-    this.renderEditorChips();
+    if (this.editor) this.renderEditorChips(); // 풀 칩 더블탭 수정처럼 모달 밖에서도 호출된다
     this.hint.setColor(css(C.subtext)).setText('뽑기를 누르면 하나가 나와요').setScale(1);
     this.drawBtn.setLabel('뽑기');
   }
@@ -308,7 +345,7 @@ export default class DrawScene extends MiniGame {
     this.editorNote.setText(msg).setColor(css(C.warning));
     this.time.delayedCall(1200, () => {
       if (this.editorNote && this.editorNote.active) {
-        this.editorNote.setText(`항목 ${MIN_I}–${MAX_I}개 · 눌러서 삭제 · 6자 이내`).setColor(css(C.subtext));
+        this.editorNote.setText(`항목 ${MIN_I}–${MAX_I}개 · 눌러서 삭제 · 이름은 칩 더블탭으로 수정`).setColor(css(C.subtext));
       }
     });
   }
