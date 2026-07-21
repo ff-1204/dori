@@ -189,7 +189,7 @@ export default class RouletteScene extends MiniGame {
 
   // 칸 오버레이 공통 경로(도넛 조각) — 가운데 허브(원+캡)는 가리지 않는다
   fillSlicePath(g, i) {
-    const innerR = 48; // 허브 반지름 40 + 테두리 3 + 여유
+    const innerR = 43; // 허브가 가리는 경계와 일치(반지름 40 + 테두리 6의 바깥 절반 3) — 틈도 침범도 없게
     const start = Phaser.Math.DegToRad(i * this.sliceAngle);
     const end = Phaser.Math.DegToRad((i + 1) * this.sliceAngle);
     g.beginPath();
