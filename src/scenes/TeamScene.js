@@ -6,8 +6,11 @@
 // 색상 연결: 조마다 고유색(PLAYER 팔레트) — 라벨·테두리·칩·완료 연출이 같은 색.
 import MiniGame from '../MiniGame.js';
 import { C, css, FONT, EASE, RADIUS, PLAYER } from '../theme.js';
-import { makeButton } from '../ui.js';
+import { makeButton, openTextInput, closeTextInput } from '../ui.js';
 import { Sfx } from '../sfx.js';
+
+// 명단 텍스트의 그룹 제목 단어 — 이름으로 쓰면 붙여넣기 왕복 시 제목으로 오해석되므로 금지
+const HEADERS = { 조장: 'lead', 참여: 'in', 쉼: 'out' };
 
 const LS_COUNT = 'dori.team.count';
 const LS_GROUPS = 'dori.team.groups';
@@ -83,6 +86,7 @@ export default class TeamScene extends MiniGame {
     // 씬 재진입 시 이전 판의 오버레이 참조 초기화(열어둔 채 나가면 stale 참조가 남는다)
     this.editor = null;
     this.pasteOverlay = null;
+    this.inputOverlay = null;
     this.lastLists = null;
     this.count = loadInt(LS_COUNT, 8, COUNT_MIN, COUNT_MAX);
     this.groups = loadInt(LS_GROUPS, 2, GROUP_MIN, GROUP_MAX);
@@ -620,7 +624,6 @@ export default class TeamScene extends MiniGame {
 
   // 파싱: '조장'·'참여'·'쉼' 단어가 나오면 그 아래 이름들이 해당 그룹(제목 전까지) — 표식 문자 불필요
   importRoster(text) {
-    const HEADERS = { 조장: 'lead', 참여: 'in', 쉼: 'out' };
     const tokens = String(text).split(/[\s,·]+/).map((t) => t.trim()).filter(Boolean);
     const parsed = [];
     let mode = 'in';
@@ -655,14 +658,18 @@ export default class TeamScene extends MiniGame {
 
   addName() {
     if (this.roster.length >= ROSTER_MAX) { this.flashNote(`최대 ${ROSTER_MAX}명까지예요`); return; }
-    const input = window.prompt(`이름 (${NAME_MAX}자 이내)`);
-    if (input == null) return;
-    const name = input.trim();
-    if (!name || name.length > NAME_MAX) { if (name) this.flashNote(`${NAME_MAX}자 이내로 입력해 주세요`); return; }
-    if (this.roster.some((r) => r.n === name)) { this.flashNote('이미 있는 이름이에요'); return; }
-    this.roster.push({ n: name, s: 'in' });
-    saveRoster(this.roster);
-    this.renderChips();
+    openTextInput(this, {
+      title: '이름 추가', hint: `${NAME_MAX}자 이내`, maxLength: NAME_MAX,
+      onSubmit: (raw) => {
+        const name = raw.trim();
+        if (!name) return;
+        if (HEADERS[name]) { this.flashNote('조장·참여·쉼은 이름으로 쓸 수 없어요'); return; }
+        if (this.roster.some((r) => r.n === name)) { this.flashNote('이미 있는 이름이에요'); return; }
+        this.roster.push({ n: name, s: 'in' });
+        saveRoster(this.roster);
+        this.renderChips();
+      },
+    });
   }
 
   flashNote(msg) {
@@ -676,6 +683,7 @@ export default class TeamScene extends MiniGame {
 
   closeEditor() {
     this.closePaste();
+    closeTextInput(this);
     if (this.editor) { this.editor.destroy(); this.editor = null; }
     // 명단 변경 반영: 조 수 상한 재검토
     const maxByPeople = this.useRoster() ? this.activePeople().length : this.count;

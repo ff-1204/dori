@@ -4,7 +4,7 @@
 // 색상 연결: 항목 칩 색 = 뽑힌 카드 색 = 폭발 색.
 import MiniGame from '../MiniGame.js';
 import { C, css, FONT, PLAYER, EASE, RADIUS } from '../theme.js';
-import { makeButton } from '../ui.js';
+import { makeButton, openTextInput, closeTextInput } from '../ui.js';
 import { Sfx } from '../sfx.js';
 
 const LS_ITEMS = 'dori.draw.items';
@@ -35,6 +35,7 @@ export default class DrawScene extends MiniGame {
   onCreate() {
     const { width } = this.scale;
     this.cx = width / 2;
+    this.inputOverlay = null; // 재진입 시 stale 참조 초기화
     this.items = loadItems();
     this.drawn = new Set(); // 비복원: 뽑힌 원본 인덱스
 
@@ -226,7 +227,7 @@ export default class DrawScene extends MiniGame {
 
     const done = makeButton(this, {
       x: width / 2, y: py + ph - 64, w: 280, h: 84, label: '완료', variant: 'primary',
-      onClick: () => { this.editor.destroy(); this.editor = null; },
+      onClick: () => { closeTextInput(this); this.editor.destroy(); this.editor = null; },
     });
     this.editor.add(done);
   }
@@ -266,13 +267,16 @@ export default class DrawScene extends MiniGame {
   }
 
   addItem() {
-    const input = window.prompt('추가할 항목 (6자 이내)');
-    if (input == null) return;
-    const s = input.trim();
-    if (!s || s.length > 6) { this.flashEditorNote('6자 이내로 입력해 주세요'); return; }
-    if (this.items.includes(s)) { this.flashEditorNote('이미 있는 항목이에요'); return; }
-    this.items.push(s);
-    this.afterEdit();
+    openTextInput(this, {
+      title: '항목 추가', hint: '6자 이내', maxLength: 6,
+      onSubmit: (raw) => {
+        const s = raw.trim();
+        if (!s) return;
+        if (this.items.includes(s)) { this.flashEditorNote('이미 있는 항목이에요'); return; }
+        this.items.push(s);
+        this.afterEdit();
+      },
+    });
   }
 
   removeItem(i) {

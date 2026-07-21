@@ -4,7 +4,7 @@
 // 정직한 매핑: 결과를 몰래 유도하지 않는다 — 보이는 물리 그대로(핀 반발 잔떨림 포함).
 import MiniGame from '../MiniGame.js';
 import { C, css, FONT, SLICE, EASE, RADIUS } from '../theme.js';
-import { makeButton } from '../ui.js';
+import { makeButton, openTextInput, closeTextInput } from '../ui.js';
 import { Sfx } from '../sfx.js';
 
 const LS_SLOTS = 'dori.pinball.slots';
@@ -43,6 +43,7 @@ export default class PinballScene extends MiniGame {
     const { width } = this.scale;
     this.cx = width / 2;
     this.editor = null; // 재진입 시 stale 참조 초기화(편집 연 채 나간 경우)
+    this.inputOverlay = null;
     this.slots = loadSlots();
     this.hits = 0;
     this.dropX = this.cx;
@@ -386,7 +387,7 @@ export default class PinballScene extends MiniGame {
 
     const done = makeButton(this, {
       x: width / 2, y: py + ph - 64, w: 280, h: 84, label: '완료', variant: 'primary',
-      onClick: () => { this.editor.destroy(); this.editor = null; },
+      onClick: () => { closeTextInput(this); this.editor.destroy(); this.editor = null; },
     });
     this.editor.add(done);
 
@@ -483,14 +484,17 @@ export default class PinballScene extends MiniGame {
   }
 
   renameSlot(i) {
-    const input = window.prompt('칸 이름 (4자 이내)');
-    if (input == null) return;
-    const s = input.trim();
-    if (!s || s.length > 4) return;
-    this.slots[i] = s;
-    saveSlots(this.slots);
-    this.refreshSlotLabels();
-    if (this.editor) this.renderChips(this.edRect.px, this.edRect.py, this.edRect.pw);
+    openTextInput(this, {
+      title: '칸 이름', hint: '4자 이내', maxLength: 4,
+      onSubmit: (raw) => {
+        const s = raw.trim();
+        if (!s) return;
+        this.slots[i] = s;
+        saveSlots(this.slots);
+        this.refreshSlotLabels();
+        if (this.editor) this.renderChips(this.edRect.px, this.edRect.py, this.edRect.pw);
+      },
+    });
   }
 
   refreshSlotLabels() {

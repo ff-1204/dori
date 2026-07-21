@@ -51,6 +51,44 @@ export function makeButton(scene, opts) {
   return con;
 }
 
+// 한 줄 입력 오버레이 — window.prompt 대체(테마 일치·Enter 확정·inputmode로 모바일 자판 선택).
+// 씬당 1개(scene.inputOverlay)만 유지. 씬 전환 시 DOM은 Phaser가 함께 파괴하므로
+// 재진입하는 씬은 onCreate에서 scene.inputOverlay = null 로 stale 참조를 초기화할 것.
+export function openTextInput(scene, { title, hint, inputmode = 'text', maxLength = 12, y = 560, onSubmit }) {
+  if (scene.inputOverlay) return;
+  const cx = scene.scale.width / 2;
+  scene.inputOverlay = scene.add.dom(cx, y).createFromHTML(
+    `<div style="width:520px;background:${css(C.surface)};border:2px solid ${css(C.surfaceAlt)};border-radius:16px;padding:20px;font-family:sans-serif;">`
+    + `<div style="color:${css(C.text)};font-size:24px;font-weight:bold;text-align:center;margin-bottom:12px;">${title}</div>`
+    + (hint ? `<div style="color:${css(C.subtext)};font-size:18px;text-align:center;margin-bottom:10px;">${hint}</div>` : '')
+    + `<input id="dori-input" type="text" inputmode="${inputmode}" maxlength="${maxLength}" autocomplete="off" `
+    + `style="width:100%;box-sizing:border-box;font-size:24px;padding:12px;text-align:center;`
+    + `border-radius:12px;border:2px solid ${css(C.surfaceAlt)};background:${css(C.bg)};color:${css(C.text)};outline:none;"/>`
+    + '<div style="display:flex;gap:12px;margin-top:14px;">'
+    + `<button id="dori-input-ok" style="flex:1;padding:14px;font-size:22px;font-weight:bold;border:none;border-radius:12px;background:${css(C.primary)};color:${css(C.bg)};">확인</button>`
+    + `<button id="dori-input-cancel" style="flex:1;padding:14px;font-size:22px;border:none;border-radius:12px;background:${css(C.surfaceAlt)};color:${css(C.text)};">취소</button>`
+    + '</div></div>',
+  ).setDepth(300);
+  const node = scene.inputOverlay.node;
+  const field = node.querySelector('#dori-input');
+  const submit = () => {
+    const v = field.value;
+    closeTextInput(scene);
+    onSubmit(v);
+  };
+  node.querySelector('#dori-input-ok').addEventListener('click', submit);
+  node.querySelector('#dori-input-cancel').addEventListener('click', () => closeTextInput(scene));
+  field.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') submit();
+    if (e.key === 'Escape') closeTextInput(scene);
+  });
+  field.focus();
+}
+
+export function closeTextInput(scene) {
+  if (scene.inputOverlay) { scene.inputOverlay.destroy(); scene.inputOverlay = null; }
+}
+
 // 좌상단 뒤로가기(안전 영역 24px 안쪽) — 아이콘만(⬅). 글자는 작아도
 // 히트 영역은 88×88(설계 단위)로 확장해 터치 타깃 규칙을 지킨다(responsive §7).
 export function makeBackButton(scene, onBack) {

@@ -5,7 +5,7 @@
 // 색상 연결: 참가자 색 = 경로 색 = 결과 하이라이트 색(visual-polish §3-1a).
 import MiniGame from '../MiniGame.js';
 import { C, css, FONT, PLAYER, RADIUS, EASE } from '../theme.js';
-import { makeButton } from '../ui.js';
+import { makeButton, openTextInput, closeTextInput } from '../ui.js';
 import { Sfx } from '../sfx.js';
 
 // 가로 다리 행 수는 인원 비례(rowCount) — 인접 교환 셔플은 열 수 대비 행이 많아야
@@ -42,6 +42,8 @@ export default class LadderScene extends MiniGame {
   onCreate() {
     const { width } = this.scale;
     this.cx = width / 2;
+    this.editor = null; // 재진입 시 stale 참조 초기화
+    this.inputOverlay = null;
 
     // 레이아웃(요소 점유 범위 검산: 제목116–164 / 이름286–314 / 사다리330–920 / 결과940–975 / 안내985–1015 / 버튼1050–1150 / 편집1191–1221)
     this.topY = 330;
@@ -395,22 +397,18 @@ export default class LadderScene extends MiniGame {
     this.results.forEach((r, i) => chip(r, { fill: C.surfaceAlt }, () => this.renameResult(i)));
   }
 
-  promptText(msg) {
-    const input = window.prompt(msg);
-    if (input == null) return null;
-    const s = input.trim();
-    if (!s) return null;
-    if (s.length > NAME_MAX) { this.flashEditorNote(`${NAME_MAX}자 이내로 입력해 주세요`); return null; }
-    return s;
-  }
-
   addName() {
-    const s = this.promptText('참가자 이름 (4자 이내)');
-    if (!s) return;
-    if (this.names.includes(s)) { this.flashEditorNote('이미 있는 이름이에요'); return; }
-    this.names.push(s);
-    this.syncResults();
-    this.persistAndRefresh();
+    openTextInput(this, {
+      title: '참가자 추가', hint: `${NAME_MAX}자 이내`, maxLength: NAME_MAX,
+      onSubmit: (raw) => {
+        const s = raw.trim();
+        if (!s) return;
+        if (this.names.includes(s)) { this.flashEditorNote('이미 있는 이름이에요'); return; }
+        this.names.push(s);
+        this.syncResults();
+        this.persistAndRefresh();
+      },
+    });
   }
 
   removeName(i) {
@@ -429,10 +427,15 @@ export default class LadderScene extends MiniGame {
   }
 
   renameResult(i) {
-    const s = this.promptText('결과 이름 (4자 이내)');
-    if (!s) return;
-    this.results[i] = s;
-    this.persistAndRefresh();
+    openTextInput(this, {
+      title: '결과 수정', hint: `${NAME_MAX}자 이내`, maxLength: NAME_MAX,
+      onSubmit: (raw) => {
+        const s = raw.trim();
+        if (!s) return;
+        this.results[i] = s;
+        this.persistAndRefresh();
+      },
+    });
   }
 
   persistAndRefresh() {
@@ -456,6 +459,7 @@ export default class LadderScene extends MiniGame {
   }
 
   closeEditor() {
+    closeTextInput(this);
     if (this.editor) { this.editor.destroy(); this.editor = null; }
   }
 }
