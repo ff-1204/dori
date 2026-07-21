@@ -618,10 +618,10 @@ export default class RouletteScene extends MiniGame {
     if (!this.confirmClear) {
       this.confirmClear = true;
       this.flashNote(`한 번 더 누르면 ${this.meal.label} 메뉴를 모두 지워요 (🍟 제외)`);
-      // 주의 환기: 안내 문구·버튼 깜빡임(문구가 돌아오는 1.2초에 맞춰 종료, 알파 1로 복귀)
+      // 주의 환기: 버튼 깜빡임(안내 문구가 돌아오는 1.2초에 맞춰 종료, 알파 1로 복귀)
       this.stopClearBlink();
       this.clearBlink = this.tweens.add({
-        targets: [this.editorNote, this.clearChip],
+        targets: this.clearChip,
         alpha: 0.25, duration: 150, yoyo: true, repeat: 3, ease: 'Quad.easeInOut',
       });
       this.time.delayedCall(1400, () => { this.confirmClear = false; });
@@ -640,7 +640,6 @@ export default class RouletteScene extends MiniGame {
   // 깜빡임 중단 + 알파 원복(확정·에디터 닫기 등 중도 이탈 대비)
   stopClearBlink() {
     if (this.clearBlink) { this.clearBlink.stop(); this.clearBlink = null; }
-    if (this.editorNote && this.editorNote.active) this.editorNote.setAlpha(1);
     if (this.clearChip && this.clearChip.active) this.clearChip.setAlpha(1);
   }
 
