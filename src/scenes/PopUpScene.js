@@ -101,6 +101,7 @@ export default class PopUpScene extends MiniGame {
     this.trigger = this.rng.between(0, SLOTS - 1); // SETUP: 트리거 재배치
     this.doneCount = 0;
     this.launched = false;
+    this.tweens.killTweensOf(this.pirate); // 발사 트윈이 남아 있으면 복원 위치와 충돌
     this.pirate.setPosition(this.cx, 452).setAngle(0).setAlpha(1).setScale(1);
     this.eyesNormal.setVisible(true); // 눈 복원(멀쩡한 얼굴로 다시 숨음)
     this.eyesX.setVisible(false);
@@ -166,9 +167,16 @@ export default class PopUpScene extends MiniGame {
     this.burst(this.cx, 452, C.warning, 40);
     this.colorFlash(C.warning, 220);
     this.shake(0.012, 260);
+    // 랜덤 발사: 방향·거리·높이·회전량이 매판 다르다 — 회전은 나는 방향과 같은 쪽(자연스러운 스핀).
+    // 가로는 등속 감속(Quad), 세로는 Back 오버슈트 — 둘이 겹치면 포물선처럼 보인다.
+    const dir = this.rng.pick([-1, 1]);
+    const tx = Phaser.Math.Clamp(this.cx + dir * this.rng.between(60, 250), 90, 630);
+    const ty = this.rng.between(70, 130); // 문구(y174–)를 침범하지 않는 상한
+    const spin = dir * this.rng.between(540, 1080);
     this.tweens.add({
-      targets: this.pirate, y: 90, angle: 720, scale: 1.15, duration: 700, ease: 'Back.easeOut',
+      targets: this.pirate, y: ty, angle: spin, scale: 1.15, duration: 700, ease: 'Back.easeOut',
     });
+    this.tweens.add({ targets: this.pirate, x: tx, duration: 700, ease: 'Quad.easeOut' });
     this.hint.setColor(css(C.warning));
     this.hint.setText(`펑!! ${this.doneCount}번째 칼에 발사 — 당첨 🎉`);
     this.hint.setScale(0);
