@@ -95,8 +95,9 @@ export default class RouletteScene extends MiniGame {
     this.cx = width / 2;
     this.editor = null; // 재진입 시 stale 참조 초기화(편집 연 채 나간 경우)
     this.inputOverlay = null; // 입력 오버레이도 동일(연 채 나간 경우)
-    // 레이아웃(검산): 제목116–164 / 제외 토글186–214 / 문구220–284 /(여백 60)/ 포인터344–396 / 원판390–990 /(여백 64)/ 버튼1054–1154 / 편집1191–1221
+    // 레이아웃(검산): 제목116–164·편집(우측 상단 127–153) / 제외 토글188–212 / 문구220–284 /(여백 60)/ 포인터344–396 / 원판390–990 /(여백 64)/ 버튼1054–1154
     // 원판 블록은 문구·버튼 사이에 상하 여백이 거의 균등하도록 배치(60/64 — 버튼 앞을 살짝 더)
+    // 보조 컨트롤 크기 위계: 편집 26px > 제외 토글·취소 24px — 제목(48px)·문구(32px)와 단계가 지도록
     this.cy = 690;
     this.radius = 300;
     this.wheelAngle = 0;
@@ -116,11 +117,11 @@ export default class RouletteScene extends MiniGame {
     // 토글·제외 목록은 기기 내 저장(localStorage) — 재진입해도 이어진다(excluded는 setupItems에서 복원)
     this.excludeMode = loadStr(LS_EXCLUDE, 'off') === 'on';
     this.excludeBtn = this.add.text(32, 200, '', {
-      fontFamily: FONT, fontSize: '28px', color: css(C.subtext), fontStyle: 'bold',
+      fontFamily: FONT, fontSize: '24px', color: css(C.subtext), fontStyle: 'bold',
     }).setOrigin(0, 0.5).setInteractive({ useHandCursor: true });
     this.excludeBtn.on('pointerup', () => this.toggleExclude());
     this.cancelBtn = this.add.text(width - 32, 200, '', {
-      fontFamily: FONT, fontSize: '28px', color: css(C.warning), fontStyle: 'bold',
+      fontFamily: FONT, fontSize: '24px', color: css(C.warning), fontStyle: 'bold',
     }).setOrigin(1, 0.5).setInteractive({ useHandCursor: true });
     this.cancelBtn.on('pointerup', () => this.cancelExclusions());
     this.updateExcludeUi();
@@ -140,9 +141,10 @@ export default class RouletteScene extends MiniGame {
       onClick: () => this.spin(),
     });
 
-    this.editBtn = this.add.text(this.cx, 1206, '✎ 메뉴 편집', {
-      fontFamily: FONT, fontSize: '30px', color: css(C.subtext),
-    }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+    // 우측 상단(제목 행) — 구 '숫자로' 토글 자리. 제목과 최소 20px 이격(26px 기준 검산)
+    this.editBtn = this.add.text(width - 32, 140, '✎ 메뉴 편집', {
+      fontFamily: FONT, fontSize: '26px', color: css(C.subtext), fontStyle: 'bold',
+    }).setOrigin(1, 0.5).setInteractive({ useHandCursor: true });
     this.editBtn.on('pointerover', () => this.editBtn.setColor(css(C.primary)));
     this.editBtn.on('pointerout', () => this.editBtn.setColor(css(C.subtext)));
     this.editBtn.on('pointerup', () => this.openEditor());
