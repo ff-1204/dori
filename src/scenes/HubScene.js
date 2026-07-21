@@ -88,8 +88,10 @@ export default class HubScene extends Phaser.Scene {
     }).setOrigin(0.5).setAlpha(0);
     this.tweens.add({ targets: greeting, alpha: 1, y: 208, duration: 600, delay: 250, ease: 'Quad.easeOut' });
 
-    // 범주별 게임 목록 — 2열 그리드(게임 수 확장 대응), 인사말과 여백을 두고 시작
-    let y = 288;
+    // 범주별 게임 목록 — 2열 그리드(게임 수 확장 대응)
+    // 레이아웃 검산: 인사말 ~223 /(여백 93)/ 목록 316–1052 /(여백 132)/ 페이지 링크 1184 / 하단 바 1236
+    // 행 간격 20px·범주 간 44px — 하단에 쏠려 있던 빈 공간(244px)을 목록의 호흡으로 분배
+    let y = 316;
     const colW = 304;
     const leftX = SP.xl + colW / 2;
     const rightX = width - SP.xl - colW / 2;
@@ -98,7 +100,7 @@ export default class HubScene extends Phaser.Scene {
       this.add.text(SP.xl, y, group.cat, {
         fontFamily: FONT, fontSize: '28px', color: css(C.primary), fontStyle: 'bold',
       }).setOrigin(0, 0.5).setAlpha(0.65);
-      y += 52;
+      y += 56;
 
       // 룰렛 라벨은 현재 시간대의 식사로 표기(게임 내 동작과 일치 — 정직한 매핑)
       const mealLabel = MEAL_LABEL[mealForPhase(phase.key)];
@@ -109,7 +111,7 @@ export default class HubScene extends Phaser.Scene {
           : g.name;
         const btn = makeButton(this, {
           x: idx % 2 === 0 ? leftX : rightX,
-          y: y + Math.floor(idx / 2) * 92 + 40,
+          y: y + Math.floor(idx / 2) * 100 + 40,
           w: colW,
           h: 80,
           label: g.ready ? displayName : `${displayName} · 준비 중`,
@@ -123,7 +125,7 @@ export default class HubScene extends Phaser.Scene {
         this.tweens.add({ targets: btn, alpha: finalAlpha, duration: 250, delay: 120 + this.btnSeq * 40 });
         this.btnSeq = (this.btnSeq || 0) + 1;
       });
-      y += Math.ceil(group.items.length / 2) * 92 + SP.md;
+      y += Math.ceil(group.items.length / 2) * 100 + 44;
     });
 
     this.buildTopBar();
