@@ -44,6 +44,13 @@ export default class PinballScene extends MiniGame {
     this.cx = width / 2;
     this.editor = null; // 재진입 시 stale 참조 초기화(편집 연 채 나간 경우)
     this.inputOverlay = null;
+    // 이전 판의 파괴된 객체 참조도 초기화 — 특히 pegs는 남아 있으면 buildPegs가
+    // 죽은 물리 그룹을 clear()하다 크래시(재진입 시 씬이 멈춘 것처럼 보임)
+    this.pegs = null;
+    this.slotBox = null;
+    this.ball = null;
+    this.pegCollider = null;
+    this.dragging = false;
     this.slots = loadSlots();
     this.hits = 0;
     this.dropX = this.cx;
