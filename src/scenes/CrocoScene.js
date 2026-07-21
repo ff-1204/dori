@@ -7,6 +7,8 @@ import { makeButton } from '../ui.js';
 import { Sfx } from '../sfx.js';
 
 const TEETH = 12; // 6 × 2줄
+const JAW_REST = 24;  // 위턱 기본 오프셋 — 살짝 내려 앉혀 상단 여백과 균형(이빨 위 16px 여유 검산)
+const JAW_BITE = JAW_REST + 170; // 물 때 내려오는 깊이(닫힘 정도는 기존과 동일)
 const CROC = 0x2e8b57; // 악어 몸통색(게임 전용 장식색)
 const CROC_DARK = 0x1f6b41;
 
@@ -87,7 +89,7 @@ export default class CrocoScene extends MiniGame {
     this.trap = this.rng.between(0, TEETH - 1); // SETUP: 함정 재배치(학습 방지)
     this.doneCount = 0;
     this.bitten = false;
-    this.upperJaw.y = 0;
+    this.upperJaw.y = JAW_REST;
     this.teeth.forEach((t) => {
       t.pressed = false;
       t.g.setAlpha(1);
@@ -130,7 +132,7 @@ export default class CrocoScene extends MiniGame {
     t.g.fillStyle(C.danger, 1).fillRoundedRect(t.x - 32, t.y - 30, 64, 56, 12);
     // 위턱이 쾅 닫힌다(Peak) — depth 정렬로 이빨 전부가 입 안에 가려진다
     this.tweens.add({
-      targets: this.upperJaw, y: 170, duration: 130, ease: 'Quad.easeIn',
+      targets: this.upperJaw, y: JAW_BITE, duration: 130, ease: 'Quad.easeIn',
       onComplete: () => {
         Sfx.play('bang');
         this.time.delayedCall(350, () => Sfx.play('win')); // Peak-End: 쾅 뒤 당첨 팡파르
@@ -142,7 +144,7 @@ export default class CrocoScene extends MiniGame {
         this.hint.setScale(0);
         this.tweens.add({ targets: this.hint, scale: 1, duration: 340, ease: EASE.bounce });
         // 잠시 꽉 물고 있다가 입을 다시 열며 빨간 함정 이빨 공개(실물 완구 동작 + 정직한 공개)
-        this.tweens.add({ targets: this.upperJaw, y: 0, duration: 420, delay: 600, ease: 'Back.easeOut' });
+        this.tweens.add({ targets: this.upperJaw, y: JAW_REST, duration: 420, delay: 600, ease: 'Back.easeOut' });
         this.unlock();
       },
     });
