@@ -209,8 +209,20 @@ export default class LadderScene extends MiniGame {
   }
 
   onNameTap(i) {
-    if (!this.started) { this.flashHint('먼저 시작을 눌러 주세요'); return; }
-    if (this.locked || this.traced.has(i)) return;
+    if (this.locked) return;
+    // 시작 전: 더블탭으로 이름 수정(시작 후엔 탭 = 출발이라 수정과 충돌 — 섞기 전 설정 단계에서만)
+    if (!this.started) {
+      const now = this.time.now;
+      if (this.lastNameTap && this.lastNameTap.i === i && now - this.lastNameTap.t < 350) {
+        this.lastNameTap = null;
+        this.renameName(i);
+      } else {
+        this.lastNameTap = { i, t: now };
+        this.flashHint('더블탭: 이름 수정 · 시작을 누르면 출발!');
+      }
+      return;
+    }
+    if (this.traced.has(i)) return;
     this.lock();
     this.mainBtn.disableButton();
 
@@ -324,7 +336,7 @@ export default class LadderScene extends MiniGame {
       fontFamily: FONT, fontSize: '38px', color: css(C.text), fontStyle: 'bold',
     }).setOrigin(0.5));
 
-    this.editorNote = this.add.text(width / 2, py + 94, `이름/결과는 ${NAME_MAX}자까지 · 항목을 눌러 삭제·수정`, {
+    this.editorNote = this.add.text(width / 2, py + 94, '항목을 눌러 삭제 · 이름 수정은 보드에서 더블탭', {
       fontFamily: FONT, fontSize: '22px', color: css(C.subtext),
     }).setOrigin(0.5);
     this.editor.add(this.editorNote);
@@ -397,15 +409,24 @@ export default class LadderScene extends MiniGame {
     this.results.forEach((r, i) => chip(r, { fill: C.surfaceAlt }, () => this.renameResult(i)));
   }
 
+  // 'N번' 자동 추가(빈 번호 중 가장 작은 수) — 이름은 보드에서 더블탭으로 수정
   addName() {
+    let k = 1;
+    while (this.names.includes(`${k}번`)) k += 1;
+    this.names.push(`${k}번`);
+    this.syncResults();
+    this.persistAndRefresh();
+  }
+
+  // 보드의 참가자 이름 더블탭 → 이름 수정(편집 즉시 저장)
+  renameName(i) {
     openTextInput(this, {
-      title: '참가자 추가', hint: `${NAME_MAX}자 이내`, maxLength: NAME_MAX,
+      title: '이름 수정', hint: `${NAME_MAX}자 이내`, maxLength: NAME_MAX,
       onSubmit: (raw) => {
         const s = raw.trim();
-        if (!s) return;
-        if (this.names.includes(s)) { this.flashEditorNote('이미 있는 이름이에요'); return; }
-        this.names.push(s);
-        this.syncResults();
+        if (!s || s === this.names[i]) return;
+        if (this.names.includes(s)) { this.flashHint('이미 있는 이름이에요'); return; }
+        this.names[i] = s;
         this.persistAndRefresh();
       },
     });
@@ -446,14 +467,14 @@ export default class LadderScene extends MiniGame {
     this.drawBoard();
     this.mainBtn.setLabel('시작');
     this.hint.setColor(css(C.subtext)).setText('시작을 누르면 사다리가 완성돼요');
-    this.renderEditor();
+    if (this.editor) this.renderEditor(); // 보드 더블탭 수정처럼 모달 밖에서도 호출된다
   }
 
   flashEditorNote(msg) {
     this.editorNote.setText(msg).setColor(css(C.warning));
     this.time.delayedCall(1200, () => {
       if (this.editorNote && this.editorNote.active) {
-        this.editorNote.setText(`이름/결과는 ${NAME_MAX}자까지 · 항목을 눌러 삭제·수정`).setColor(css(C.subtext));
+        this.editorNote.setText('항목을 눌러 삭제 · 이름 수정은 보드에서 더블탭').setColor(css(C.subtext));
       }
     });
   }
