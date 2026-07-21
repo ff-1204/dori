@@ -247,6 +247,12 @@ export default class RouletteScene extends MiniGame {
 
   colorFor(i) { return this.sliceColors[i]; }
 
+  // 관람차식: 휠 회전을 상쇄해 라벨이 스핀 중에도 항상 위를 본다(트랜스폼만 갱신 — 부하 없음)
+  uprightLabels() {
+    const r = -this.wheel.rotation;
+    this.sliceLabels.forEach((l) => l.setRotation(r));
+  }
+
   buildWheel() {
     this.n = this.items.length;
     this.sliceAngle = 360 / this.n;
@@ -279,14 +285,11 @@ export default class RouletteScene extends MiniGame {
       const label = this.add.text(lx, ly, display, {
         fontFamily: FONT, fontSize: `${fontSize}px`, color: css(C.bg), fontStyle: 'bold',
       }).setOrigin(0.5);
-      // 긴 이름은 칸 안에 들어가도록 폰트 자동 축소(반지름 방향 최대 폭 기준)
-      const maxW = 200;
+      // 라벨은 항상 위를 향한다(시계 문자판식) — 가로 배치라 칸의 접선 폭(상단 기준 ≈106px)에 맞춰 자동 축소
+      const maxW = 110;
       if (label.width > maxW) {
         label.setFontSize(Math.max(14, Math.floor((fontSize * maxW) / label.width)));
       }
-      let rot = mid;
-      if (Math.cos(mid) < 0) rot += Math.PI;
-      label.setRotation(rot);
       // 숨은 치트 진입점(더블탭, 모든 메뉴) — 이스터에그라 커서 힌트 없음
       label.setInteractive();
       label.on('pointerup', () => this.onLabelTap(i));
@@ -430,6 +433,7 @@ export default class RouletteScene extends MiniGame {
       ease: EASE.spin,
       onUpdate: () => {
         this.wheel.rotation = Phaser.Math.DegToRad(proxy.a);
+        this.uprightLabels();
         // 칸이 바뀔 때만 틱 + 표기 갱신 — 감속(ease-out)과 함께 간격이 벌어지며 긴장이 자연히 쌓인다
         const idx = pointedAt(proxy.a);
         if (idx !== lastPointed) { lastPointed = idx; Sfx.play('tick'); showPointed(idx); }
