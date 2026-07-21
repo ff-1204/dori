@@ -192,11 +192,25 @@ export default class LadderScene extends MiniGame {
 
   startOrShuffle() {
     if (this.locked) return;
+    // 라운드 완료 후 '새 판': 설정 단계로 복귀(더블탭 수정 가능) — 설정→시작→모두 도착→새 판 사이클
+    if (this.started && this.traced.size === this.names.length) {
+      this.resetToSetup();
+      return;
+    }
     this.started = true;
     this.rungs = this.buildRungs();
     this.drawBoard();
     this.mainBtn.setLabel('다시 섞기');
     this.hint.setColor(css(C.subtext)).setText('이름을 눌러 출발!');
+  }
+
+  // 설정 단계로 복귀: 사다리를 걷고 편집(더블탭) 가능 상태로
+  resetToSetup() {
+    this.started = false;
+    this.rungs = null;
+    this.drawBoard();
+    this.mainBtn.setLabel('시작');
+    this.hint.setColor(css(C.subtext)).setText(HINT_SETUP);
   }
 
   // ===== 경로 추적 =====
@@ -325,10 +339,12 @@ export default class LadderScene extends MiniGame {
 
     this.unlock();
     this.mainBtn.enableButton();
+    // 라운드 완료: 버튼이 '새 판'이 되고, 누르면 설정 단계로 돌아간다
     if (this.traced.size === this.names.length) {
+      this.mainBtn.setLabel('새 판');
       this.time.delayedCall(900, () => {
         if (this.hint.active && this.traced.size === this.names.length) {
-          this.hint.setColor(css(C.subtext)).setText('모두 도착! 다시 섞기로 새 판');
+          this.hint.setColor(css(C.subtext)).setText('모두 도착! 새 판으로 계속');
         }
       });
     }
@@ -484,11 +500,7 @@ export default class LadderScene extends MiniGame {
   persistAndRefresh() {
     saveList(LS_NAMES, this.names);
     saveList(LS_RESULTS, this.results);
-    this.started = false;
-    this.rungs = null;
-    this.drawBoard();
-    this.mainBtn.setLabel('시작');
-    this.hint.setColor(css(C.subtext)).setText(HINT_SETUP);
+    this.resetToSetup();
     if (this.editor) this.renderEditor(); // 보드 더블탭 수정처럼 모달 밖에서도 호출된다
   }
 
