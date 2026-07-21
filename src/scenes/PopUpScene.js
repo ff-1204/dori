@@ -19,18 +19,19 @@ export default class PopUpScene extends MiniGame {
     const { width } = this.scale;
     this.cx = width / 2;
 
-    this.add.text(this.cx, 140, '해적통', {
-      fontFamily: FONT, fontSize: '48px', color: css(C.text), fontStyle: 'bold',
+    // 공통 레이아웃 패턴: 헤더 y48(⬅·제목 40px) / 태그라인128 / 문구190(32px) / 게임판 / 주 버튼
+    this.add.text(this.cx, 48, '해적통', {
+      fontFamily: FONT, fontSize: '40px', color: css(C.text), fontStyle: 'bold',
     }).setOrigin(0.5);
 
-    this.add.text(this.cx, 196, '칼을 꽂다 보면… 펑! 해적 발사', {
-      fontFamily: FONT, fontSize: '26px', color: css(C.subtext),
+    this.add.text(this.cx, 128, '칼을 꽂다 보면… 펑! 해적 발사', {
+      fontFamily: FONT, fontSize: '24px', color: css(C.subtext),
     }).setOrigin(0.5);
 
     this.buildBarrel();
 
-    this.hint = this.add.text(this.cx, 1000, '', {
-      fontFamily: FONT, fontSize: '30px', color: css(C.subtext), fontStyle: 'bold',
+    this.hint = this.add.text(this.cx, 190, '', {
+      fontFamily: FONT, fontSize: '32px', color: css(C.subtext), fontStyle: 'bold',
     }).setOrigin(0.5);
 
     this.resetBtn = makeButton(this, {

@@ -51,12 +51,13 @@ export default class DancheongScene extends MiniGame {
     const { width } = this.scale;
     this.cx = width / 2;
 
-    this.add.text(this.cx, 140, '단청', {
-      fontFamily: FONT, fontSize: '48px', color: css(C.text), fontStyle: 'bold',
+    // 공통 레이아웃 패턴: 헤더 y48(⬅·제목 40px) / 태그라인128 — 답 공개 연출(색패·결과)은 판 중심이라 그대로 둔다
+    this.add.text(this.cx, 48, '단청', {
+      fontFamily: FONT, fontSize: '40px', color: css(C.text), fontStyle: 'bold',
     }).setOrigin(0.5);
 
-    this.add.text(this.cx, 196, '묻고, 색으로 답을 받으세요', {
-      fontFamily: FONT, fontSize: '26px', color: css(C.subtext),
+    this.add.text(this.cx, 128, '묻고, 색으로 답을 받으세요', {
+      fontFamily: FONT, fontSize: '24px', color: css(C.subtext),
     }).setOrigin(0.5);
 
     // 질문 입력창(HTML 오버레이 — 한글 IME 대응)

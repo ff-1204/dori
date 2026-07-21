@@ -18,19 +18,20 @@ export default class RussianScene extends MiniGame {
     this.cx = width / 2;
     this.cy = 560;
 
-    this.add.text(this.cx, 140, '러시안 룰렛', {
-      fontFamily: FONT, fontSize: '48px', color: css(C.text), fontStyle: 'bold',
+    // 공통 레이아웃 패턴: 헤더 y48(⬅·제목 40px) / 태그라인128 / 문구190(32px) / 게임판 / 주 버튼
+    this.add.text(this.cx, 48, '러시안 룰렛', {
+      fontFamily: FONT, fontSize: '40px', color: css(C.text), fontStyle: 'bold',
     }).setOrigin(0.5);
 
-    this.add.text(this.cx, 196, '한 칸에만 "빵!" — 걸리면 벌칙 당첨', {
-      fontFamily: FONT, fontSize: '26px', color: css(C.subtext),
+    this.add.text(this.cx, 128, '한 칸에만 "빵!" — 걸리면 벌칙 당첨', {
+      fontFamily: FONT, fontSize: '24px', color: css(C.subtext),
     }).setOrigin(0.5);
 
     this.buildCylinder();
     this.buildPointer();
 
-    this.hint = this.add.text(this.cx, 1000, '', {
-      fontFamily: FONT, fontSize: '30px', color: css(C.subtext), fontStyle: 'bold',
+    this.hint = this.add.text(this.cx, 190, '', {
+      fontFamily: FONT, fontSize: '32px', color: css(C.subtext), fontStyle: 'bold',
     }).setOrigin(0.5);
 
     this.triggerBtn = makeButton(this, {

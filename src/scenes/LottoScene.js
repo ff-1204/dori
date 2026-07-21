@@ -55,20 +55,22 @@ export default class LottoScene extends MiniGame {
     this.lineCount = saved ? Math.min(Math.max(saved.count || 1, MIN_LINES), MAX_LINES) : 1;
     this.drawnHour = saved ? saved.hour : null;
 
-    this.add.text(this.cx, 140, '로또 번호 추첨', {
-      fontFamily: FONT, fontSize: '48px', color: css(C.text), fontStyle: 'bold',
+    // 공통 레이아웃 패턴: 헤더 y48(⬅·제목 40px) / 태그라인128 / 문구190 / 게임판 / 판 아래 컨트롤(26px) / 주 버튼
+    this.add.text(this.cx, 48, '로또 번호 추첨', {
+      fontFamily: FONT, fontSize: '40px', color: css(C.text), fontStyle: 'bold',
     }).setOrigin(0.5);
 
-    this.add.text(this.cx, 196, '이번 주, 당신의 여섯 숫자', {
-      fontFamily: FONT, fontSize: '26px', color: css(C.subtext),
+    this.add.text(this.cx, 128, '이번 주, 당신의 여섯 숫자', {
+      fontFamily: FONT, fontSize: '24px', color: css(C.subtext),
     }).setOrigin(0.5);
 
     this.linesLayer = this.add.container(0, 0);
 
     this.buildLineControls();
 
-    this.hint = this.add.text(this.cx, 1000, '', {
-      fontFamily: FONT, fontSize: '25px', color: css(C.subtext), fontStyle: 'bold', align: 'center',
+    // 두 줄 문구가 길어 26px 유지(패턴 32px 대신 — 화면 폭 검산)
+    this.hint = this.add.text(this.cx, 190, '', {
+      fontFamily: FONT, fontSize: '26px', color: css(C.subtext), fontStyle: 'bold', align: 'center',
     }).setOrigin(0.5);
 
     this.drawBtn = makeButton(this, {
@@ -77,15 +79,15 @@ export default class LottoScene extends MiniGame {
     });
 
     // 복사 · 공유(하단 보조 액션)
-    this.copyBtn = this.add.text(this.cx - 140, 1206, '📋 복사', {
-      fontFamily: FONT, fontSize: '30px', color: css(C.subtext), fontStyle: 'bold',
+    this.copyBtn = this.add.text(this.cx - 140, 1002, '📋 복사', {
+      fontFamily: FONT, fontSize: '26px', color: css(C.subtext), fontStyle: 'bold',
     }).setOrigin(0.5).setInteractive({ useHandCursor: true });
     this.copyBtn.on('pointerover', () => this.copyBtn.setColor(css(C.primary)));
     this.copyBtn.on('pointerout', () => this.copyBtn.setColor(css(C.subtext)));
     this.copyBtn.on('pointerup', () => this.copyNumbers());
 
-    this.shareBtn = this.add.text(this.cx + 140, 1206, '공유 ↗', {
-      fontFamily: FONT, fontSize: '30px', color: css(C.subtext), fontStyle: 'bold',
+    this.shareBtn = this.add.text(this.cx + 140, 1002, '공유 ↗', {
+      fontFamily: FONT, fontSize: '26px', color: css(C.subtext), fontStyle: 'bold',
     }).setOrigin(0.5).setInteractive({ useHandCursor: true });
     this.shareBtn.on('pointerover', () => this.shareBtn.setColor(css(C.primary)));
     this.shareBtn.on('pointerout', () => this.shareBtn.setColor(css(C.subtext)));

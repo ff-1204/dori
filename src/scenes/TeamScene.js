@@ -94,12 +94,13 @@ export default class TeamScene extends MiniGame {
     try { this.leaderMode = localStorage.getItem(LS_LEADER) === 'on'; } catch (e) { this.leaderMode = false; }
     this.roster = loadRoster();
 
-    this.add.text(this.cx, 140, '조 배정', {
-      fontFamily: FONT, fontSize: '48px', color: css(C.text), fontStyle: 'bold',
+    // 공통 레이아웃 패턴: 헤더 y48(⬅·제목 40px) / 태그라인128 / 문구190(32px) / 게임판 / 판 아래 컨트롤(26px) / 주 버튼
+    this.add.text(this.cx, 48, '조 배정', {
+      fontFamily: FONT, fontSize: '40px', color: css(C.text), fontStyle: 'bold',
     }).setOrigin(0.5);
 
-    this.add.text(this.cx, 196, '번호로 뽑거나, 명단을 만들어 이름으로 나눠요', {
-      fontFamily: FONT, fontSize: '26px', color: css(C.subtext),
+    this.add.text(this.cx, 128, '번호로 뽑거나, 명단을 만들어 이름으로 나눠요', {
+      fontFamily: FONT, fontSize: '24px', color: css(C.subtext),
     }).setOrigin(0.5);
 
     this.countLabel = this.makeStepper(285, () => this.changeCount(-1), () => this.changeCount(1));
@@ -115,8 +116,8 @@ export default class TeamScene extends MiniGame {
     this.buildPanels();
     this.refreshLabels();
 
-    this.hint = this.add.text(this.cx, 1000, '조 짜기를 누르면 조로 모여요', {
-      fontFamily: FONT, fontSize: '30px', color: css(C.subtext), fontStyle: 'bold',
+    this.hint = this.add.text(this.cx, 190, '조 짜기를 누르면 조로 모여요', {
+      fontFamily: FONT, fontSize: '32px', color: css(C.subtext), fontStyle: 'bold',
     }).setOrigin(0.5);
 
     this.assignBtn = makeButton(this, {
@@ -125,15 +126,15 @@ export default class TeamScene extends MiniGame {
     });
 
     // 보조 액션: 명단 편집(좌) · 조 편성 복사(우 — 결과 후에만)
-    this.editBtn = this.add.text(this.cx - 170, 1206, '✎ 명단 편집', {
-      fontFamily: FONT, fontSize: '30px', color: css(C.subtext),
+    this.editBtn = this.add.text(this.cx - 170, 1002, '✎ 명단 편집', {
+      fontFamily: FONT, fontSize: '26px', color: css(C.subtext), fontStyle: 'bold',
     }).setOrigin(0.5).setInteractive({ useHandCursor: true });
     this.editBtn.on('pointerover', () => this.editBtn.setColor(css(C.primary)));
     this.editBtn.on('pointerout', () => this.editBtn.setColor(css(C.subtext)));
     this.editBtn.on('pointerup', () => this.openEditor());
 
-    this.copyBtn = this.add.text(this.cx + 170, 1206, '📋 조 편성 복사', {
-      fontFamily: FONT, fontSize: '30px', color: css(C.subtext),
+    this.copyBtn = this.add.text(this.cx + 170, 1002, '📋 조 편성 복사', {
+      fontFamily: FONT, fontSize: '26px', color: css(C.subtext), fontStyle: 'bold',
     }).setOrigin(0.5).setInteractive({ useHandCursor: true }).setVisible(false);
     this.copyBtn.on('pointerover', () => this.copyBtn.setColor(css(C.primary)));
     this.copyBtn.on('pointerout', () => this.copyBtn.setColor(css(C.subtext)));
