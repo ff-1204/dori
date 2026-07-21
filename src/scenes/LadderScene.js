@@ -227,7 +227,7 @@ export default class LadderScene extends MiniGame {
         this.renameName(i);
       } else {
         this.lastNameTap = { i, t: now };
-        this.flashHint('더블탭: 이름 수정 · 시작을 누르면 출발!');
+        this.flashHint('더블탭: 이름 수정');
       }
       return;
     }
