@@ -95,7 +95,8 @@ export default class RouletteScene extends MiniGame {
     this.cx = width / 2;
     this.editor = null; // 재진입 시 stale 참조 초기화(편집 연 채 나간 경우)
     this.inputOverlay = null; // 입력 오버레이도 동일(연 채 나간 경우)
-    this.cy = 560;
+    // 레이아웃(검산): 제목116–164 / 제외 토글186–214 / 문구220–284 / 포인터294–346 / 원판340–940 / 버튼1054–1154 / 편집1191–1221
+    this.cy = 640;
     this.radius = 300;
     this.wheelAngle = 0;
 
@@ -105,7 +106,7 @@ export default class RouletteScene extends MiniGame {
     this.setupItems();
     this.makeFryTexture();
 
-    // 제목은 포인터(원판 위 y≈214–266)와 겹치지 않게 충분히 위에 배치
+    // 제목 — 아래 요소들과의 간격은 onCreate 상단 레이아웃 검산 주석 참고
     this.titleText = this.add.text(this.cx, 140, `${this.meal.label} 메뉴 룰렛`, {
       fontFamily: FONT, fontSize: '48px', color: css(C.text), fontStyle: 'bold',
     }).setOrigin(0.5);
@@ -128,8 +129,9 @@ export default class RouletteScene extends MiniGame {
     this.updateFryHint(); // 진입 시 카운터가 이미 9면 바로 반짝임
     this.applyExclusionDims(); // 저장된 제외 칸 흐림 복원
 
-    this.resultText = this.add.text(this.cx, 930, '돌려서 메뉴를 정하세요', {
-      fontFamily: FONT, fontSize: '38px', color: css(C.subtext), fontStyle: 'bold', align: 'center',
+    // 안내·실시간 표기·결과 공용 문구 — '나온 건 제외' 행과 원판(포인터) 사이
+    this.resultText = this.add.text(this.cx, 252, '돌려서 메뉴를 정하세요', {
+      fontFamily: FONT, fontSize: '32px', color: css(C.subtext), fontStyle: 'bold', align: 'center',
     }).setOrigin(0.5);
 
     this.spinBtn = makeButton(this, {
@@ -451,7 +453,7 @@ export default class RouletteScene extends MiniGame {
     if (isFry) {
       // 🍟 이스터에그: 감자튀김 파티클이 쏟아진다
       this.friesBurst(this.cx, this.cy - this.radius);
-      this.friesBurst(this.cx, 930);
+      this.friesBurst(this.cx, 252); // 결과 문구 위치
       this.shake(0.007, 220);
     } else {
       this.burst(this.cx, this.cy - this.radius, sliceColor, 26); // 당첨 칸(포인터) 위치에서 폭발
