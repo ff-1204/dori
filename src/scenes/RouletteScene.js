@@ -76,8 +76,16 @@ function loadItems(mealKey, defaults) {
   return [...defaults];
 }
 
+// 기본값과 같으면 저장하지 않는다(키 삭제) — localStorage는 '편집된 상태'만 담는다
 function saveItems(mealKey, items) {
-  try { localStorage.setItem(keyFor(mealKey), JSON.stringify(items)); } catch (e) { /* 무시 */ }
+  try {
+    const def = ensureFry([...MEALS[mealKey].defaults]);
+    if (items.length === def.length && items.every((v, i) => v === def[i])) {
+      localStorage.removeItem(keyFor(mealKey));
+    } else {
+      localStorage.setItem(keyFor(mealKey), JSON.stringify(items));
+    }
+  } catch (e) { /* 무시 */ }
 }
 
 export default class RouletteScene extends MiniGame {
