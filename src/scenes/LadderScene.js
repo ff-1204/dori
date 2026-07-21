@@ -45,6 +45,7 @@ export default class LadderScene extends MiniGame {
     this.cx = width / 2;
     this.editor = null; // 재진입 시 stale 참조 초기화
     this.inputOverlay = null;
+    this.resultsOverlay = null;
 
     // 레이아웃(검산): 헤더 y48(⬅·제목 40px) / 문구124–156 / 이름174–246(라벨 210) / 사다리250–890 / 결과905–945(라벨 925) / 편집989–1015 / 버튼1054–1154
     // 룰렛과 같은 패턴: 헤더 행 + 상단 문구 + 게임판 + 판 아래 편집 + 주 버튼(크기 위계 40>32>26)
@@ -79,13 +80,20 @@ export default class LadderScene extends MiniGame {
       onClick: () => this.startOrShuffle(),
     });
 
-    // 게임판 바로 아래 — 판 구성 컨트롤은 판에 붙인다(룰렛의 ✎ 메뉴 편집과 동일)
-    this.editBtn = this.add.text(this.cx, 1002, '✎ 참가자 편집', {
+    // 게임판 바로 아래 — 좌: 편집(설정 컨트롤) / 우: 전체 결과(시작 후에만 — 조 배정 복사 버튼 패턴)
+    this.editBtn = this.add.text(this.cx - 150, 1002, '✎ 참가자 편집', {
       fontFamily: FONT, fontSize: '26px', color: css(C.subtext), fontStyle: 'bold',
     }).setOrigin(0.5).setInteractive({ useHandCursor: true });
     this.editBtn.on('pointerover', () => this.editBtn.setColor(css(C.primary)));
     this.editBtn.on('pointerout', () => this.editBtn.setColor(css(C.subtext)));
     this.editBtn.on('pointerup', () => this.openEditor());
+
+    this.resultsBtn = this.add.text(this.cx + 150, 1002, '👀 전체 결과', {
+      fontFamily: FONT, fontSize: '26px', color: css(C.subtext), fontStyle: 'bold',
+    }).setOrigin(0.5).setInteractive({ useHandCursor: true }).setVisible(false);
+    this.resultsBtn.on('pointerover', () => this.resultsBtn.setColor(css(C.primary)));
+    this.resultsBtn.on('pointerout', () => this.resultsBtn.setColor(css(C.subtext)));
+    this.resultsBtn.on('pointerup', () => this.openResults());
 
     this.drawBoard();
   }
@@ -201,6 +209,7 @@ export default class LadderScene extends MiniGame {
     this.rungs = this.buildRungs();
     this.drawBoard();
     this.mainBtn.setLabel('다시 섞기');
+    this.resultsBtn.setVisible(true);
     this.hint.setColor(css(C.subtext)).setText('이름을 눌러 출발!');
   }
 
@@ -208,9 +217,61 @@ export default class LadderScene extends MiniGame {
   resetToSetup() {
     this.started = false;
     this.rungs = null;
+    this.closeResults();
     this.drawBoard();
     this.mainBtn.setLabel('시작');
+    this.resultsBtn.setVisible(false);
     this.hint.setColor(css(C.subtext)).setText(HINT_SETUP);
+  }
+
+  // ===== 전체 결과 팝업 =====
+  // 사다리는 시작 시 전부 공개되므로 요약 표도 정직 — 추적 애니메이션 없이 경로만 계산해 보여준다
+  openResults() {
+    if (this.resultsOverlay || this.locked || !this.started) return;
+    Sfx.play('tap');
+    const { width, height } = this.scale;
+    this.resultsOverlay = this.add.container(0, 0).setDepth(120);
+    const dim = this.add.rectangle(0, 0, width, height, 0x000000, 0.72).setOrigin(0).setInteractive();
+    dim.on('pointerup', () => this.closeResults()); // 바깥 탭으로도 닫기
+    this.resultsOverlay.add(dim);
+
+    const n = this.names.length;
+    const rowH = 64;
+    const pw = 520;
+    const ph = 150 + n * rowH + 116;
+    const px = (width - pw) / 2;
+    const py = (height - ph) / 2 - 40; // 광학 중앙(살짝 위)
+    const panel = this.add.graphics();
+    panel.fillStyle(C.surface, 1).fillRoundedRect(px, py, pw, ph, RADIUS);
+    panel.lineStyle(2, C.surfaceAlt, 1).strokeRoundedRect(px, py, pw, ph, RADIUS);
+    this.resultsOverlay.add(panel);
+
+    this.resultsOverlay.add(this.add.text(this.cx, py + 56, '전체 결과', {
+      fontFamily: FONT, fontSize: '36px', color: css(C.text), fontStyle: 'bold',
+    }).setOrigin(0.5));
+
+    // 행: 참가자 색 = 색상 연결, 이미 도착한 사람은 ✓
+    this.names.forEach((name, i) => {
+      const { endCol } = this.tracePath(i);
+      const done = this.traced.has(i) ? '  ✓' : '';
+      this.resultsOverlay.add(this.add.text(this.cx, py + 130 + i * rowH, `${name}  →  ${this.results[endCol]}${done}`, {
+        fontFamily: FONT, fontSize: '30px', color: css(PLAYER[i]), fontStyle: 'bold',
+      }).setOrigin(0.5));
+    });
+
+    const close = makeButton(this, {
+      x: this.cx, y: py + ph - 62, w: 240, h: 80, label: '닫기', variant: 'primary',
+      onClick: () => this.closeResults(),
+    });
+    this.resultsOverlay.add(close);
+
+    // 모달 공통 페이드
+    this.resultsOverlay.setAlpha(0);
+    this.tweens.add({ targets: this.resultsOverlay, alpha: 1, duration: 160, ease: 'Quad.easeOut' });
+  }
+
+  closeResults() {
+    if (this.resultsOverlay) { this.resultsOverlay.destroy(); this.resultsOverlay = null; }
   }
 
   // ===== 경로 추적 =====
