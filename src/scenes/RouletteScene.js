@@ -89,6 +89,7 @@ export default class RouletteScene extends MiniGame {
     const { width } = this.scale;
     this.cx = width / 2;
     this.editor = null; // 재진입 시 stale 참조 초기화(편집 연 채 나간 경우)
+    this.inputOverlay = null; // 입력 오버레이도 동일(연 채 나간 경우)
     this.cy = 560;
     this.radius = 300;
     this.wheelAngle = 0;
@@ -233,19 +234,58 @@ export default class RouletteScene extends MiniGame {
 
   promptNumberCount() {
     if (this.locked) return;
-    const input = window.prompt('숫자 개수 (2–16)');
-    if (input == null) return;
-    const n = parseInt(input.trim(), 10);
-    if (!n || n < 2 || n > 16) {
-      this.resultText.setColor(css(C.warning)).setText('2–16 사이로 입력해 주세요');
-      return;
-    }
-    this.numberCount = n;
-    saveStr(LS_NUM, String(n));
-    this.setupItems();
-    this.rebuildWheel();
-    this.resultText.setColor(css(C.subtext)).setText(this.defaultHint()).setScale(1);
-    this.spinBtn.setLabel('돌리기');
+    this.openInput({
+      title: '숫자 개수', hint: '2–16 사이로 입력해 주세요',
+      inputmode: 'numeric', maxLength: 2,
+      onSubmit: (raw) => {
+        const n = parseInt(raw.trim(), 10);
+        if (!n || n < 2 || n > 16) {
+          this.resultText.setColor(css(C.warning)).setText('2–16 사이로 입력해 주세요');
+          return;
+        }
+        this.numberCount = n;
+        saveStr(LS_NUM, String(n));
+        this.setupItems();
+        this.rebuildWheel();
+        this.resultText.setColor(css(C.subtext)).setText(this.defaultHint()).setScale(1);
+        this.spinBtn.setLabel('돌리기');
+      },
+    });
+  }
+
+  // 한 줄 입력 오버레이 — prompt 대체(모바일 자판·테마 일치). 조 배정 붙여넣기 오버레이와 같은 DOM 패턴
+  openInput({ title, hint, inputmode = 'text', maxLength = 12, onSubmit }) {
+    if (this.inputOverlay) return;
+    this.inputOverlay = this.add.dom(this.cx, 560).createFromHTML(
+      `<div style="width:520px;background:${css(C.surface)};border:2px solid ${css(C.surfaceAlt)};border-radius:16px;padding:20px;font-family:sans-serif;">`
+      + `<div style="color:${css(C.text)};font-size:24px;font-weight:bold;text-align:center;margin-bottom:12px;">${title}</div>`
+      + (hint ? `<div style="color:${css(C.subtext)};font-size:18px;text-align:center;margin-bottom:10px;">${hint}</div>` : '')
+      + `<input id="dori-input" type="text" inputmode="${inputmode}" maxlength="${maxLength}" autocomplete="off" `
+      + `style="width:100%;box-sizing:border-box;font-size:24px;padding:12px;text-align:center;`
+      + `border-radius:12px;border:2px solid ${css(C.surfaceAlt)};background:${css(C.bg)};color:${css(C.text)};outline:none;"/>`
+      + '<div style="display:flex;gap:12px;margin-top:14px;">'
+      + `<button id="dori-input-ok" style="flex:1;padding:14px;font-size:22px;font-weight:bold;border:none;border-radius:12px;background:${css(C.primary)};color:${css(C.bg)};">확인</button>`
+      + `<button id="dori-input-cancel" style="flex:1;padding:14px;font-size:22px;border:none;border-radius:12px;background:${css(C.surfaceAlt)};color:${css(C.text)};">취소</button>`
+      + '</div></div>',
+    ).setDepth(300);
+    const node = this.inputOverlay.node;
+    const field = node.querySelector('#dori-input');
+    const submit = () => {
+      const v = field.value;
+      this.closeInput();
+      onSubmit(v);
+    };
+    node.querySelector('#dori-input-ok').addEventListener('click', submit);
+    node.querySelector('#dori-input-cancel').addEventListener('click', () => this.closeInput());
+    field.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') submit();
+      if (e.key === 'Escape') this.closeInput();
+    });
+    field.focus();
+  }
+
+  closeInput() {
+    if (this.inputOverlay) { this.inputOverlay.destroy(); this.inputOverlay = null; }
   }
 
   // 🍟 파티클용 텍스처: 시스템 이모지를 렌더텍스처로 굽는다(외부 에셋 없음 → 라이선스 클린)
@@ -688,18 +728,21 @@ export default class RouletteScene extends MiniGame {
   }
 
   addItem() {
-    // 캔버스엔 입력창이 없어 브라우저 기본 입력을 사용
-    const input = window.prompt(`${this.meal.label}에 추가할 메뉴`);
-    if (input == null) return;
-    const name = input.trim();
-    if (!name) return;
-    if (this.items.includes(name)) { this.flashNote('이미 있는 메뉴예요'); return; }
     if (this.items.length >= 16) { this.flashNote('최대 16개까지예요'); return; }
-    this.items.push(name);
-    saveItems(this.mealKey, this.items);
-    this.clearExclusions();
-    this.rebuildWheel();
-    this.renderChips();
+    this.openInput({
+      title: `${this.meal.label} 메뉴 추가`,
+      inputmode: 'text', maxLength: 12,
+      onSubmit: (raw) => {
+        const name = raw.trim();
+        if (!name) return;
+        if (this.items.includes(name)) { this.flashNote('이미 있는 메뉴예요'); return; }
+        this.items.push(name);
+        saveItems(this.mealKey, this.items);
+        this.clearExclusions();
+        this.rebuildWheel();
+        this.renderChips();
+      },
+    });
   }
 
   flashNote(msg) {
@@ -713,6 +756,7 @@ export default class RouletteScene extends MiniGame {
 
   closeEditor() {
     this.stopClearBlink();
+    this.closeInput();
     if (this.editor) { this.editor.destroy(); this.editor = null; }
     this.resultText.setColor(css(C.subtext)).setText(this.defaultHint()).setScale(1);
     this.spinBtn.setLabel('돌리기');
