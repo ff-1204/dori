@@ -80,7 +80,7 @@ export default class LadderScene extends MiniGame {
     });
 
     // 게임판 바로 아래 — 판 구성 컨트롤은 판에 붙인다(룰렛의 ✎ 메뉴 편집과 동일)
-    this.editBtn = this.add.text(this.cx, 1002, '✎ 참가자·결과 편집', {
+    this.editBtn = this.add.text(this.cx, 1002, '✎ 참가자 편집', {
       fontFamily: FONT, fontSize: '26px', color: css(C.subtext), fontStyle: 'bold',
     }).setOrigin(0.5).setInteractive({ useHandCursor: true });
     this.editBtn.on('pointerover', () => this.editBtn.setColor(css(C.primary)));
@@ -358,7 +358,7 @@ export default class LadderScene extends MiniGame {
     panel.lineStyle(2, C.surfaceAlt, 1).strokeRoundedRect(px, py, pw, ph, RADIUS);
     this.editor.add(panel);
 
-    this.editor.add(this.add.text(width / 2, py + 48, '참가자·결과 편집', {
+    this.editor.add(this.add.text(width / 2, py + 48, '참가자 편집', {
       fontFamily: FONT, fontSize: '38px', color: css(C.text), fontStyle: 'bold',
     }).setOrigin(0.5));
 

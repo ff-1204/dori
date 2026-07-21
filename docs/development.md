@@ -38,7 +38,7 @@ dori/
 │       ├── PreloadScene.js   # 에셋 로딩 + 로딩 바
 │       ├── HubScene.js       # 게임 선택 허브(범주별 목록)
 │       ├── RouletteScene.js  # 메뉴 룰렛(시간대별 세트 + 편집)
-│       ├── LadderScene.js    # 사다리타기(참가자·결과 편집 + 결과 일괄 설정)
+│       ├── LadderScene.js    # 사다리타기(참가자 편집 + 결과 기본값, 이름·결과는 보드 더블탭 수정)
 │       ├── PinballScene.js   # 랜덤 핀볼(Arcade 물리·낙하 지점 선택)
 │       ├── DrawScene.js      # 뽑기 상자(비복원 추첨)
 │       ├── RussianScene.js   # 러시안 룰렛(조건부 확률 정직 표시)
