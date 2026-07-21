@@ -8,7 +8,8 @@ import { C, css, FONT, PLAYER, RADIUS, EASE } from '../theme.js';
 import { makeButton } from '../ui.js';
 import { Sfx } from '../sfx.js';
 
-const ROWS = 8; // 가로 다리 행 수
+// 가로 다리 행 수는 인원 비례(rowCount) — 인접 교환 셔플은 열 수 대비 행이 많아야
+// 충분히 섞인다(적으면 출발 열 근처 도착으로 편향). 2명=8행 … 6명=16행.
 const MIN_P = 2;
 const MAX_P = 6; // 모바일 가독성 한계(responsive-design §7)
 const NAME_MAX = 4; // 라벨 겹침 방지(글자 수 제한)
@@ -94,8 +95,10 @@ export default class LadderScene extends MiniGame {
     return this.leftX + (i * (this.rightX - this.leftX)) / (n - 1);
   }
 
+  rowCount() { return 6 + 2 * (this.names.length - 1); }
+
   rowY(row) {
-    return this.topY + 40 + (row * (this.bottomY - this.topY - 80)) / (ROWS - 1);
+    return this.topY + 40 + (row * (this.bottomY - this.topY - 80)) / (this.rowCount() - 1);
   }
 
   // ===== 보드 그리기 =====
@@ -154,9 +157,10 @@ export default class LadderScene extends MiniGame {
   // ===== 다리 생성 (편향 없는 랜덤 + 경계당 최소 1개 보장) =====
   buildRungs() {
     const n = this.names.length;
+    const rows = this.rowCount();
     const rungs = [];
     const has = (row, col) => rungs.some((r) => r.row === row && r.col === col);
-    for (let row = 0; row < ROWS; row += 1) {
+    for (let row = 0; row < rows; row += 1) {
       for (let col = 0; col < n - 1; col += 1) {
         // 같은 행 인접 다리 금지(한 점에서 세 갈래 방지)
         if (!has(row, col - 1) && this.rng.frac() < 0.42) rungs.push({ row, col });
@@ -166,7 +170,7 @@ export default class LadderScene extends MiniGame {
     for (let col = 0; col < n - 1; col += 1) {
       if (!rungs.some((r) => r.col === col)) {
         const candidates = [];
-        for (let row = 0; row < ROWS; row += 1) {
+        for (let row = 0; row < rows; row += 1) {
           if (!has(row, col - 1) && !has(row, col + 1)) candidates.push(row);
         }
         if (candidates.length) rungs.push({ row: this.rng.pick(candidates), col });
@@ -188,7 +192,7 @@ export default class LadderScene extends MiniGame {
   tracePath(startCol) {
     const points = [{ x: this.colX(startCol), y: this.topY }];
     let col = startCol;
-    for (let row = 0; row < ROWS; row += 1) {
+    for (let row = 0; row < this.rowCount(); row += 1) {
       const y = this.rowY(row);
       const right = this.rungs.some((r) => r.row === row && r.col === col);
       const left = this.rungs.some((r) => r.row === row && r.col === col - 1);
@@ -416,9 +420,12 @@ export default class LadderScene extends MiniGame {
     this.persistAndRefresh();
   }
 
+  // 당첨 위치는 무작위 — 0번 고정이면 왼쪽 참가자가 걸릴 확률이 구조적으로 높아진다(섞임 편향)
   applyPreset(word) {
-    this.results = this.results.map((_, i) => (i === 0 ? word : '통과'));
+    const winner = this.rng.between(0, this.results.length - 1);
+    this.results = this.results.map((_, i) => (i === winner ? word : '통과'));
     this.persistAndRefresh();
+    this.flashEditorNote(`'${word}' 자리는 무작위로 정했어요`);
   }
 
   renameResult(i) {
