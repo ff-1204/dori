@@ -48,7 +48,8 @@ export default class PinballScene extends MiniGame {
     this.hits = 0;
     this.dropX = this.cx;
 
-    // 레이아웃(검산): 헤더 y48(⬅·제목 40px) / 문구124–156 / 카운터187–213(우) / 낙하 조작215–365 / 핀400–860 / 칸895–995 / 섞기·편집1007–1033 / 버튼1054–1154
+    // 레이아웃(검산): 헤더 y48(⬅·제목 40px) / 문구124–156 /(여백 35)/ 낙하 조작191–341 / 핀376–836 / 칸871–971 /(여백 36)/ 섞기·편집1007–1033 / 버튼1054–1154
+    // 보드 블록은 문구·컨트롤 링크 사이 상하 여백 균등(35/36) — 카운터(우, 187–213)는 투명 조작 영역과 겹쳐도 무방(표시 전용)
     // 룰렛·사다리와 같은 패턴: 헤더 행 + 상단 문구 + 게임판 + 판 아래 구성 컨트롤 + 주 버튼(위계 40>32>26)
     this.add.text(this.cx, 48, '랜덤 핀볼', {
       fontFamily: FONT, fontSize: '40px', color: css(C.text), fontStyle: 'bold',
@@ -94,8 +95,8 @@ export default class PinballScene extends MiniGame {
     // 벽(시각)
     const wall = this.add.graphics();
     wall.lineStyle(4, C.surfaceAlt, 1);
-    wall.lineBetween(LEFT, 360, LEFT, 1000);
-    wall.lineBetween(RIGHT, 360, RIGHT, 1000);
+    wall.lineBetween(LEFT, 336, LEFT, 976);
+    wall.lineBetween(RIGHT, 336, RIGHT, 976);
 
     this.buildSlots();
     this.buildPegs();
@@ -127,16 +128,16 @@ export default class PinballScene extends MiniGame {
     for (let i = 0; i < n; i += 1) {
       const x = LEFT + slotW * (i + 0.5);
       const color = SLICE[i % SLICE.length];
-      const rect = this.add.rectangle(x, 945, slotW - 10, 96, color, 0.22)
+      const rect = this.add.rectangle(x, 921, slotW - 10, 96, color, 0.22)
         .setStrokeStyle(3, color, 0.9);
-      const label = this.add.text(x, 945, this.slots[i], {
+      const label = this.add.text(x, 921, this.slots[i], {
         fontFamily: FONT, fontSize: `${fs}px`, color: css(color), fontStyle: 'bold',
       }).setOrigin(0.5);
       this.slotBox.add(rect);
       this.slotBox.add(label);
       this.slotRects.push(rect);
       this.slotLabels.push(label);
-      if (i > 0) div.lineBetween(LEFT + slotW * i, 895, LEFT + slotW * i, 995);
+      if (i > 0) div.lineBetween(LEFT + slotW * i, 871, LEFT + slotW * i, 971);
     }
   }
 
@@ -160,13 +161,13 @@ export default class PinballScene extends MiniGame {
       this.tweens.add({ targets: peg, scale: pegScale, duration: 200, delay, ease: 'Back.easeOut' });
     };
 
-    // 랜덤 8행: y 400–860(마지막 행이 결정칸 바로 위) — 모든 행 동일한 랜덤 규칙·크기
+    // 랜덤 8행: y 376–836(마지막 행이 결정칸 바로 위) — 모든 행 동일한 랜덤 규칙·크기
     const ballD = 2 * BALL_R * s; // 공 지름(스케일 반영)
     const minGap = ballD + 2 * PEG_R * s + 10; // 핀 중심 간격 하한: 공 + 핀 + 여유 → 핀 사이 틈 ≥ 공 지름 + 10
     // 핀 x 범위: 벽 바로 옆까지(벽-핀 틈 4px < 공 지름 → 양끝 빈 통로 없음, 공은 끼지도 통과하지도 못함)
     const lo = LEFT + PEG_R * s + 4;
     const hi = RIGHT - PEG_R * s - 4;
-    const rowGap = (860 - 400) / 7;
+    const rowGap = (836 - 376) / 7;
     for (let row = 0; row < 8; row += 1) {
       // 행당 핀 개수는 칸 수에 연동 — 칸이 늘면 갈림도 촘촘해진다(간격 하한이 허용하는 개수로 캡)
       const nMax = Math.floor((hi - lo) / minGap) + 1;
@@ -178,7 +179,7 @@ export default class PinballScene extends MiniGame {
       for (let i = 0; i < n; i += 1) {
         if (i === skipIdx) continue;
         const x = Phaser.Math.Clamp(lo + i * spacing + this.rng.between(-jitter, jitter), lo, hi);
-        const y = 400 + row * rowGap + this.rng.between(-12, 12);
+        const y = 376 + row * rowGap + this.rng.between(-12, 12);
         makePeg(x, y, row * 30);
       }
     }
@@ -200,13 +201,13 @@ export default class PinballScene extends MiniGame {
 
   buildDropControl() {
     // 고스트 공 + 화살표(주도성: 여기서 떨어진다는 정직한 시그니파이어)
-    this.ghost = this.add.image(this.dropX, 300, 'ball').setTint(C.primary).setAlpha(0.55).setScale(this.ballScale());
+    this.ghost = this.add.image(this.dropX, 276, 'ball').setTint(C.primary).setAlpha(0.55).setScale(this.ballScale());
     this.arrow = this.add.graphics();
     this.drawArrow();
 
     // 상단 조작 영역: 드래그로 위치 선택, 탭으로 즉시 낙하(빠른 라운드 = 도파민)
     // 드래그는 씬 전역으로 추적 — 누른 채 영역 밖(아래)으로 끌어도 이어지고, 놓는 순간 낙하한다.
-    const zone = this.add.rectangle(this.cx, 290, RIGHT - LEFT, 150, 0xffffff, 0)
+    const zone = this.add.rectangle(this.cx, 266, RIGHT - LEFT, 150, 0xffffff, 0)
       .setInteractive({ useHandCursor: true });
     const follow = (p) => {
       this.dropX = Phaser.Math.Clamp(p.x, LEFT + 24, RIGHT - 24);
@@ -240,7 +241,7 @@ export default class PinballScene extends MiniGame {
   drawArrow() {
     this.arrow.clear();
     this.arrow.fillStyle(C.primary, 0.9);
-    this.arrow.fillTriangle(this.dropX - 14, 332, this.dropX + 14, 332, this.dropX, 356);
+    this.arrow.fillTriangle(this.dropX - 14, 308, this.dropX + 14, 308, this.dropX, 332);
   }
 
   drop() {
@@ -253,7 +254,7 @@ export default class PinballScene extends MiniGame {
     this.slowmoDone = false;
     Sfx.play('pop'); // 출발
 
-    this.ball = this.physics.add.image(this.dropX, 300, 'ball').setTint(C.text).setScale(this.ballScale());
+    this.ball = this.physics.add.image(this.dropX, 276, 'ball').setTint(C.text).setScale(this.ballScale());
     this.ball.body.setCircle(BALL_TEX_R); // 소스 픽셀 기준 — 동적 바디는 스케일 자동 반영(월드 r = BALL_R × 크기 스케일)
     this.ball.setBounce(0.55);
     this.ball.setCollideWorldBounds(true);
@@ -293,7 +294,7 @@ export default class PinballScene extends MiniGame {
     if (!this.ball || !this.ball.active) return;
 
     // 막판 슬로모 + 살짝 줌(기대감 → 해소 직전 긴장 연장)
-    if (!this.slowmoDone && this.ball.y > 760) {
+    if (!this.slowmoDone && this.ball.y > 736) {
       this.slowmoDone = true;
       this.physics.world.timeScale = 2.1;
       this.cameras.main.zoomTo(1.06, 220);
@@ -308,7 +309,7 @@ export default class PinballScene extends MiniGame {
       if (!this.ball) return; // 넛지 한도 초과로 강제 확정됐으면 이 프레임 종료
     }
 
-    if (this.ball.y > 920) this.resolve();
+    if (this.ball.y > 896) this.resolve();
   }
 
   // 틸트 넛지: 중앙 쪽으로 살짝 튕겨 끼임에서 빼낸다. 3회로도 못 빠지면 그 자리 기준 확정(안전망).
@@ -336,7 +337,7 @@ export default class PinballScene extends MiniGame {
     this.ball = null;
     ball.disableBody(true, false);
     this.tweens.add({
-      targets: ball, x: slotX, y: 945, scale: this.ballScale() * 0.8, duration: 160, ease: 'Quad.easeIn',
+      targets: ball, x: slotX, y: 921, scale: this.ballScale() * 0.8, duration: 160, ease: 'Quad.easeIn',
       onComplete: () => {
         this.tweens.add({ targets: ball, alpha: 0, duration: 350, delay: 500, onComplete: () => ball.destroy() });
       },
@@ -345,7 +346,7 @@ export default class PinballScene extends MiniGame {
     // Peak-End: 착지 순간에 연출 집중(색상 연결)
     const rect = this.slotRects[idx];
     this.tweens.add({ targets: rect, scaleX: 1.12, scaleY: 1.25, duration: 140, yoyo: true, ease: 'Quad.easeOut' });
-    this.burst(slotX, 930, color, 36);
+    this.burst(slotX, 906, color, 36);
     this.colorFlash(color, 190);
     this.shake(0.006, 160);
     Sfx.play(this.slots[idx] === '꽝' ? 'fail' : 'win'); // Peak를 결과에 맞게(꽝은 하강 개그 톤)
