@@ -16,6 +16,9 @@ const NAME_MAX = 4; // 라벨 겹침 방지(글자 수 제한)
 
 const PRESETS = ['커피', '벌칙', '청소', '당첨'];
 
+// 시작 전 기본 안내 — 이름 수정 어포던스를 상시 노출('시작' 버튼 자체가 진행 어포던스)
+const HINT_SETUP = '이름은 더블탭으로 수정할 수 있어요';
+
 const LS_NAMES = 'dori.ladder.names';
 const LS_RESULTS = 'dori.ladder.results';
 
@@ -66,7 +69,7 @@ export default class LadderScene extends MiniGame {
     this.traceLayer = this.add.container(0, 0);   // 경로(색상 연결)
     this.labelLayer = this.add.container(0, 0);   // 이름/결과 라벨
 
-    this.hint = this.add.text(this.cx, 1000, '시작을 누르면 사다리가 완성돼요', {
+    this.hint = this.add.text(this.cx, 1000, HINT_SETUP, {
       fontFamily: FONT, fontSize: '28px', color: css(C.subtext), fontStyle: 'bold',
     }).setOrigin(0.5);
 
@@ -309,7 +312,7 @@ export default class LadderScene extends MiniGame {
   }
 
   flashHint(msg) {
-    const orig = this.started ? '이름을 눌러 출발!' : '시작을 누르면 사다리가 완성돼요';
+    const orig = this.started ? '이름을 눌러 출발!' : HINT_SETUP;
     this.hint.setColor(css(C.warning)).setText(msg);
     this.time.delayedCall(1200, () => {
       if (this.hint.active) this.hint.setColor(css(C.subtext)).setText(orig);
@@ -466,7 +469,7 @@ export default class LadderScene extends MiniGame {
     this.rungs = null;
     this.drawBoard();
     this.mainBtn.setLabel('시작');
-    this.hint.setColor(css(C.subtext)).setText('시작을 누르면 사다리가 완성돼요');
+    this.hint.setColor(css(C.subtext)).setText(HINT_SETUP);
     if (this.editor) this.renderEditor(); // 보드 더블탭 수정처럼 모달 밖에서도 호출된다
   }
 
