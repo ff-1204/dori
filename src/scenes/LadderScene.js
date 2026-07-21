@@ -46,6 +46,9 @@ export default class LadderScene extends MiniGame {
     this.editor = null; // 재진입 시 stale 참조 초기화
     this.inputOverlay = null;
     this.resultsOverlay = null;
+    this.rungs = null;
+    this.lastNameTap = null;
+    this.lastResultTap = null;
 
     // 레이아웃(검산): 헤더 y48(⬅·제목 40px) / 문구124–156 / 이름174–246(라벨 210) / 사다리250–890 / 결과905–945(라벨 925) / 편집989–1015 / 버튼1054–1154
     // 룰렛과 같은 패턴: 헤더 행 + 상단 문구 + 게임판 + 판 아래 편집 + 주 버튼(크기 위계 40>32>26)

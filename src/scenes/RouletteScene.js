@@ -95,6 +95,10 @@ export default class RouletteScene extends MiniGame {
     this.cx = width / 2;
     this.editor = null; // 재진입 시 stale 참조 초기화(편집 연 채 나간 경우)
     this.inputOverlay = null; // 입력 오버레이도 동일(연 채 나간 경우)
+    this.fryHint = null; // 남아 있으면 재진입 시 보증 예고 반짝임이 안 뜬다
+    this.clearBlink = null; // 죽은 트윈에 stop() 호출 방지
+    this.clearChip = null;
+    this.lastTap = null;
     // 레이아웃(검산): 헤더 y48(⬅·제목) / 문구156–224 /(여백 60)/ 포인터284–336 / 원판330–930 /(여백 59)/ 편집989–1015 / 버튼1054–1154 / 제외 토글·취소1188–1212
     // 원판 블록은 문구·편집 링크 사이 상하 여백 균등(60/59) — 편집은 원판 바로 아래, 제외 토글은 돌리기 아래
     // 크기 위계: 제목 40px > 문구 32px > 편집 26px > 제외 토글·취소 24px

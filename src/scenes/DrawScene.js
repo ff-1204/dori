@@ -36,6 +36,9 @@ export default class DrawScene extends MiniGame {
     const { width } = this.scale;
     this.cx = width / 2;
     this.inputOverlay = null; // 재진입 시 stale 참조 초기화
+    this.card = null;
+    this.toastPrev = null; // 남아 있으면 이전 판의 문구가 토스트 복원으로 되살아난다
+    this.lastItemTap = null;
     this.items = loadItems();
     this.drawn = new Set(); // 비복원: 뽑힌 원본 인덱스
 

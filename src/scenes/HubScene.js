@@ -48,6 +48,10 @@ export default class HubScene extends Phaser.Scene {
     const { width } = this.scale;
     this.leaving = false; // 씬 전환 가드 — 버튼 연타·동시 탭으로 인한 중복 start 방지
     this.btnSeq = 0; // 버튼 순차 등장 카운터(씬 재진입 시 초기화)
+    // 모달·토스트 stale 참조 초기화 — 연 채 떠나면 재진입 후 가드에 걸려 다시 안 열린다
+    this.qrModal = null;
+    this.guideModal = null;
+    this.toastBox = null;
     this.cameras.main.setBackgroundColor(C.bg);
     this.cameras.main.fadeIn(160, 18, 19, 28); // 씬 전환을 부드럽게(하드 컷 방지)
     const phase = applyTimeAtmosphere(this); // 시간대 분위기(생리적 패턴)
