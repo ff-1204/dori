@@ -14,8 +14,8 @@ const MIN_P = 2;
 const MAX_P = 6; // 모바일 가독성 한계(responsive-design §7)
 const NAME_MAX = 4; // 라벨 겹침 방지(글자 수 제한)
 
-// 시작 전 기본 안내 — 이름 수정 어포던스를 노출
-const HINT_SETUP = '이름을 더블탭으로 수정할 수 있어요';
+// 시작 전 기본 안내 — 이름·결과 수정 어포던스를 노출(38px에서 화면 폭 내 길이 유지)
+const HINT_SETUP = '이름과 결과는 더블탭으로 수정';
 
 const LS_NAMES = 'dori.ladder.names';
 const LS_RESULTS = 'dori.ladder.results';
@@ -147,13 +147,17 @@ export default class LadderScene extends MiniGame {
       this.nameLabels.push(t);
     });
 
-    // 결과 라벨(하단)
+    // 결과 라벨(하단) — 참가자와 동일하게 시작 전 더블탭으로 수정
     this.resultLabels = [];
     this.results.forEach((r, i) => {
       const t = this.add.text(this.colX(i), 955, r, {
         fontFamily: FONT, fontSize: `${n >= 6 ? 22 : 26}px`, color: css(C.subtext), fontStyle: 'bold',
       }).setOrigin(0.5);
+      const hit = this.add.rectangle(this.colX(i), 955, 100, 64, 0xffffff, 0)
+        .setInteractive({ useHandCursor: true });
+      hit.on('pointerup', () => this.onResultTap(i));
       this.labelLayer.add(t);
+      this.labelLayer.add(hit);
       this.resultLabels.push(t);
     });
   }
@@ -225,6 +229,23 @@ export default class LadderScene extends MiniGame {
       return;
     }
     if (this.traced.has(i)) return;
+    this.startTrace(i);
+  }
+
+  // 결과도 참가자와 동일: 시작 전 더블탭으로 수정(시작 후엔 결과 확정 단계라 수정 불가)
+  onResultTap(i) {
+    if (this.locked || this.started) return;
+    const now = this.time.now;
+    if (this.lastResultTap && this.lastResultTap.i === i && now - this.lastResultTap.t < 350) {
+      this.lastResultTap = null;
+      this.renameResult(i);
+    } else {
+      this.lastResultTap = { i, t: now };
+      this.flashHint('더블탭: 결과 수정');
+    }
+  }
+
+  startTrace(i) {
     this.lock();
     this.mainBtn.disableButton();
 
@@ -338,7 +359,7 @@ export default class LadderScene extends MiniGame {
       fontFamily: FONT, fontSize: '38px', color: css(C.text), fontStyle: 'bold',
     }).setOrigin(0.5));
 
-    this.editorNote = this.add.text(width / 2, py + 94, '항목을 눌러 삭제 · 이름 수정은 보드에서 더블탭', {
+    this.editorNote = this.add.text(width / 2, py + 94, '항목을 눌러 삭제 · 이름·결과는 보드에서 더블탭', {
       fontFamily: FONT, fontSize: '22px', color: css(C.subtext),
     }).setOrigin(0.5);
     this.editor.add(this.editorNote);
@@ -401,14 +422,9 @@ export default class LadderScene extends MiniGame {
     if (this.names.length < MAX_P) chip('+ 추가', { outline: true }, () => this.addName());
     x = startX; y += chipH + 36;
 
-    // 결과 일괄 설정: 당첨 1(무작위 자리) + 나머지 벌칙
-    section('결과 일괄 설정');
+    // 결과 기본값: 당첨 1(무작위 자리) + 나머지 벌칙 — 개별 수정은 보드에서 더블탭
+    section('결과 기본값');
     chip('🎯 당첨 1 · 나머지 벌칙', { outline: true, color: C.warning }, () => this.applyDefaultResults());
-    x = startX; y += chipH + 36;
-
-    // 결과(눌러서 이름 바꾸기)
-    section('결과 (눌러서 수정)');
-    this.results.forEach((r, i) => chip(r, { fill: C.surfaceAlt }, () => this.renameResult(i)));
   }
 
   // 'N번' 자동 추가(빈 번호 중 가장 작은 수) — 이름은 보드에서 더블탭으로 수정
@@ -477,7 +493,7 @@ export default class LadderScene extends MiniGame {
     this.editorNote.setText(msg).setColor(css(C.warning));
     this.time.delayedCall(1200, () => {
       if (this.editorNote && this.editorNote.active) {
-        this.editorNote.setText('항목을 눌러 삭제 · 이름 수정은 보드에서 더블탭').setColor(css(C.subtext));
+        this.editorNote.setText('항목을 눌러 삭제 · 이름·결과는 보드에서 더블탭').setColor(css(C.subtext));
       }
     });
   }
