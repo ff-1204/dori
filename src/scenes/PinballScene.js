@@ -51,6 +51,8 @@ export default class PinballScene extends MiniGame {
     this.ball = null;
     this.pegCollider = null;
     this.dragging = false;
+    this.lastSlotTap = null;
+    this.toastPrev = null;
     this.slots = loadSlots();
     this.hits = 0;
     this.dropX = this.cx;
@@ -169,6 +171,11 @@ export default class PinballScene extends MiniGame {
       }).setOrigin(0.5);
       this.slotBox.add(rect);
       this.slotBox.add(label);
+      // 더블탭 = 이름 수정(사다리·뽑기와 같은 숨은 어포던스 — 한 번 탭하면 힌트)
+      const hit = this.add.rectangle(x, 921, slotW - 10, 96, 0xffffff, 0)
+        .setInteractive({ useHandCursor: true });
+      hit.on('pointerup', () => this.onSlotTap(i));
+      this.slotBox.add(hit);
       this.slotRects.push(rect);
       this.slotLabels.push(label);
       if (i > 0) div.lineBetween(LEFT + slotW * i, 871, LEFT + slotW * i, 971);
@@ -418,11 +425,11 @@ export default class PinballScene extends MiniGame {
     panel.lineStyle(2, C.surfaceAlt, 1).strokeRoundedRect(px, py, pw, ph, RADIUS);
     this.editor.add(panel);
 
-    this.editor.add(this.add.text(width / 2, py + 52, '칸 편집 (눌러서 이름 변경)', {
+    this.editor.add(this.add.text(width / 2, py + 52, '칸 편집', {
       fontFamily: FONT, fontSize: '36px', color: css(C.text), fontStyle: 'bold',
     }).setOrigin(0.5));
 
-    this.editorNote = this.add.text(width / 2, py + 100, `칸 ${SLOT_MIN}–${SLOT_MAX}개 · 이름 4자 이내`, {
+    this.editorNote = this.add.text(width / 2, py + 100, `칸 ${SLOT_MIN}–${SLOT_MAX}개 · 눌러서 삭제 · 이름은 보드 칸 더블탭`, {
       fontFamily: FONT, fontSize: '22px', color: css(C.subtext),
     }).setOrigin(0.5);
     this.editor.add(this.editorNote);
@@ -455,23 +462,22 @@ export default class PinballScene extends MiniGame {
       const g = this.add.graphics();
       g.fillStyle(C.surfaceAlt, 1).fillRoundedRect(x, y, chipW, chipH, 14);
       g.lineStyle(3, color, 1).strokeRoundedRect(x, y, chipW, chipH, 14);
-      const t = this.add.text(x + chipW / 2, y + chipH / 2, s, {
+      const t = this.add.text(x + chipW / 2, y + chipH / 2, `${s}  ✕`, {
         fontFamily: FONT, fontSize: '28px', color: css(color), fontStyle: 'bold',
       }).setOrigin(0.5);
       const hit = this.add.rectangle(x + chipW / 2, y + chipH / 2, chipW, chipH, 0xffffff, 0)
         .setInteractive({ useHandCursor: true });
-      hit.on('pointerup', () => this.renameSlot(i));
+      hit.on('pointerup', () => this.removeSlotAt(i)); // 룰렛 편집과 동일: 칩 탭 = 그 칸 삭제
       this.chipsBox.add(g);
       this.chipsBox.add(t);
       this.chipsBox.add(hit);
     });
 
-    // 컨트롤 행(칸 그리드 아래): ＋ 칸 추가 · − 칸 빼기 · ↺ 기본값
+    // 컨트롤 행(칸 그리드 아래): ＋ 칸 추가 · ↺ 기본값 — 개별 삭제가 생겨 '− 칸 빼기'는 제거
     const rows = Math.ceil(this.slots.length / 3);
     const cy = py + 150 + rows * (chipH + gap) + 12;
     const controls = [
       { label: '＋ 칸 추가', color: C.primary, onTap: () => this.addSlot() },
-      { label: '− 칸 빼기', color: C.primary, onTap: () => this.removeSlot() },
       { label: '↺ 기본값', color: C.warning, onTap: () => this.resetSlots() },
     ];
     controls.forEach((c, i) => {
@@ -505,9 +511,9 @@ export default class PinballScene extends MiniGame {
     this.applySlotCount();
   }
 
-  removeSlot() {
+  removeSlotAt(i) {
     if (this.slots.length <= SLOT_MIN) { this.flashNote(`최소 ${SLOT_MIN}칸은 있어야 해요`); return; }
-    this.slots.pop();
+    this.slots.splice(i, 1);
     this.applySlotCount();
   }
 
@@ -524,7 +530,32 @@ export default class PinballScene extends MiniGame {
     this.editorNote.setText(msg).setColor(css(C.warning));
     this.time.delayedCall(1200, () => {
       if (this.editorNote && this.editorNote.active) {
-        this.editorNote.setText(`칸 ${SLOT_MIN}–${SLOT_MAX}개 · 이름 4자 이내`).setColor(css(C.subtext));
+        this.editorNote.setText(`칸 ${SLOT_MIN}–${SLOT_MAX}개 · 눌러서 삭제 · 이름은 보드 칸 더블탭`).setColor(css(C.subtext));
+      }
+    });
+  }
+
+  // 보드 결과 칸 더블탭 = 이름 수정(사다리 보드·뽑기 풀 칩과 같은 패턴)
+  onSlotTap(i) {
+    if (this.locked) return;
+    const now = this.time.now;
+    if (this.lastSlotTap && this.lastSlotTap.i === i && now - this.lastSlotTap.t < 350) {
+      this.lastSlotTap = null;
+      this.renameSlot(i);
+    } else {
+      this.lastSlotTap = { i, t: now };
+      this.toastResult('더블탭: 이름 수정');
+    }
+  }
+
+  // 잠깐 안내 후 원래 문구(결과 포함)로 복원
+  toastResult(msg) {
+    if (!this.toastPrev) this.toastPrev = { text: this.resultText.text, color: this.resultText.style.color };
+    this.resultText.setColor(css(C.warning)).setText(msg).setScale(1);
+    this.time.delayedCall(1200, () => {
+      if (this.resultText.active && this.toastPrev) {
+        this.resultText.setColor(this.toastPrev.color).setText(this.toastPrev.text).setScale(1);
+        this.toastPrev = null;
       }
     });
   }
