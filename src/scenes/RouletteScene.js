@@ -69,7 +69,8 @@ function loadItems(mealKey, defaults) {
     const raw = localStorage.getItem(keyFor(mealKey));
     if (raw) {
       const a = JSON.parse(raw);
-      if (Array.isArray(a) && a.length >= 2) return a;
+      // 1개(감자튀김만)도 유효 — '모두 지우기' 상태 유지(스핀은 2개 미만이면 잠김)
+      if (Array.isArray(a) && a.length >= 1) return a;
     }
   } catch (e) { /* 저장소 접근 불가 시 무시 */ }
   return [...defaults];
@@ -417,6 +418,11 @@ export default class RouletteScene extends MiniGame {
 
   spin(forceIdx = null) {
     if (this.locked) return;
+    // 칸이 1개면 결과가 정해져 있어 돌리지 않는다(정직) — 추가를 안내
+    if (this.items.length < 2) {
+      this.resultText.setColor(css(C.warning)).setText('메뉴가 부족해요\n✎ 메뉴 편집에서 추가해 주세요').setScale(1);
+      return;
+    }
     // 비복원: 남은 풀 계산 — 모두 나왔으면 스핀 대신 안내(정직: 빈 풀에서 돌리지 않는다)
     const pool = this.items.map((_, i) => i)
       .filter((i) => !this.excludeMode || !this.excluded.has(this.items[i]));
@@ -568,7 +574,7 @@ export default class RouletteScene extends MiniGame {
     const addChip = (labelStr, kind, onTap) => {
       const outlineColor = kind === 'add' ? C.primary
         : kind === 'reset' ? C.warning
-        : kind === 'resetall' ? C.danger : null;
+        : kind === 'clear' || kind === 'resetall' ? C.danger : null;
       const t = this.add.text(0, 0, labelStr, {
         fontFamily: FONT, fontSize: '28px',
         color: outlineColor ? css(outlineColor) : css(C.text), fontStyle: 'bold',
@@ -596,6 +602,7 @@ export default class RouletteScene extends MiniGame {
     });
     addChip('+ 추가', 'add', () => this.addItem());
     addChip('↺ 기본값', 'reset', () => this.resetItems());
+    addChip('🗑 모두 지우기', 'clear', () => this.clearItems());
     addChip('⟲ 전체 초기화', 'resetall', () => this.resetAllItems());
   }
 
@@ -607,6 +614,23 @@ export default class RouletteScene extends MiniGame {
     this.rebuildWheel();
     this.renderChips();
     this.flashNote(`${this.meal.label} 메뉴를 기본값으로 복원했어요`);
+  }
+
+  // 모두 지우기: 이 시간대 메뉴를 감자튀김만 남기고 비운다 — 파괴적 동작이라 두 번 눌러 확정
+  clearItems() {
+    if (!this.confirmClear) {
+      this.confirmClear = true;
+      this.flashNote(`한 번 더 누르면 ${this.meal.label} 메뉴를 모두 지워요 (🍟 제외)`);
+      this.time.delayedCall(1400, () => { this.confirmClear = false; });
+      return;
+    }
+    this.confirmClear = false;
+    this.items = [FRY];
+    saveItems(this.mealKey, this.items);
+    this.clearExclusions();
+    this.rebuildWheel();
+    this.renderChips();
+    this.flashNote('감자튀김만 남기고 모두 지웠어요 — + 추가로 채워 주세요');
   }
 
   // 전체 초기화: 아침·점심·저녁·야식 4개 시간대 모두 기본값으로 — 파괴적 동작이라 두 번 눌러 확정
@@ -646,7 +670,6 @@ export default class RouletteScene extends MiniGame {
 
   removeItem(name) {
     if (name === FRY) { this.flashNote('감자튀김은 영원해요 🍟'); return; }
-    if (this.items.length <= 2) { this.flashNote('최소 2개는 있어야 해요'); return; }
     this.items = this.items.filter((x) => x !== name);
     saveItems(this.mealKey, this.items);
     this.clearExclusions();
