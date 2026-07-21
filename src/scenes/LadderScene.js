@@ -14,8 +14,6 @@ const MIN_P = 2;
 const MAX_P = 6; // 모바일 가독성 한계(responsive-design §7)
 const NAME_MAX = 4; // 라벨 겹침 방지(글자 수 제한)
 
-const PRESETS = ['커피', '벌칙', '청소', '당첨'];
-
 // 시작 전 상단 안내 — 이름 바로 위에서 수정 어포던스를 노출(시작하면 숨김)
 const HINT_SETUP = '이름을 더블탭으로 수정할 수 있어요';
 
@@ -408,9 +406,9 @@ export default class LadderScene extends MiniGame {
     if (this.names.length < MAX_P) chip('+ 추가', { outline: true }, () => this.addName());
     x = startX; y += chipH + 36;
 
-    // 결과 프리셋(트렌드: 커피/벌칙/청소/당첨 내기)
-    section('결과 프리셋 (1명 당첨, 나머지 통과)');
-    PRESETS.forEach((p) => chip(p, { outline: true, color: C.warning }, () => this.applyPreset(p)));
+    // 결과 일괄 설정: 당첨 1(무작위 자리) + 나머지 벌칙
+    section('결과 일괄 설정');
+    chip('🎯 당첨 1 · 나머지 벌칙', { outline: true, color: C.warning }, () => this.applyDefaultResults());
     x = startX; y += chipH + 36;
 
     // 결과(눌러서 이름 바꾸기)
@@ -448,12 +446,13 @@ export default class LadderScene extends MiniGame {
     this.persistAndRefresh();
   }
 
-  // 당첨 위치는 무작위 — 0번 고정이면 왼쪽 참가자가 걸릴 확률이 구조적으로 높아진다(섞임 편향)
-  applyPreset(word) {
+  // 결과 일괄 설정: '당첨' 1개 + 나머지 전부 '벌칙'
+  // 당첨 위치는 무작위 — 고정 자리는 그 앞 참가자가 걸릴 확률이 구조적으로 높아진다(섞임 편향)
+  applyDefaultResults() {
     const winner = this.rng.between(0, this.results.length - 1);
-    this.results = this.results.map((_, i) => (i === winner ? word : '통과'));
+    this.results = this.results.map((_, i) => (i === winner ? '당첨' : '벌칙'));
     this.persistAndRefresh();
-    this.flashEditorNote(`'${word}' 자리는 무작위로 정했어요`);
+    this.flashEditorNote("'당첨' 자리는 무작위로 정했어요");
   }
 
   renameResult(i) {
