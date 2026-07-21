@@ -31,7 +31,7 @@ export function enforceHostLock() {
   box.innerHTML =
     '<h1 style="font-size:28px;margin:0 0 12px">dori</h1>'
     + '<p style="color:#8b90a8;font-size:16px;line-height:1.7;margin:0">'
-    + '공식 사이트에서만 플레이할 수 있습니다.<br>Play the official version at<br>'
+    + '공식 사이트에서 이용할 수 있습니다.<br>Visit the official site at<br>'
     + '<a style="color:#6cc7ff" href="https://dori.io.kr/">dori.io.kr</a>'
     + '</p>';
   document.body.appendChild(box);

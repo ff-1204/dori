@@ -1,7 +1,7 @@
 {
   "name": "dori — 도리도리 잼잼",
   "short_name": "dori",
-  "description": "뭐 먹지? 누가 쏘지? 고민은 짧게, 결정은 즐겁게.",
+  "description": "뭐 먹지? 누가 하지? 고민은 짧게, 결정은 즐겁게.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

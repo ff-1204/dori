@@ -22,7 +22,7 @@ export default class CrocoScene extends MiniGame {
     this.cx = width / 2;
 
     // 공통 레이아웃 패턴: 헤더 y48(⬅·제목 40px) / 태그라인128 / 문구190(32px) / 게임판 / 주 버튼
-    this.add.text(this.cx, 48, '악어 이빨 누르기', {
+    this.add.text(this.cx, 48, '악어 이빨', {
       fontFamily: FONT, fontSize: '40px', color: css(C.text), fontStyle: 'bold',
     }).setOrigin(0.5);
 

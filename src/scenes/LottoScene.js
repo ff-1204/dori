@@ -56,7 +56,7 @@ export default class LottoScene extends MiniGame {
     this.drawnHour = saved ? saved.hour : null;
 
     // 공통 레이아웃 패턴: 헤더 y48(⬅·제목 40px) / 태그라인128 / 문구190 / 게임판 / 판 아래 컨트롤(26px) / 주 버튼
-    this.add.text(this.cx, 48, '로또 번호 추첨', {
+    this.add.text(this.cx, 48, '로또 추첨', {
       fontFamily: FONT, fontSize: '40px', color: css(C.text), fontStyle: 'bold',
     }).setOrigin(0.5);
 
