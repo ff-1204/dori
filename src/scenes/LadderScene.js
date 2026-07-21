@@ -14,7 +14,7 @@ const MIN_P = 2;
 const MAX_P = 6; // 모바일 가독성 한계(responsive-design §7)
 const NAME_MAX = 4; // 라벨 겹침 방지(글자 수 제한)
 
-// 시작 전 기본 안내(상단 공용 문구 자리) — 이름 수정 어포던스를 노출
+// 시작 전 기본 안내 — 이름 수정 어포던스를 노출
 const HINT_SETUP = '이름을 더블탭으로 수정할 수 있어요';
 
 const LS_NAMES = 'dori.ladder.names';
@@ -46,7 +46,7 @@ export default class LadderScene extends MiniGame {
     this.editor = null; // 재진입 시 stale 참조 초기화
     this.inputOverlay = null;
 
-    // 레이아웃(요소 점유 범위 검산: 제목116–164 / 안내208–236 / 이름286–314 / 사다리330–920 / 결과940–975 / 버튼1050–1150 / 편집1191–1221)
+    // 레이아웃(요소 점유 범위 검산: 제목116–164 / 이름286–314 / 사다리330–920 / 결과940–975 / 안내991–1029 / 버튼1050–1150 / 편집1191–1221)
     this.topY = 330;
     this.bottomY = 920;
     this.leftX = 90;
@@ -67,9 +67,9 @@ export default class LadderScene extends MiniGame {
     this.traceLayer = this.add.container(0, 0);   // 경로(색상 연결)
     this.labelLayer = this.add.container(0, 0);   // 이름/결과 라벨
 
-    // 안내 문구는 상단(제목과 이름 사이) 한 곳 — 설정·진행·결과 요약 공용
-    this.hint = this.add.text(this.cx, 222, HINT_SETUP, {
-      fontFamily: FONT, fontSize: '28px', color: css(C.subtext), fontStyle: 'bold',
+    // 안내·결과 문구는 메뉴 룰렛과 같은 배치 — 보드 아래·버튼 위에 크게 하나(설정·진행·결과 공용)
+    this.hint = this.add.text(this.cx, 1010, HINT_SETUP, {
+      fontFamily: FONT, fontSize: '38px', color: css(C.subtext), fontStyle: 'bold',
     }).setOrigin(0.5);
 
     this.mainBtn = makeButton(this, {
