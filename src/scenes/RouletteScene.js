@@ -95,8 +95,8 @@ export default class RouletteScene extends MiniGame {
     this.cx = width / 2;
     this.editor = null; // 재진입 시 stale 참조 초기화(편집 연 채 나간 경우)
     this.inputOverlay = null; // 입력 오버레이도 동일(연 채 나간 경우)
-    // 레이아웃(검산): 헤더 행 y48(⬅24–72 / 제목28–68 / 편집35–61) / 제외 토글108–132 / 문구156–224 /(여백 95)/ 포인터319–371 / 원판365–965 /(여백 89)/ 버튼1054–1154
-    // 헤더는 뒤로가기와 같은 행(앱 헤더 패턴), 원판 블록은 문구·버튼 사이 여백 균형(95/89)
+    // 레이아웃(검산): 헤더 y48(⬅·제목) / 문구156–224 / 포인터319–371 / 원판365–965 / 편집989–1015 / 버튼1054–1154 / 제외 토글·취소1188–1212
+    // 편집은 원판 바로 아래(판 구성 컨트롤), 제외 토글은 돌리기 아래(스핀 옵션 클러스터)
     // 크기 위계: 제목 40px > 문구 32px > 편집 26px > 제외 토글·취소 24px
     this.cy = 665;
     this.radius = 300;
@@ -116,11 +116,11 @@ export default class RouletteScene extends MiniGame {
     // 비복원 모드: 나온 항목은 칸이 흐려지고 다음 스핀에서 제외(뽑기 상자와 같은 정직 원칙)
     // 토글·제외 목록은 기기 내 저장(localStorage) — 재진입해도 이어진다(excluded는 setupItems에서 복원)
     this.excludeMode = loadStr(LS_EXCLUDE, 'off') === 'on';
-    this.excludeBtn = this.add.text(32, 120, '', {
+    this.excludeBtn = this.add.text(32, 1200, '', {
       fontFamily: FONT, fontSize: '24px', color: css(C.subtext), fontStyle: 'bold',
     }).setOrigin(0, 0.5).setInteractive({ useHandCursor: true });
     this.excludeBtn.on('pointerup', () => this.toggleExclude());
-    this.cancelBtn = this.add.text(width - 32, 120, '', {
+    this.cancelBtn = this.add.text(width - 32, 1200, '', {
       fontFamily: FONT, fontSize: '24px', color: css(C.warning), fontStyle: 'bold',
     }).setOrigin(1, 0.5).setInteractive({ useHandCursor: true });
     this.cancelBtn.on('pointerup', () => this.cancelExclusions());
@@ -141,10 +141,10 @@ export default class RouletteScene extends MiniGame {
       onClick: () => this.spin(),
     });
 
-    // 헤더 행 우측 — 제목(40px, 중앙)과 최소 40px 이격(검산: 제목 우단 ≈500, 편집 좌단 ≈540)
-    this.editBtn = this.add.text(width - 32, 48, '✎ 메뉴 편집', {
+    // 원판 바로 아래 중앙 — 판 구성 컨트롤은 판에 붙여 둔다
+    this.editBtn = this.add.text(this.cx, 1002, '✎ 메뉴 편집', {
       fontFamily: FONT, fontSize: '26px', color: css(C.subtext), fontStyle: 'bold',
-    }).setOrigin(1, 0.5).setInteractive({ useHandCursor: true });
+    }).setOrigin(0.5).setInteractive({ useHandCursor: true });
     this.editBtn.on('pointerover', () => this.editBtn.setColor(css(C.primary)));
     this.editBtn.on('pointerout', () => this.editBtn.setColor(css(C.subtext)));
     this.editBtn.on('pointerup', () => this.openEditor());
