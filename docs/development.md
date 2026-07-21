@@ -26,7 +26,7 @@ dori/
 ├── src/
 │   ├── main.js           # 게임 설정 + 씬 등록
 │   ├── theme.js          # 디자인 토큰(팔레트·간격·이징) — visual-polish 기준
-│   ├── ui.js             # 공통 UI(어포던스 버튼·뒤로가기·한 줄 입력 오버레이 openTextInput)
+│   ├── ui.js             # 공통 UI(어포던스 버튼·뒤로가기·입력 오버레이 openTextInput·터치 타깃 확장 padHitArea)
 │   ├── MiniGame.js       # 미니게임 공통 베이스(FSM·시드 RNG·입력 잠금·시간 분위기·연출 헬퍼 burst/colorFlash/shake)
 │   ├── timeOfDay.js      # 시간대 분위기(서카디안) — affective-design 기준
 │   ├── nav.js            # 뒤로가기 통합(popstate ↔ 씬 전환) + 해시 딥링크(#roulette 등)
@@ -43,7 +43,7 @@ dori/
 │       ├── DrawScene.js      # 뽑기 상자(비복원 추첨)
 │       ├── RussianScene.js   # 러시안 룰렛(조건부 확률 정직 표시)
 │       ├── CrocoScene.js     # 악어 이빨(트리거 슬롯)
-│       ├── PopUpScene.js     # 통아저씨(트리거 슬롯 + 발사)
+│       ├── PopUpScene.js     # 해적통(트리거 슬롯 + 발사 — 구 '통아저씨', 씬 키는 유지)
 │       ├── DancheongScene.js # 단청(결정적 해시 오라클, HTML 입력 오버레이)
 │       ├── LottoScene.js     # 로또 번호 추첨(정각 잠금·기록, 복사/공유)
 │       └── TeamScene.js      # 조 배정(번호 셔플 + N분할 라운드로빈)

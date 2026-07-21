@@ -3,7 +3,7 @@
 // 정직한 매핑: 결과를 RNG로 먼저 정하고 포인터 칸에 정확히 멈추게 회전 각을 역산(game-mechanics A-1).
 import MiniGame from '../MiniGame.js';
 import { C, css, FONT, EASE, RADIUS } from '../theme.js';
-import { makeButton, openTextInput, closeTextInput } from '../ui.js';
+import { makeButton, openTextInput, closeTextInput, padHitArea } from '../ui.js';
 import { mealForPhase } from '../timeOfDay.js';
 import { Sfx } from '../sfx.js';
 
@@ -152,6 +152,7 @@ export default class RouletteScene extends MiniGame {
     this.editBtn.on('pointerover', () => this.editBtn.setColor(css(C.primary)));
     this.editBtn.on('pointerout', () => this.editBtn.setColor(css(C.subtext)));
     this.editBtn.on('pointerup', () => this.openEditor());
+    padHitArea(this.editBtn);
   }
 
   // 메뉴(저장분 우선) + 제외 목록 복원
@@ -194,6 +195,8 @@ export default class RouletteScene extends MiniGame {
     const n = this.excluded.size;
     this.cancelBtn.setVisible(this.excludeMode && n > 0);
     this.cancelBtn.setText(`↺ 제외 취소 (${n})`);
+    padHitArea(this.excludeBtn); // 라벨이 바뀌므로 갱신 시점마다 재계산(터치 타깃 ≥88px)
+    padHitArea(this.cancelBtn);
   }
 
   // 칸 오버레이 공통 경로(도넛 조각) — 가운데 허브(원+캡)는 가리지 않는다

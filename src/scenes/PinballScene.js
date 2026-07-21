@@ -4,7 +4,7 @@
 // 정직한 매핑: 결과를 몰래 유도하지 않는다 — 보이는 물리 그대로(핀 반발 잔떨림 포함).
 import MiniGame from '../MiniGame.js';
 import { C, css, FONT, SLICE, EASE, RADIUS } from '../theme.js';
-import { makeButton, openTextInput, closeTextInput } from '../ui.js';
+import { makeButton, openTextInput, closeTextInput, padHitArea } from '../ui.js';
 import { Sfx } from '../sfx.js';
 
 const LS_SLOTS = 'dori.pinball.slots';
@@ -98,6 +98,8 @@ export default class PinballScene extends MiniGame {
     this.editBtn.on('pointerover', () => this.editBtn.setColor(css(C.primary)));
     this.editBtn.on('pointerout', () => this.editBtn.setColor(css(C.subtext)));
     this.editBtn.on('pointerup', () => this.openEditor());
+    padHitArea(this.shuffleBtn); // 터치 타깃 ≥88px(responsive §7)
+    padHitArea(this.editBtn);
 
     this.setupBoardCam();
   }

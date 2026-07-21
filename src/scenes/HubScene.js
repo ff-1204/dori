@@ -1,7 +1,7 @@
 // 허브 씬 — 게임 선택 포털. 정체성(결정 돕기·랜덤 뽑기·복불복)을 범주로 노출.
 // 미구현 게임은 '준비 중'으로 흐리게 표시(정직한 어포던스: 누를 수 없음을 드러냄).
 import { C, css, FONT, SP } from '../theme.js';
-import { makeButton } from '../ui.js';
+import { makeButton, padHitArea } from '../ui.js';
 import { applyTimeAtmosphere, mealForPhase, MEAL_LABEL, greetingForPhase } from '../timeOfDay.js';
 import { pushGameState, consumeDeepLink } from '../nav.js';
 import { Sfx } from '../sfx.js';
@@ -159,6 +159,7 @@ export default class HubScene extends Phaser.Scene {
       if (next) Sfx.play('pop');
       this.toast(next ? '효과음 켜짐' : '효과음 꺼짐');
     });
+    padHitArea(this.soundBtn, 88, 88); // 이모지 단독 버튼이라 세로도 넉넉히
 
     // 제작자 크레딧 → GitHub (자연스러운 외부 링크)
     const credit = this.add.text(width / 2, by, 'made by ff-1204  ↗', {
@@ -175,6 +176,7 @@ export default class HubScene extends Phaser.Scene {
     install.on('pointerover', () => install.setColor(css(C.primary)));
     install.on('pointerout', () => install.setColor(css(C.subtext)));
     install.on('pointerup', () => this.installShortcut());
+    padHitArea(install);
 
     // 정적 페이지 링크(하단 바 위 한 줄) — 소개·사용 안내·개인정보처리방침(신뢰 신호, AdSense 요건)
     const pages = [['소개', 'about.html'], ['사용 안내', 'guide.html'], ['개인정보처리방침', 'privacy.html']];
@@ -272,6 +274,7 @@ export default class HubScene extends Phaser.Scene {
     qrBtn.on('pointerover', () => qrBtn.setColor(css(C.primary)));
     qrBtn.on('pointerout', () => qrBtn.setColor(css(C.subtext)));
     qrBtn.on('pointerup', () => this.openQr());
+    padHitArea(qrBtn); // 터치 타깃 ≥88px(responsive §7)
 
     const shareBtn = this.add.text(width - SP.md, SP.md + 6, '🔗 주소 복사', {
       fontFamily: FONT, fontSize: '30px', color: css(C.subtext), fontStyle: 'bold',
@@ -279,6 +282,7 @@ export default class HubScene extends Phaser.Scene {
     shareBtn.on('pointerover', () => shareBtn.setColor(css(C.primary)));
     shareBtn.on('pointerout', () => shareBtn.setColor(css(C.subtext)));
     shareBtn.on('pointerup', () => this.doShare());
+    padHitArea(shareBtn);
   }
 
   async doShare() {

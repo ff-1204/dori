@@ -5,7 +5,7 @@
 // 색상 연결: 참가자 색 = 경로 색 = 결과 하이라이트 색(visual-polish §3-1a).
 import MiniGame from '../MiniGame.js';
 import { C, css, FONT, PLAYER, RADIUS, EASE } from '../theme.js';
-import { makeButton, openTextInput, closeTextInput } from '../ui.js';
+import { makeButton, openTextInput, closeTextInput, padHitArea } from '../ui.js';
 import { Sfx } from '../sfx.js';
 
 // 가로 다리 행 수는 인원 비례(rowCount) — 인접 교환 셔플은 열 수 대비 행이 많아야
@@ -97,6 +97,8 @@ export default class LadderScene extends MiniGame {
     this.resultsBtn.on('pointerover', () => this.resultsBtn.setColor(css(C.primary)));
     this.resultsBtn.on('pointerout', () => this.resultsBtn.setColor(css(C.subtext)));
     this.resultsBtn.on('pointerup', () => this.openResults());
+    padHitArea(this.editBtn); // 터치 타깃 ≥88px(responsive §7)
+    padHitArea(this.resultsBtn);
 
     this.drawBoard();
   }

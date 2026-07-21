@@ -6,7 +6,7 @@
 // 색상 연결: 조마다 고유색(PLAYER 팔레트) — 라벨·테두리·칩·완료 연출이 같은 색.
 import MiniGame from '../MiniGame.js';
 import { C, css, FONT, EASE, RADIUS, PLAYER } from '../theme.js';
-import { makeButton, openTextInput, closeTextInput } from '../ui.js';
+import { makeButton, openTextInput, closeTextInput, padHitArea } from '../ui.js';
 import { Sfx } from '../sfx.js';
 
 // 명단 텍스트의 그룹 제목 단어 — 이름으로 쓰면 붙여넣기 왕복 시 제목으로 오해석되므로 금지
@@ -136,6 +136,8 @@ export default class TeamScene extends MiniGame {
     this.copyBtn = this.add.text(this.cx + 170, 1002, '📋 조 편성 복사', {
       fontFamily: FONT, fontSize: '26px', color: css(C.subtext), fontStyle: 'bold',
     }).setOrigin(0.5).setInteractive({ useHandCursor: true }).setVisible(false);
+    padHitArea(this.editBtn); // 터치 타깃 ≥88px(responsive §7)
+    padHitArea(this.copyBtn);
     this.copyBtn.on('pointerover', () => this.copyBtn.setColor(css(C.primary)));
     this.copyBtn.on('pointerout', () => this.copyBtn.setColor(css(C.subtext)));
     this.copyBtn.on('pointerup', () => this.copyResult());

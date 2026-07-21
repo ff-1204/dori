@@ -4,7 +4,7 @@
 // 색상 연결: 항목 칩 색 = 뽑힌 카드 색 = 폭발 색.
 import MiniGame from '../MiniGame.js';
 import { C, css, FONT, PLAYER, EASE, RADIUS } from '../theme.js';
-import { makeButton, openTextInput, closeTextInput } from '../ui.js';
+import { makeButton, openTextInput, closeTextInput, padHitArea } from '../ui.js';
 import { Sfx } from '../sfx.js';
 
 const LS_ITEMS = 'dori.draw.items';
@@ -77,6 +77,8 @@ export default class DrawScene extends MiniGame {
     this.resetBtn.on('pointerover', () => this.resetBtn.setColor(css(C.warning)));
     this.resetBtn.on('pointerout', () => this.resetBtn.setColor(css(C.subtext)));
     this.resetBtn.on('pointerup', () => this.resetDrawn());
+    padHitArea(this.editBtn); // 터치 타깃 ≥88px(responsive §7)
+    padHitArea(this.resetBtn);
   }
 
   itemColor(i) {

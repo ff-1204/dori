@@ -5,7 +5,7 @@
 // 공 색은 공식 로또 색 구간(1-10 노랑, 11-20 파랑, 21-30 빨강, 31-40 회색, 41-45 초록)을 팔레트로 매핑.
 import MiniGame from '../MiniGame.js';
 import { C, css, FONT, EASE } from '../theme.js';
-import { makeButton } from '../ui.js';
+import { makeButton, padHitArea } from '../ui.js';
 import { Sfx } from '../sfx.js';
 
 const LS_KEY = 'dori.lotto';
@@ -92,6 +92,8 @@ export default class LottoScene extends MiniGame {
     this.shareBtn.on('pointerover', () => this.shareBtn.setColor(css(C.primary)));
     this.shareBtn.on('pointerout', () => this.shareBtn.setColor(css(C.subtext)));
     this.shareBtn.on('pointerup', () => this.shareNumbers());
+    padHitArea(this.copyBtn); // 터치 타깃 ≥88px(responsive §7)
+    padHitArea(this.shareBtn);
 
     this.renderLines();
     this.refreshLockState();

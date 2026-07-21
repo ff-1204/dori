@@ -51,6 +51,15 @@ export function makeButton(scene, opts) {
   return con;
 }
 
+// 작은 텍스트 링크의 터치 타깃 확장 — 표시 크기는 그대로 두고 히트 영역만 키운다(responsive §7: ≥88px 설계 단위).
+// 라벨을 setText로 바꾸는 버튼은 바꾼 뒤 다시 호출할 것(폭 기준으로 재계산).
+export function padHitArea(t, minW = 88, minH = 56) {
+  if (!t.input) return;
+  const w = Math.max(t.width + 24, minW);
+  const h = Math.max(t.height + 24, minH);
+  t.input.hitArea.setTo((t.width - w) / 2, (t.height - h) / 2, w, h);
+}
+
 // 한 줄 입력 오버레이 — window.prompt 대체(테마 일치·Enter 확정·inputmode로 모바일 자판 선택).
 // 씬당 1개(scene.inputOverlay)만 유지. 씬 전환 시 DOM은 Phaser가 함께 파괴하므로
 // 재진입하는 씬은 onCreate에서 scene.inputOverlay = null 로 stale 참조를 초기화할 것.
