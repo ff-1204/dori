@@ -207,14 +207,23 @@ export default class RouletteScene extends MiniGame {
     this.cancelBtn.setText(`↺ 제외 취소 (${n})`);
   }
 
+  // 칸 오버레이 공통 경로(도넛 조각) — 가운데 허브(원+캡)는 가리지 않는다
+  fillSlicePath(g, i) {
+    const innerR = 48; // 허브 반지름 40 + 테두리 3 + 여유
+    const start = Phaser.Math.DegToRad(i * this.sliceAngle);
+    const end = Phaser.Math.DegToRad((i + 1) * this.sliceAngle);
+    g.beginPath();
+    g.arc(0, 0, this.radius, start, end, false);
+    g.arc(0, 0, innerR, end, start, true);
+    g.closePath();
+    g.fillPath();
+  }
+
   // 흐림 처리: 칸 위에 어두운 오버레이 + 라벨 흐림(휠과 함께 회전)
   dimSlice(i) {
     const g = this.add.graphics();
     g.fillStyle(C.bg, 0.62);
-    g.beginPath();
-    g.slice(0, 0, this.radius, Phaser.Math.DegToRad(i * this.sliceAngle), Phaser.Math.DegToRad((i + 1) * this.sliceAngle), false);
-    g.closePath();
-    g.fillPath();
+    this.fillSlicePath(g, i);
     this.wheel.add(g);
     this.dimOverlays.push(g);
     if (this.sliceLabels[i]) this.sliceLabels[i].setAlpha(0.4);
@@ -398,10 +407,7 @@ export default class RouletteScene extends MiniGame {
   sliceOverlay(i) {
     const g = this.add.graphics();
     g.fillStyle(0xffffff, 1);
-    g.beginPath();
-    g.slice(0, 0, this.radius, Phaser.Math.DegToRad(i * this.sliceAngle), Phaser.Math.DegToRad((i + 1) * this.sliceAngle), false);
-    g.closePath();
-    g.fillPath();
+    this.fillSlicePath(g, i);
     g.setAlpha(0);
     this.wheel.add(g);
     return g;
