@@ -383,8 +383,15 @@ export default class RouletteScene extends MiniGame {
     }
     this.lock();
     this.spinBtn.disableButton();
-    this.resultText.setColor(css(C.subtext));
-    this.resultText.setText('...');
+
+    // 스핀 중 실시간 표기: 포인터가 지나는 칸의 이름을 그 칸 색으로(포인터-텍스트 일치 + 색상 연결)
+    const pointedAt = (deg) => {
+      const local = (((270 - deg) % 360) + 360) % 360; // 포인터는 상단(270°)
+      return Math.floor(local / this.sliceAngle) % this.n;
+    };
+    const showPointed = (idx) => {
+      this.resultText.setColor(css(this.colorFor(idx))).setText(this.items[idx]);
+    };
 
     // 🍟 보증(피티): 10번째 스핀은 감자튀김 확정 — 공개 규칙(docs/game.md)
     let pity = parseInt(loadStr(LS_SPINS, '0'), 10) || 0;
@@ -408,7 +415,8 @@ export default class RouletteScene extends MiniGame {
 
     Sfx.play('pop'); // 출발
     const proxy = { a: this.wheelAngle };
-    let lastSlice = Math.floor(this.wheelAngle / this.sliceAngle);
+    let lastPointed = pointedAt(this.wheelAngle);
+    showPointed(lastPointed);
     this.tweens.add({
       targets: proxy,
       a: finalAngle,
@@ -416,9 +424,9 @@ export default class RouletteScene extends MiniGame {
       ease: EASE.spin,
       onUpdate: () => {
         this.wheel.rotation = Phaser.Math.DegToRad(proxy.a);
-        // 칸 경계 통과마다 틱 — 감속(ease-out)과 함께 간격이 벌어지며 긴장이 자연히 쌓인다
-        const slice = Math.floor(proxy.a / this.sliceAngle);
-        if (slice !== lastSlice) { lastSlice = slice; Sfx.play('tick'); }
+        // 칸이 바뀔 때만 틱 + 표기 갱신 — 감속(ease-out)과 함께 간격이 벌어지며 긴장이 자연히 쌓인다
+        const idx = pointedAt(proxy.a);
+        if (idx !== lastPointed) { lastPointed = idx; Sfx.play('tick'); showPointed(idx); }
       },
       onComplete: () => {
         this.wheelAngle = finalAngle;
