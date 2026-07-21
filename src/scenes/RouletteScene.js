@@ -367,7 +367,8 @@ export default class RouletteScene extends MiniGame {
 
   buildPointer() {
     const topY = this.cy - this.radius;
-    const g = this.add.graphics();
+    // 명시적 depth — rebuildWheel()로 원판이 새로 그려져도(리스트 맨 위) 포인터가 항상 위에 온다
+    const g = this.add.graphics().setDepth(5);
     g.fillStyle(0x000000, 0.25).fillTriangle(this.cx - 26, topY - 44, this.cx + 26, topY - 44, this.cx, topY + 10);
     g.fillStyle(C.text, 1).fillTriangle(this.cx - 24, topY - 46, this.cx + 24, topY - 46, this.cx, topY + 6);
   }
