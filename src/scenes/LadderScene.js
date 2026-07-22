@@ -4,8 +4,8 @@
 // 경로 애니메이션은 그 다리를 그대로 따라간다(숨은 조작 없음).
 // 색상 연결: 참가자 색 = 경로 색 = 결과 하이라이트 색(visual-polish §3-1a).
 import MiniGame from '../MiniGame.js';
-import { C, css, FONT, PLAYER, RADIUS, EASE } from '../theme.js';
-import { makeButton, openTextInput, closeTextInput, padHitArea } from '../ui.js';
+import { C, css, FONT, PLAYER, RADIUS, EASE, LAYOUT } from '../theme.js';
+import { makeButton, makeHeader, makeSubLink, makeModal, chipFlow, openTextInput, closeTextInput } from '../ui.js';
 import { Sfx } from '../sfx.js';
 
 // 가로 다리 행 수는 인원 비례(rowCount) — 인접 교환 셔플은 열 수 대비 행이 많아야
@@ -52,8 +52,8 @@ export default class LadderScene extends MiniGame {
 
     // 레이아웃(검산): 헤더 y48(⬅·제목 40px) / 문구124–156 / 이름174–246(라벨 210) / 사다리250–890 / 결과905–945(라벨 925) / 편집989–1015 / 버튼1054–1154
     // 룰렛과 같은 패턴: 헤더 행 + 상단 문구 + 게임판 + 판 아래 편집 + 주 버튼(크기 위계 40>32>26)
-    this.topY = 250;
-    this.bottomY = 890;
+    this.topY = 284; // 이름 라벨(y244)이 문구(y190)와 겹치지 않는 게임판 밴드 시작
+    this.bottomY = 904;
     this.leftX = 90;
     this.rightX = 630;
 
@@ -64,41 +64,27 @@ export default class LadderScene extends MiniGame {
     this.started = false;
     this.traced = new Set();
 
-    // 제목 — 뒤로가기(⬅)와 같은 헤더 행(룰렛과 동일)
-    this.add.text(this.cx, 48, '사다리타기', {
-      fontFamily: FONT, fontSize: '40px', color: css(C.text), fontStyle: 'bold',
-    }).setOrigin(0.5);
+    // 공통 레이아웃 그리드(LAYOUT): 헤더48 / 태그라인128 / 문구190 / 게임판 / 링크1002(±150) / 주 버튼1104
+    makeHeader(this, '사다리타기', '줄 따라 내려가면 결과가 기다려요');
 
     this.boardLayer = this.add.container(0, 0);   // 세로줄 + 다리
     this.traceLayer = this.add.container(0, 0);   // 경로(색상 연결)
     this.labelLayer = this.add.container(0, 0);   // 이름/결과 라벨
 
-    // 안내·결과 문구 — 룰렛과 동일하게 상단(헤더와 게임판 사이) 한 곳(설정·진행·결과 공용)
-    this.hint = this.add.text(this.cx, 140, HINT_SETUP, {
+    // 안내·결과 문구 — 상단 한 곳(설정·진행·결과 공용)
+    this.hint = this.add.text(this.cx, LAYOUT.msgY, HINT_SETUP, {
       fontFamily: FONT, fontSize: '32px', color: css(C.subtext), fontStyle: 'bold',
     }).setOrigin(0.5);
 
     this.mainBtn = makeButton(this, {
-      x: this.cx, y: 1104, w: 360, h: 100, label: '시작', variant: 'primary',
+      x: this.cx, y: LAYOUT.btnY, w: 360, h: 100, label: '시작', variant: 'primary',
       onClick: () => this.startOrShuffle(),
     });
 
     // 게임판 바로 아래 — 좌: 편집(설정 컨트롤) / 우: 전체 결과(시작 후에만 — 조 배정 복사 버튼 패턴)
-    this.editBtn = this.add.text(this.cx - 150, 1002, '✎ 참가자 편집', {
-      fontFamily: FONT, fontSize: '26px', color: css(C.subtext), fontStyle: 'bold',
-    }).setOrigin(0.5).setInteractive({ useHandCursor: true });
-    this.editBtn.on('pointerover', () => this.editBtn.setColor(css(C.primary)));
-    this.editBtn.on('pointerout', () => this.editBtn.setColor(css(C.subtext)));
-    this.editBtn.on('pointerup', () => this.openEditor());
-
-    this.resultsBtn = this.add.text(this.cx + 150, 1002, '👀 전체 결과', {
-      fontFamily: FONT, fontSize: '26px', color: css(C.subtext), fontStyle: 'bold',
-    }).setOrigin(0.5).setInteractive({ useHandCursor: true }).setVisible(false);
-    this.resultsBtn.on('pointerover', () => this.resultsBtn.setColor(css(C.primary)));
-    this.resultsBtn.on('pointerout', () => this.resultsBtn.setColor(css(C.subtext)));
-    this.resultsBtn.on('pointerup', () => this.openResults());
-    padHitArea(this.editBtn); // 터치 타깃 ≥88px(responsive §7)
-    padHitArea(this.resultsBtn);
+    this.editBtn = makeSubLink(this, this.cx - LAYOUT.linkDX, LAYOUT.linksY, '✎ 참가자 편집', () => this.openEditor());
+    this.resultsBtn = makeSubLink(this, this.cx + LAYOUT.linkDX, LAYOUT.linksY, '👀 전체 결과', () => this.openResults());
+    this.resultsBtn.setVisible(false);
 
     this.drawBoard();
   }
@@ -152,10 +138,10 @@ export default class LadderScene extends MiniGame {
     // 이름(참가자 색 = 색상 연결 시작점) — 눌러서 출발(주도성)
     this.nameLabels = [];
     this.names.forEach((name, i) => {
-      const t = this.add.text(this.colX(i), 210, name, {
+      const t = this.add.text(this.colX(i), 244, name, {
         fontFamily: FONT, fontSize: `${nameSize}px`, color: css(PLAYER[i]), fontStyle: 'bold',
       }).setOrigin(0.5);
-      const hit = this.add.rectangle(this.colX(i), 210, 100, 72, 0xffffff, 0)
+      const hit = this.add.rectangle(this.colX(i), 244, 100, 72, 0xffffff, 0)
         .setInteractive({ useHandCursor: true });
       hit.on('pointerup', () => this.onNameTap(i));
       this.labelLayer.add(t);
@@ -166,10 +152,10 @@ export default class LadderScene extends MiniGame {
     // 결과 라벨(하단) — 참가자와 동일하게 시작 전 더블탭으로 수정
     this.resultLabels = [];
     this.results.forEach((r, i) => {
-      const t = this.add.text(this.colX(i), 925, r, {
+      const t = this.add.text(this.colX(i), 939, r, {
         fontFamily: FONT, fontSize: `${n >= 6 ? 22 : 26}px`, color: css(C.subtext), fontStyle: 'bold',
       }).setOrigin(0.5);
-      const hit = this.add.rectangle(this.colX(i), 925, 100, 64, 0xffffff, 0)
+      const hit = this.add.rectangle(this.colX(i), 939, 100, 64, 0xffffff, 0)
         .setInteractive({ useHandCursor: true });
       hit.on('pointerup', () => this.onResultTap(i));
       this.labelLayer.add(t);
@@ -252,7 +238,7 @@ export default class LadderScene extends MiniGame {
     this.resultsOverlay.add(panel);
 
     this.resultsOverlay.add(this.add.text(this.cx, py + 56, '전체 결과', {
-      fontFamily: FONT, fontSize: '36px', color: css(C.text), fontStyle: 'bold',
+      fontFamily: FONT, fontSize: '38px', color: css(C.text), fontStyle: 'bold',
     }).setOrigin(0.5));
 
     // 행: 참가자 색 = 색상 연결, 이미 도착한 사람은 ✓
@@ -427,88 +413,35 @@ export default class LadderScene extends MiniGame {
   // ===== 편집(참가자·결과) =====
   openEditor() {
     if (this.editor || this.locked) return;
-    const { width, height } = this.scale;
 
-    this.editor = this.add.container(0, 0).setDepth(100);
-    const dim = this.add.rectangle(0, 0, width, height, 0x000000, 0.72).setOrigin(0).setInteractive();
-    this.editor.add(dim);
-
-    const px = 40; const py = 140; const pw = 640; const ph = 980;
-    this.editorPanel = { px, py, pw };
-    const panel = this.add.graphics();
-    panel.fillStyle(C.surface, 1).fillRoundedRect(px, py, pw, ph, RADIUS);
-    panel.lineStyle(2, C.surfaceAlt, 1).strokeRoundedRect(px, py, pw, ph, RADIUS);
-    this.editor.add(panel);
-
-    this.editor.add(this.add.text(width / 2, py + 48, '참가자 편집', {
-      fontFamily: FONT, fontSize: '38px', color: css(C.text), fontStyle: 'bold',
-    }).setOrigin(0.5));
-
-    this.editorNote = this.add.text(width / 2, py + 94, '항목을 눌러 삭제 · 이름·결과는 보드에서 더블탭', {
-      fontFamily: FONT, fontSize: '22px', color: css(C.subtext),
-    }).setOrigin(0.5);
-    this.editor.add(this.editorNote);
-
-    this.chipsBox = this.add.container(0, 0);
-    this.editor.add(this.chipsBox);
-
-    const done = makeButton(this, {
-      x: width / 2, y: py + ph - 64, w: 280, h: 84, label: '완료', variant: 'primary',
-      onClick: () => this.closeEditor(),
+    // 공통 모달 스캐폴드(제목 38·안내 22·완료 버튼·페이드) — ui.makeModal
+    const modal = makeModal(this, {
+      title: '참가자 편집',
+      note: '항목을 눌러 삭제 · 이름·결과는 보드에서 더블탭',
+      py: 140,
+      ph: 980,
+      onDone: () => this.closeEditor(),
     });
-    this.editor.add(done);
+    this.editor = modal.root;
+    this.editorNote = modal.noteText;
+    this.chipsBox = modal.chipsBox;
+    this.chipArea = modal.chips;
 
     this.renderEditor();
   }
 
   renderEditor() {
-    const { px, py, pw } = this.editorPanel;
     this.chipsBox.removeAll(true);
-
-    const startX = px + 32;
-    const maxX = px + pw - 32;
-    const gap = 12;
-    const chipH = 60;
-    let x = startX;
-    let y = py + 140;
-
-    const section = (label) => {
-      x = startX;
-      const t = this.add.text(startX, y, label, {
-        fontFamily: FONT, fontSize: '26px', color: css(C.primary), fontStyle: 'bold',
-      }).setOrigin(0, 0.5);
-      this.chipsBox.add(t);
-      y += 52;
-    };
-
-    const chip = (labelStr, opts, onTap) => {
-      const t = this.add.text(0, 0, labelStr, {
-        fontFamily: FONT, fontSize: '26px',
-        color: opts.outline ? css(opts.color ?? C.primary) : css(opts.textColor ?? C.text),
-        fontStyle: 'bold',
-      }).setOrigin(0.5);
-      const w = Math.ceil(t.width) + 40;
-      if (x + w > maxX) { x = startX; y += chipH + gap; }
-      const g = this.add.graphics();
-      if (opts.outline) g.lineStyle(2, opts.color ?? C.primary, 1).strokeRoundedRect(0, 0, w, chipH, 14);
-      else g.fillStyle(opts.fill ?? C.surfaceAlt, 1).fillRoundedRect(0, 0, w, chipH, 14);
-      t.setPosition(w / 2, chipH / 2);
-      const con = this.add.container(x, y, [g, t]);
-      const hit = this.add.rectangle(w / 2, chipH / 2, w, chipH, 0xffffff, 0).setInteractive({ useHandCursor: true });
-      con.add(hit);
-      hit.on('pointerup', onTap);
-      this.chipsBox.add(con);
-      x += w + gap;
-    };
+    const chip = chipFlow(this, this.chipsBox, this.chipArea);
 
     // 참가자(이름 색 = 참가자 색)
-    section(`참가자 (${this.names.length}/${MAX_P})`);
-    this.names.forEach((name, i) => chip(`${name}  ✕`, { fill: C.surfaceAlt, textColor: PLAYER[i] }, () => this.removeName(i)));
+    chip.section(`참가자 (${this.names.length}/${MAX_P})`);
+    this.names.forEach((name, i) => chip(`${name}  ✕`, { textColor: PLAYER[i] }, () => this.removeName(i)));
     if (this.names.length < MAX_P) chip('+ 추가', { outline: true }, () => this.addName());
-    x = startX; y += chipH + 36;
+    chip.gapRow(24);
 
     // 결과 기본값: 당첨 1(무작위 자리) + 나머지 벌칙 — 개별 수정은 보드에서 더블탭
-    section('결과 기본값');
+    chip.section('결과 기본값');
     chip('🎯 당첨 1 · 나머지 벌칙', { outline: true, color: C.warning }, () => this.applyDefaultResults());
   }
 

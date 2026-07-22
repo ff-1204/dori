@@ -2,8 +2,8 @@
 // 기본값은 한국인 선호 음식 트렌드 기반이며, 사용자가 추가/삭제할 수 있고 localStorage에 저장된다.
 // 정직한 매핑: 결과를 RNG로 먼저 정하고 포인터 칸에 정확히 멈추게 회전 각을 역산(game-mechanics A-1).
 import MiniGame from '../MiniGame.js';
-import { C, css, FONT, EASE, RADIUS } from '../theme.js';
-import { makeButton, openTextInput, closeTextInput, padHitArea } from '../ui.js';
+import { C, css, FONT, EASE, LAYOUT } from '../theme.js';
+import { makeButton, makeHeader, makeSubLink, makeModal, chipFlow, openTextInput, closeTextInput, padHitArea } from '../ui.js';
 import { mealForPhase } from '../timeOfDay.js';
 import { Sfx } from '../sfx.js';
 
@@ -99,9 +99,8 @@ export default class RouletteScene extends MiniGame {
     this.clearBlink = null; // 죽은 트윈에 stop() 호출 방지
     this.clearChip = null;
     this.lastTap = null;
-    // 레이아웃(검산): 헤더 y48(⬅·제목) / 문구156–224 /(여백 60)/ 포인터284–336 / 원판330–930 /(여백 59)/ 편집989–1015 / 버튼1054–1154 / 제외 토글·취소1188–1212
-    // 원판 블록은 문구·편집 링크 사이 상하 여백 균등(60/59) — 편집은 원판 바로 아래, 제외 토글은 돌리기 아래
-    // 크기 위계: 제목 40px > 문구 32px > 편집 26px > 제외 토글·취소 24px
+    // 공통 레이아웃 그리드(LAYOUT): 헤더48 / 태그라인128 / 문구190(156–224) / 포인터284–336 / 원판330–930 / 편집 링크1002 / 주 버튼1104 / 제외 토글·취소1200
+    // 크기 위계: 제목 40px > 문구 32px > 태그라인·편집 26/24px > 제외 토글·취소 24px
     this.cy = 630;
     this.radius = 300;
     this.wheelAngle = 0;
@@ -113,9 +112,7 @@ export default class RouletteScene extends MiniGame {
     this.makeFryTexture();
 
     // 제목 — 뒤로가기(⬅)와 같은 헤더 행, 40px(헤더 스케일이되 위계는 유지)
-    this.titleText = this.add.text(this.cx, 48, `${this.meal.label} 메뉴 룰렛`, {
-      fontFamily: FONT, fontSize: '40px', color: css(C.text), fontStyle: 'bold',
-    }).setOrigin(0.5);
+    this.titleText = makeHeader(this, `${this.meal.label} 메뉴 룰렛`, '고민은 원판에 맡기고, 돌리세요').titleText;
 
     // 비복원 모드: 나온 항목은 칸이 흐려지고 다음 스핀에서 제외(뽑기 상자와 같은 정직 원칙)
     // 토글·제외 목록은 기기 내 저장(localStorage) — 재진입해도 이어진다(excluded는 setupItems에서 복원)
@@ -135,24 +132,18 @@ export default class RouletteScene extends MiniGame {
     this.updateFryHint(); // 진입 시 카운터가 이미 9면 바로 반짝임
     this.applyExclusionDims(); // 저장된 제외 칸 흐림 복원
 
-    // 안내·실시간 표기·결과 공용 문구 — '나온 건 제외' 행과 원판(포인터) 사이
-    this.resultText = this.add.text(this.cx, 190, '돌려서 메뉴를 정하세요', {
+    // 안내·실시간 표기·결과 공용 문구 — 태그라인과 원판(포인터) 사이
+    this.resultText = this.add.text(this.cx, LAYOUT.msgY, '돌려서 메뉴를 정하세요', {
       fontFamily: FONT, fontSize: '32px', color: css(C.subtext), fontStyle: 'bold', align: 'center',
     }).setOrigin(0.5);
 
     this.spinBtn = makeButton(this, {
-      x: this.cx, y: 1104, w: 360, h: 100, label: '돌리기', variant: 'primary',
+      x: this.cx, y: LAYOUT.btnY, w: 360, h: 100, label: '돌리기', variant: 'primary',
       onClick: () => this.spin(),
     });
 
-    // 원판 바로 아래 중앙 — 판 구성 컨트롤은 판에 붙여 둔다
-    this.editBtn = this.add.text(this.cx, 1002, '✎ 메뉴 편집', {
-      fontFamily: FONT, fontSize: '26px', color: css(C.subtext), fontStyle: 'bold',
-    }).setOrigin(0.5).setInteractive({ useHandCursor: true });
-    this.editBtn.on('pointerover', () => this.editBtn.setColor(css(C.primary)));
-    this.editBtn.on('pointerout', () => this.editBtn.setColor(css(C.subtext)));
-    this.editBtn.on('pointerup', () => this.openEditor());
-    padHitArea(this.editBtn);
+    // 원판 바로 아래 중앙 — 판 구성 컨트롤은 판에 붙여 둔다(링크 1개는 중앙)
+    this.editBtn = makeSubLink(this, this.cx, LAYOUT.linksY, '✎ 메뉴 편집', () => this.openEditor());
   }
 
   // 메뉴(저장분 우선) + 제외 목록 복원
@@ -491,91 +482,36 @@ export default class RouletteScene extends MiniGame {
   // ===== 메뉴 편집 =====
   openEditor() {
     if (this.editor || this.locked) return;
-    const { width, height } = this.scale;
 
-    this.editor = this.add.container(0, 0).setDepth(100);
-    const dim = this.add.rectangle(0, 0, width, height, 0x000000, 0.72).setOrigin(0).setInteractive();
-    this.editor.add(dim);
-
-    const px = 40; const py = 180; const pw = 640; const ph = 900;
-    this.editorPanel = { px, py, pw };
-    const panel = this.add.graphics();
-    panel.fillStyle(C.surface, 1).fillRoundedRect(px, py, pw, ph, RADIUS);
-    panel.lineStyle(2, C.surfaceAlt, 1).strokeRoundedRect(px, py, pw, ph, RADIUS);
-    this.editor.add(panel);
-
-    this.editorTitle = this.add.text(width / 2, py + 52, `${this.meal.label} 메뉴 편집`, {
-      fontFamily: FONT, fontSize: '40px', color: css(C.text), fontStyle: 'bold',
-    }).setOrigin(0.5);
-    this.editor.add(this.editorTitle);
-
-    this.editorNote = this.add.text(width / 2, py + 100, '항목을 눌러 삭제 · ‘+ 추가’로 새 메뉴', {
-      fontFamily: FONT, fontSize: '24px', color: css(C.subtext),
-    }).setOrigin(0.5);
-    this.editor.add(this.editorNote);
-
-    this.chipsBox = this.add.container(0, 0);
-    this.editor.add(this.chipsBox);
-
-    const done = makeButton(this, {
-      x: width / 2, y: py + ph - 66, w: 280, h: 84, label: '완료', variant: 'primary',
-      onClick: () => this.closeEditor(),
+    // 공통 모달 스캐폴드(제목 38·안내 22·완료 버튼·페이드) — ui.makeModal
+    const modal = makeModal(this, {
+      title: `${this.meal.label} 메뉴 편집`,
+      note: '항목을 눌러 삭제 · ‘+ 추가’로 새 메뉴',
+      py: 180,
+      ph: 900,
+      onDone: () => this.closeEditor(),
     });
-    this.editor.add(done);
+    this.editor = modal.root;
+    this.editorTitle = modal.titleText;
+    this.editorNote = modal.noteText;
+    this.chipsBox = modal.chipsBox;
+    this.chipArea = modal.chips;
 
     this.renderChips();
-
-    // 팝 등장(주스) — 모달 공통 페이드
-    this.editor.setAlpha(0);
-    this.tweens.add({ targets: this.editor, alpha: 1, duration: 160, ease: 'Quad.easeOut' });
   }
 
   renderChips() {
     this.stopClearBlink(); // 이전 칩을 향한 트윈이 파괴된 대상을 만지지 않도록
-    const { px, py, pw } = this.editorPanel;
     this.chipsBox.removeAll(true);
-
-    const startX = px + 32;
-    const startY = py + 156;
-    const maxX = px + pw - 32;
-    const gap = 14;
-    const chipH = 64;
-    let x = startX;
-    let y = startY;
-
-    const addChip = (labelStr, kind, onTap) => {
-      const outlineColor = kind === 'add' ? C.primary
-        : kind === 'reset' ? C.warning
-        : kind === 'clear' ? C.danger : null;
-      const t = this.add.text(0, 0, labelStr, {
-        fontFamily: FONT, fontSize: '28px',
-        color: outlineColor ? css(outlineColor) : css(C.text), fontStyle: 'bold',
-      }).setOrigin(0.5);
-      const w = Math.ceil(t.width) + 44;
-      if (x + w > maxX) { x = startX; y += chipH + gap; }
-
-      const g = this.add.graphics();
-      if (outlineColor) g.lineStyle(2, outlineColor, 1).strokeRoundedRect(0, 0, w, chipH, 14);
-      else g.fillStyle(C.surfaceAlt, 1).fillRoundedRect(0, 0, w, chipH, 14);
-      t.setPosition(w / 2, chipH / 2);
-
-      const chip = this.add.container(x, y, [g, t]);
-      const hit = this.add.rectangle(w / 2, chipH / 2, w, chipH, 0xffffff, 0).setInteractive({ useHandCursor: true });
-      chip.add(hit);
-      hit.on('pointerup', onTap);
-      this.chipsBox.add(chip);
-
-      x += w + gap;
-      return chip;
-    };
+    const chip = chipFlow(this, this.chipsBox, this.chipArea);
 
     this.items.forEach((name) => {
       const display = name === FRY ? `🍟 ${name}` : `${name}  ✕`; // 감자튀김은 삭제 불가 표시
-      addChip(display, 'item', () => this.removeItem(name));
+      chip(display, {}, () => this.removeItem(name));
     });
-    addChip('+ 추가', 'add', () => this.addItem());
-    addChip('↺ 기본값', 'reset', () => this.resetItems());
-    this.clearChip = addChip('🗑 모두 지우기', 'clear', () => this.clearItems());
+    chip('+ 추가', { outline: true }, () => this.addItem());
+    chip('↺ 기본값', { outline: true, color: C.warning }, () => this.resetItems());
+    this.clearChip = chip('🗑 모두 지우기', { outline: true, color: C.danger }, () => this.clearItems());
   }
 
   // 이 시간대만 기본 메뉴로 복원(다른 시간대 저장분은 그대로)

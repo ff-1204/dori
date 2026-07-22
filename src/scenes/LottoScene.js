@@ -4,8 +4,8 @@
 //          재추첨 시각은 정적 표기(초읽기 카운트다운 금지 — 도박적 긴급함 배제).
 // 공 색은 공식 로또 색 구간(1-10 노랑, 11-20 파랑, 21-30 빨강, 31-40 회색, 41-45 초록)을 팔레트로 매핑.
 import MiniGame from '../MiniGame.js';
-import { C, css, FONT, EASE } from '../theme.js';
-import { makeButton, padHitArea } from '../ui.js';
+import { C, css, FONT, EASE, LAYOUT } from '../theme.js';
+import { makeButton, makeHeader, makeSubLink } from '../ui.js';
 import { Sfx } from '../sfx.js';
 
 const LS_KEY = 'dori.lotto';
@@ -55,45 +55,26 @@ export default class LottoScene extends MiniGame {
     this.lineCount = saved ? Math.min(Math.max(saved.count || 1, MIN_LINES), MAX_LINES) : 1;
     this.drawnHour = saved ? saved.hour : null;
 
-    // 공통 레이아웃 패턴: 헤더 y48(⬅·제목 40px) / 태그라인128 / 문구190 / 게임판 / 판 아래 컨트롤(26px) / 주 버튼
-    this.add.text(this.cx, 48, '로또 추첨', {
-      fontFamily: FONT, fontSize: '40px', color: css(C.text), fontStyle: 'bold',
-    }).setOrigin(0.5);
-
-    this.add.text(this.cx, 128, '이번 주, 당신의 여섯 숫자', {
-      fontFamily: FONT, fontSize: '24px', color: css(C.subtext),
-    }).setOrigin(0.5);
+    // 공통 레이아웃 그리드(LAYOUT): 헤더48 / 태그라인128 / 문구190 / 게임판 / 링크1002(±150) / 주 버튼1104
+    makeHeader(this, '로또 추첨', '이번 주, 당신의 여섯 숫자');
 
     this.linesLayer = this.add.container(0, 0);
 
     this.buildLineControls();
 
-    // 두 줄 문구가 길어 26px 유지(패턴 32px 대신 — 화면 폭 검산)
-    this.hint = this.add.text(this.cx, 190, '', {
+    // 두 줄 문구가 길어 26px 유지(패턴 32px 대신 — 화면 폭 검산, 문서화된 예외)
+    this.hint = this.add.text(this.cx, LAYOUT.msgY, '', {
       fontFamily: FONT, fontSize: '26px', color: css(C.subtext), fontStyle: 'bold', align: 'center',
     }).setOrigin(0.5);
 
     this.drawBtn = makeButton(this, {
-      x: this.cx, y: 1100, w: 360, h: 100, label: '추첨', variant: 'primary',
+      x: this.cx, y: LAYOUT.btnY, w: 360, h: 100, label: '추첨', variant: 'primary',
       onClick: () => this.draw(),
     });
 
     // 복사 · 공유(하단 보조 액션)
-    this.copyBtn = this.add.text(this.cx - 140, 1002, '📋 복사', {
-      fontFamily: FONT, fontSize: '26px', color: css(C.subtext), fontStyle: 'bold',
-    }).setOrigin(0.5).setInteractive({ useHandCursor: true });
-    this.copyBtn.on('pointerover', () => this.copyBtn.setColor(css(C.primary)));
-    this.copyBtn.on('pointerout', () => this.copyBtn.setColor(css(C.subtext)));
-    this.copyBtn.on('pointerup', () => this.copyNumbers());
-
-    this.shareBtn = this.add.text(this.cx + 140, 1002, '공유 ↗', {
-      fontFamily: FONT, fontSize: '26px', color: css(C.subtext), fontStyle: 'bold',
-    }).setOrigin(0.5).setInteractive({ useHandCursor: true });
-    this.shareBtn.on('pointerover', () => this.shareBtn.setColor(css(C.primary)));
-    this.shareBtn.on('pointerout', () => this.shareBtn.setColor(css(C.subtext)));
-    this.shareBtn.on('pointerup', () => this.shareNumbers());
-    padHitArea(this.copyBtn); // 터치 타깃 ≥88px(responsive §7)
-    padHitArea(this.shareBtn);
+    this.copyBtn = makeSubLink(this, this.cx - LAYOUT.linkDX, LAYOUT.linksY, '📋 복사', () => this.copyNumbers());
+    this.shareBtn = makeSubLink(this, this.cx + LAYOUT.linkDX, LAYOUT.linksY, '공유 ↗', () => this.shareNumbers());
 
     this.renderLines();
     this.refreshLockState();
@@ -154,8 +135,9 @@ export default class LottoScene extends MiniGame {
   // ===== 번호 표시 =====
   renderLines() {
     this.linesLayer.removeAll(true);
-    const startY = 310;
     const gapY = 95;
+    // 줄 블록을 판 영역 중앙(y 550)에 세로 정렬 — 1줄이어도 위로 쏠리지 않는다
+    const startY = Math.round(550 - ((this.lineCount - 1) * gapY) / 2);
     const ballR = 32;
     const firstX = 168;
     const gapX = 88;
@@ -220,7 +202,7 @@ export default class LottoScene extends MiniGame {
 
     const total = this.lineCount * 13 * 40 + 400;
     this.time.delayedCall(total, () => {
-      this.burst(this.cx, 520, C.warning, 30);
+      this.burst(this.cx, 550, C.warning, 30);
       this.colorFlash(C.primary, 150);
       Sfx.play('win');
       this.unlock();

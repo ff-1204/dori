@@ -2,8 +2,8 @@
 // 슬롯 배열 중 1개가 트리거(비복원 시도), 밟으면 입이 닫힌다.
 // 정직한 긴장 연출: 안전한 이빨에 가짜 덜컥임 없음(design-principles).
 import MiniGame from '../MiniGame.js';
-import { C, css, FONT, EASE } from '../theme.js';
-import { makeButton } from '../ui.js';
+import { C, css, FONT, EASE, LAYOUT } from '../theme.js';
+import { makeButton, makeHeader } from '../ui.js';
 import { Sfx } from '../sfx.js';
 
 const TEETH = 12; // 6 × 2줄
@@ -21,23 +21,17 @@ export default class CrocoScene extends MiniGame {
     const { width } = this.scale;
     this.cx = width / 2;
 
-    // 공통 레이아웃 패턴: 헤더 y48(⬅·제목 40px) / 태그라인128 / 문구190(32px) / 게임판 / 주 버튼
-    this.add.text(this.cx, 48, '악어 이빨', {
-      fontFamily: FONT, fontSize: '40px', color: css(C.text), fontStyle: 'bold',
-    }).setOrigin(0.5);
-
-    this.add.text(this.cx, 128, '이빨 하나가 함정 — 누르면 앙!', {
-      fontFamily: FONT, fontSize: '24px', color: css(C.subtext),
-    }).setOrigin(0.5);
+    // 공통 레이아웃 그리드(LAYOUT): 헤더48 / 태그라인128 / 문구190 / 게임판(중심 ≈600) / 주 버튼1104
+    makeHeader(this, '악어 이빨', '이빨 하나가 함정 — 누르면 앙!');
 
     this.buildCroc();
 
-    this.hint = this.add.text(this.cx, 190, '', {
+    this.hint = this.add.text(this.cx, LAYOUT.msgY, '', {
       fontFamily: FONT, fontSize: '32px', color: css(C.subtext), fontStyle: 'bold',
     }).setOrigin(0.5);
 
     this.resetBtn = makeButton(this, {
-      x: this.cx, y: 1100, w: 360, h: 100, label: '다시 시작', variant: 'primary',
+      x: this.cx, y: LAYOUT.btnY, w: 360, h: 100, label: '다시 시작', variant: 'primary',
       onClick: () => this.reset(),
     });
 
@@ -45,36 +39,36 @@ export default class CrocoScene extends MiniGame {
   }
 
   buildCroc() {
-    // 아래턱(고정): y 640–860
+    // 아래턱(고정): y 690–910 — 게임판 밴드(문구 아래–버튼 위) 광학 중심에 맞춤
     const lower = this.add.graphics();
-    lower.fillStyle(CROC, 1).fillRoundedRect(80, 640, 560, 220, 40);
-    lower.fillStyle(CROC_DARK, 1).fillRoundedRect(80, 640, 560, 30, { tl: 40, tr: 40, bl: 0, br: 0 });
-    lower.fillStyle(0xffffff, 0.10).fillRoundedRect(140, 760, 440, 64, 24); // 배 밴드(밝은 띠)
+    lower.fillStyle(CROC, 1).fillRoundedRect(80, 690, 560, 220, 40);
+    lower.fillStyle(CROC_DARK, 1).fillRoundedRect(80, 690, 560, 30, { tl: 40, tr: 40, bl: 0, br: 0 });
+    lower.fillStyle(0xffffff, 0.10).fillRoundedRect(140, 810, 440, 64, 24); // 배 밴드(밝은 띠)
 
-    // 위턱(내려와서 무는 컨테이너): y 260–450 → 물면 +170
+    // 위턱(내려와서 무는 컨테이너): y 310–500 → 물면 +170
     // 이빨보다 위 레이어(depth) — 닫힐 때 이빨이 입 안으로 자연히 가려진다
     this.upperJaw = this.add.container(0, 0).setDepth(10);
     const upper = this.add.graphics();
     // 등 융기(정수리 혹) — 실루엣에 악어다움을 더한다
-    upper.fillStyle(CROC, 1).fillCircle(240, 262, 16).fillCircle(360, 256, 18).fillCircle(480, 262, 16);
-    upper.fillStyle(CROC, 1).fillRoundedRect(80, 260, 560, 190, 40);
-    upper.fillStyle(CROC_DARK, 1).fillRoundedRect(80, 420, 560, 30, { tl: 0, tr: 0, bl: 40, br: 40 });
+    upper.fillStyle(CROC, 1).fillCircle(240, 312, 16).fillCircle(360, 306, 18).fillCircle(480, 312, 16);
+    upper.fillStyle(CROC, 1).fillRoundedRect(80, 310, 560, 190, 40);
+    upper.fillStyle(CROC_DARK, 1).fillRoundedRect(80, 470, 560, 30, { tl: 0, tr: 0, bl: 40, br: 40 });
     // 눈 + 광(생기)
-    upper.fillStyle(0xffffff, 1).fillCircle(200, 300, 34).fillCircle(520, 300, 34);
-    upper.fillStyle(C.bg, 1).fillCircle(200, 306, 14).fillCircle(520, 306, 14);
-    upper.fillStyle(0xffffff, 1).fillCircle(195, 300, 5).fillCircle(515, 300, 5);
+    upper.fillStyle(0xffffff, 1).fillCircle(200, 350, 34).fillCircle(520, 350, 34);
+    upper.fillStyle(C.bg, 1).fillCircle(200, 356, 14).fillCircle(520, 356, 14);
+    upper.fillStyle(0xffffff, 1).fillCircle(195, 350, 5).fillCircle(515, 350, 5);
     // 콧구멍
-    upper.fillStyle(CROC_DARK, 1).fillCircle(340, 282, 7).fillCircle(380, 282, 7);
+    upper.fillStyle(CROC_DARK, 1).fillCircle(340, 332, 7).fillCircle(380, 332, 7);
     this.upperJaw.add(upper);
     // (위턱 세모 장식 제거 — 누르는 버튼만으로 이빨을 표현)
 
-    // 누르는 이빨 12개(2줄 × 6개, 입 안 y 500–630) — 터치 타깃 88×72
+    // 누르는 이빨 12개(2줄 × 6개, 입 안 y 550–680) — 터치 타깃 88×76
     this.teeth = [];
     for (let i = 0; i < TEETH; i += 1) {
       const row = Math.floor(i / 6);
       const col = i % 6;
       const x = 130 + col * 92;
-      const y = 520 + row * 84;
+      const y = 570 + row * 84;
 
       const tooth = this.add.graphics();
       tooth.fillStyle(0x000000, 0.25).fillRoundedRect(x - 32, y - 26 + 5, 64, 56, 12);

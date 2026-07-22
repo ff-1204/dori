@@ -5,8 +5,8 @@
 //   참여 2명 이상이면 번호 대신 명단으로 배정하고, 지정 조장은 각 조에 1명씩 우선 배치된다.
 // 색상 연결: 조마다 고유색(PLAYER 팔레트) — 라벨·테두리·칩·완료 연출이 같은 색.
 import MiniGame from '../MiniGame.js';
-import { C, css, FONT, EASE, RADIUS, PLAYER } from '../theme.js';
-import { makeButton, openTextInput, closeTextInput, padHitArea } from '../ui.js';
+import { C, css, FONT, EASE, RADIUS, PLAYER, LAYOUT } from '../theme.js';
+import { makeButton, makeHeader, makeSubLink, makeModal, chipFlow, openTextInput, closeTextInput, padHitArea } from '../ui.js';
 import { Sfx } from '../sfx.js';
 
 // 명단 텍스트의 그룹 제목 단어 — 이름으로 쓰면 붙여넣기 왕복 시 제목으로 오해석되므로 금지
@@ -94,14 +94,8 @@ export default class TeamScene extends MiniGame {
     try { this.leaderMode = localStorage.getItem(LS_LEADER) === 'on'; } catch (e) { this.leaderMode = false; }
     this.roster = loadRoster();
 
-    // 공통 레이아웃 패턴: 헤더 y48(⬅·제목 40px) / 태그라인128 / 문구190(32px) / 게임판 / 판 아래 컨트롤(26px) / 주 버튼
-    this.add.text(this.cx, 48, '조 배정', {
-      fontFamily: FONT, fontSize: '40px', color: css(C.text), fontStyle: 'bold',
-    }).setOrigin(0.5);
-
-    this.add.text(this.cx, 128, '번호로 뽑거나, 명단을 만들어 이름으로 나눠요', {
-      fontFamily: FONT, fontSize: '24px', color: css(C.subtext),
-    }).setOrigin(0.5);
+    // 공통 레이아웃 그리드(LAYOUT): 헤더48 / 태그라인128 / 문구190 / 게임판 / 링크1002(±150) / 주 버튼1104
+    makeHeader(this, '조 배정', '번호로 뽑거나, 명단을 만들어 이름으로 나눠요');
 
     this.countLabel = this.makeStepper(285, () => this.changeCount(-1), () => this.changeCount(1));
     this.groupLabel = this.makeStepper(360, () => this.changeGroups(-1), () => this.changeGroups(1));
@@ -116,31 +110,19 @@ export default class TeamScene extends MiniGame {
     this.buildPanels();
     this.refreshLabels();
 
-    this.hint = this.add.text(this.cx, 190, '조 짜기를 누르면 조로 모여요', {
+    this.hint = this.add.text(this.cx, LAYOUT.msgY, '조 짜기를 누르면 조로 모여요', {
       fontFamily: FONT, fontSize: '32px', color: css(C.subtext), fontStyle: 'bold',
     }).setOrigin(0.5);
 
     this.assignBtn = makeButton(this, {
-      x: this.cx, y: 1100, w: 360, h: 100, label: '조 짜기', variant: 'primary',
+      x: this.cx, y: LAYOUT.btnY, w: 360, h: 100, label: '조 짜기', variant: 'primary',
       onClick: () => this.assign(),
     });
 
     // 보조 액션: 명단 편집(좌) · 조 편성 복사(우 — 결과 후에만)
-    this.editBtn = this.add.text(this.cx - 170, 1002, '✎ 명단 편집', {
-      fontFamily: FONT, fontSize: '26px', color: css(C.subtext), fontStyle: 'bold',
-    }).setOrigin(0.5).setInteractive({ useHandCursor: true });
-    this.editBtn.on('pointerover', () => this.editBtn.setColor(css(C.primary)));
-    this.editBtn.on('pointerout', () => this.editBtn.setColor(css(C.subtext)));
-    this.editBtn.on('pointerup', () => this.openEditor());
-
-    this.copyBtn = this.add.text(this.cx + 170, 1002, '📋 조 편성 복사', {
-      fontFamily: FONT, fontSize: '26px', color: css(C.subtext), fontStyle: 'bold',
-    }).setOrigin(0.5).setInteractive({ useHandCursor: true }).setVisible(false);
-    padHitArea(this.editBtn); // 터치 타깃 ≥88px(responsive §7)
-    padHitArea(this.copyBtn);
-    this.copyBtn.on('pointerover', () => this.copyBtn.setColor(css(C.primary)));
-    this.copyBtn.on('pointerout', () => this.copyBtn.setColor(css(C.subtext)));
-    this.copyBtn.on('pointerup', () => this.copyResult());
+    this.editBtn = makeSubLink(this, this.cx - LAYOUT.linkDX, LAYOUT.linksY, '✎ 명단 편집', () => this.openEditor());
+    this.copyBtn = makeSubLink(this, this.cx + LAYOUT.linkDX, LAYOUT.linksY, '📋 조 편성 복사', () => this.copyResult());
+    this.copyBtn.setVisible(false);
 
     this.restoreLast(); // 지난 편성이 있으면 그대로 보여준다
   }
@@ -457,124 +439,68 @@ export default class TeamScene extends MiniGame {
 
   flashCopy(msg) {
     this.copyBtn.setText(msg);
+    padHitArea(this.copyBtn); // 라벨 폭이 바뀌므로 히트 영역 재계산
     this.time.delayedCall(1200, () => {
-      if (this.copyBtn.active) this.copyBtn.setText('📋 조 편성 복사');
+      if (this.copyBtn.active) {
+        this.copyBtn.setText('📋 조 편성 복사');
+        padHitArea(this.copyBtn);
+      }
     });
   }
 
   // ===== 명단 편집(버퍼): 이름 추가 · 탭으로 참여 → 👑 조장 → 쉬기 순환 · ✕ 삭제 =====
   openEditor() {
     if (this.editor || this.locked) return;
-    const { width, height } = this.scale;
+    const { width } = this.scale;
 
-    this.editor = this.add.container(0, 0).setDepth(100);
-    const dim = this.add.rectangle(0, 0, width, height, 0x000000, 0.72).setOrigin(0).setInteractive();
-    this.editor.add(dim);
-
-    const px = 40; const py = 180; const pw = 640; const ph = 900;
-    this.edRect = { px, py, pw };
-    const panel = this.add.graphics();
-    panel.fillStyle(C.surface, 1).fillRoundedRect(px, py, pw, ph, RADIUS);
-    panel.lineStyle(2, C.surfaceAlt, 1).strokeRoundedRect(px, py, pw, ph, RADIUS);
-    this.editor.add(panel);
-
-    this.editor.add(this.add.text(width / 2, py + 52, '명단 편집', {
-      fontFamily: FONT, fontSize: '40px', color: css(C.text), fontStyle: 'bold',
-    }).setOrigin(0.5));
-
-    this.editorNote = this.add.text(width / 2, py + 96, '탭: 참여 → 👑 조장 → 쉬기 · ✕로 삭제', {
-      fontFamily: FONT, fontSize: '24px', color: css(C.subtext),
-    }).setOrigin(0.5);
-    this.editor.add(this.editorNote);
+    // 공통 모달 스캐폴드(제목 38·안내 22·완료 버튼·페이드) — ui.makeModal
+    const modal = makeModal(this, {
+      title: '명단 편집',
+      note: '탭: 참여 → 👑 조장 → 쉬기 · ✕로 삭제',
+      py: 180,
+      ph: 900,
+      onDone: () => this.closeEditor(),
+    });
+    this.editor = modal.root;
+    this.editorNote = modal.noteText;
+    this.chipsBox = modal.chipsBox;
+    this.chipArea = modal.chips;
 
     // 규칙 공개: 참여 인원 < 조 수면 배정 불가(조 수가 자동으로 줄어든다)
-    this.editor.add(this.add.text(width / 2, py + 128, `참여 인원은 조 수(${this.groups}개) 이상이어야 배정할 수 있어요`, {
+    this.editor.add(this.add.text(width / 2, modal.py + 122, `참여 인원은 조 수(${this.groups}개) 이상이어야 배정할 수 있어요`, {
       fontFamily: FONT, fontSize: '22px', color: css(C.warning),
     }).setOrigin(0.5).setAlpha(0.9));
 
-    this.chipsBox = this.add.container(0, 0);
-    this.editor.add(this.chipsBox);
-
-    const done = makeButton(this, {
-      x: width / 2, y: py + ph - 66, w: 280, h: 84, label: '완료', variant: 'primary',
-      onClick: () => this.closeEditor(),
-    });
-    this.editor.add(done);
-
     this.renderChips();
-
-    // 팝 등장(주스) — 모달 공통 페이드
-    this.editor.setAlpha(0);
-    this.tweens.add({ targets: this.editor, alpha: 1, duration: 160, ease: 'Quad.easeOut' });
   }
 
   renderChips() {
-    const { px, py, pw } = this.edRect;
     this.chipsBox.removeAll(true);
+    const chip = chipFlow(this, this.chipsBox, this.chipArea);
 
-    const startX = px + 32;
-    const startY = py + 156;
-    const maxX = px + pw - 32;
-    const gap = 14;
-    const chipH = 64;
-    let x = startX;
-    let y = startY;
-
-    const addChip = (r, idx) => {
+    // 명단 칩: 본문 탭 = 상태 순환 / 오른쪽 ✕ = 삭제(이중 히트라 onTap 없이 직접 붙임)
+    this.roster.forEach((r, idx) => {
       const stateIcon = r.s === 'lead' ? '👑 ' : '';
-      const labelStr = `${stateIcon}${r.n}  ✕`;
-      const color = r.s === 'lead' ? C.warning : C.text;
-      const t = this.add.text(0, 0, labelStr, {
-        fontFamily: FONT, fontSize: '28px', color: css(color), fontStyle: 'bold',
-      }).setOrigin(0.5);
-      const w = Math.ceil(t.width) + 44;
-      if (x + w > maxX) { x = startX; y += chipH + gap; }
-
-      const g = this.add.graphics();
-      if (r.s === 'lead') g.lineStyle(2, C.warning, 1).strokeRoundedRect(0, 0, w, chipH, 14);
-      else g.fillStyle(C.surfaceAlt, 1).fillRoundedRect(0, 0, w, chipH, 14);
-      t.setPosition(w / 2, chipH / 2);
-
-      const chip = this.add.container(x, y, [g, t]);
-      if (r.s === 'out') chip.setAlpha(0.35); // 쉬는 사람은 흐리게(정직한 상태 표시)
-      // 본문 탭: 상태 순환 / 오른쪽 ✕: 삭제
-      const mainHit = this.add.rectangle((w - 40) / 2, chipH / 2, w - 40, chipH, 0xffffff, 0)
+      const con = chip(`${stateIcon}${r.n}  ✕`, r.s === 'lead'
+        ? { outline: true, color: C.warning, textColor: C.warning }
+        : {});
+      if (r.s === 'out') con.setAlpha(0.35); // 쉬는 사람은 흐리게(정직한 상태 표시)
+      const w = con.chipW;
+      const h = con.chipH;
+      const mainHit = this.add.rectangle((w - 40) / 2, h / 2, w - 40, h, 0xffffff, 0)
         .setInteractive({ useHandCursor: true });
       mainHit.on('pointerup', () => this.cycleState(idx));
-      const delHit = this.add.rectangle(w - 22, chipH / 2, 40, chipH, 0xffffff, 0)
+      const delHit = this.add.rectangle(w - 22, h / 2, 40, h, 0xffffff, 0)
         .setInteractive({ useHandCursor: true });
       delHit.on('pointerup', () => this.removeName(idx));
-      chip.add(mainHit);
-      chip.add(delHit);
-      this.chipsBox.add(chip);
-
-      x += w + gap;
-    };
-
-    this.roster.forEach((r, idx) => addChip(r, idx));
+      con.add(mainHit);
+      con.add(delHit);
+    });
 
     // 컨트롤 칩: 추가 · 명단 복사(내보내기) · 붙여넣기(가져오기)
-    const controls = [
-      { label: '+ 추가', color: C.primary, onTap: () => this.addName() },
-      { label: '📋 명단 복사', color: C.primary, onTap: () => this.copyRoster() },
-      { label: '📥 붙여넣기', color: C.warning, onTap: () => this.pasteRoster() },
-    ];
-    controls.forEach((c) => {
-      const t = this.add.text(0, 0, c.label, {
-        fontFamily: FONT, fontSize: '28px', color: css(c.color), fontStyle: 'bold',
-      }).setOrigin(0.5);
-      const w = Math.ceil(t.width) + 44;
-      if (x + w > maxX) { x = startX; y += chipH + gap; }
-      const g = this.add.graphics();
-      g.lineStyle(2, c.color, 1).strokeRoundedRect(0, 0, w, chipH, 14);
-      t.setPosition(w / 2, chipH / 2);
-      const chip = this.add.container(x, y, [g, t]);
-      const hit = this.add.rectangle(w / 2, chipH / 2, w, chipH, 0xffffff, 0).setInteractive({ useHandCursor: true });
-      hit.on('pointerup', c.onTap);
-      chip.add(hit);
-      this.chipsBox.add(chip);
-      x += w + gap;
-    });
+    chip('+ 추가', { outline: true }, () => this.addName());
+    chip('📋 명단 복사', { outline: true }, () => this.copyRoster());
+    chip('📥 붙여넣기', { outline: true, color: C.warning }, () => this.pasteRoster());
   }
 
   // 명단 내보내기 — 그룹(조장/참여/쉼) 제목 아래 이름을 나열하는 순수 텍스트(특수문자 없음).

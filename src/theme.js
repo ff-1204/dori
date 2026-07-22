@@ -39,3 +39,14 @@ export const EASE = {
 };
 
 export const RADIUS = 16;
+
+// 씬 공통 세로 그리드(720×1280) — 모든 잼잼 화면이 같은 리듬을 공유한다.
+// 게임판은 msgY 아래 ~230부터 linksY 위 ~980 사이 밴드에 광학 중심 ≈600으로 배치.
+export const LAYOUT = {
+  headerY: 48,   // 헤더 행: ⬅ + 제목 40px
+  taglineY: 128, // 태그라인 24px(씬 성격 한 줄)
+  msgY: 190,     // 안내·결과 공용 문구 32px
+  linksY: 1002,  // 판 아래 보조 링크 행 26px
+  linkDX: 150,   // 보조 링크 2개일 때 중심 오프셋(±)
+  btnY: 1104,    // 주 버튼 360×100
+};

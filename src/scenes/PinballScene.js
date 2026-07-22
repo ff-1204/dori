@@ -3,8 +3,8 @@
 // 도파민 설계: 핀 히트 플래시·튕김 카운터·막판 슬로모+줌·착지 파티클 폭발(Peak-End).
 // 정직한 매핑: 결과를 몰래 유도하지 않는다 — 보이는 물리 그대로(핀 반발 잔떨림 포함).
 import MiniGame from '../MiniGame.js';
-import { C, css, FONT, SLICE, EASE, RADIUS } from '../theme.js';
-import { makeButton, openTextInput, closeTextInput, padHitArea } from '../ui.js';
+import { C, css, FONT, SLICE, EASE, LAYOUT } from '../theme.js';
+import { makeButton, makeHeader, makeSubLink, makeModal, chipFlow, openTextInput, closeTextInput } from '../ui.js';
 import { Sfx } from '../sfx.js';
 
 const LS_SLOTS = 'dori.pinball.slots';
@@ -57,49 +57,36 @@ export default class PinballScene extends MiniGame {
     this.hits = 0;
     this.dropX = this.cx;
 
-    // 레이아웃(검산): 헤더 y48(⬅·제목 40px) / 문구124–156 /(여백 35)/ 낙하 조작191–341 / 핀376–836 / 칸871–971 /(여백 36)/ 섞기·편집1007–1033 / 버튼1054–1154
-    // 보드 블록은 문구·컨트롤 링크 사이 상하 여백 균등(35/36) — 카운터(우, 187–213)는 투명 조작 영역과 겹쳐도 무방(표시 전용)
-    // 룰렛·사다리와 같은 패턴: 헤더 행 + 상단 문구 + 게임판 + 판 아래 구성 컨트롤 + 주 버튼(위계 40>32>26)
-    this.titleText = this.add.text(this.cx, 48, '랜덤 핀볼', {
-      fontFamily: FONT, fontSize: '40px', color: css(C.text), fontStyle: 'bold',
-    }).setOrigin(0.5);
+    // 공통 레이아웃 그리드(LAYOUT): 헤더48 / 태그라인128 / 문구190 / 낙하 조작230–340 / 핀376–836 / 칸871–971 / 링크1002(±150) / 주 버튼1104
+    // 카운터(우, y246)는 투명 조작 영역과 겹쳐도 무방(표시 전용)
+    const hdr = makeHeader(this, '랜덤 핀볼', '자리만 정하면, 나머지는 물리의 몫');
+    this.titleText = hdr.titleText;
+    this.taglineText = hdr.taglineText;
 
-    this.hitText = this.add.text(width - 32, 200, '', {
+    this.hitText = this.add.text(width - 32, 246, '', {
       fontFamily: FONT, fontSize: '26px', color: css(C.subtext), fontStyle: 'bold',
     }).setOrigin(1, 0.5);
 
     // 맵 섞기 — 핀 배치와 결과 칸 순서를 다시 굴린다(전부 보이는 상태에서 바뀜 = 정직)
     // 판 구성 컨트롤이라 칸 편집과 함께 게임판 바로 아래에 나란히 배치
-    this.shuffleBtn = this.add.text(this.cx - 130, 1020, '🔀 맵 섞기', {
-      fontFamily: FONT, fontSize: '26px', color: css(C.subtext), fontStyle: 'bold',
-    }).setOrigin(0.5).setInteractive({ useHandCursor: true });
-    this.shuffleBtn.on('pointerover', () => this.shuffleBtn.setColor(css(C.primary)));
-    this.shuffleBtn.on('pointerout', () => this.shuffleBtn.setColor(css(C.subtext)));
-    this.shuffleBtn.on('pointerup', () => this.shuffleMap());
+    this.shuffleBtn = makeSubLink(this, this.cx - LAYOUT.linkDX, LAYOUT.linksY, '🔀 맵 섞기', () => this.shuffleMap());
 
     this.physics.world.setBounds(LEFT, 0, RIGHT - LEFT, 1280);
 
     this.buildBoard();
     this.buildDropControl();
 
-    // 안내·결과 공용 문구 — 상단(헤더와 조작 영역 사이)
-    this.resultText = this.add.text(this.cx, 140, '위쪽을 끌어 위치를 정하고 떨어뜨리세요', {
+    // 안내·결과 공용 문구 — 상단(태그라인과 조작 영역 사이)
+    this.resultText = this.add.text(this.cx, LAYOUT.msgY, '위쪽을 끌어 위치를 정하고 떨어뜨리세요', {
       fontFamily: FONT, fontSize: '32px', color: css(C.subtext), fontStyle: 'bold',
     }).setOrigin(0.5);
 
     this.dropBtn = makeButton(this, {
-      x: this.cx, y: 1104, w: 380, h: 100, label: '떨어뜨리기', variant: 'primary',
+      x: this.cx, y: LAYOUT.btnY, w: 360, h: 100, label: '떨어뜨리기', variant: 'primary',
       onClick: () => this.drop(),
     });
 
-    this.editBtn = this.add.text(this.cx + 130, 1020, '✎ 칸 편집', {
-      fontFamily: FONT, fontSize: '26px', color: css(C.subtext), fontStyle: 'bold',
-    }).setOrigin(0.5).setInteractive({ useHandCursor: true });
-    this.editBtn.on('pointerover', () => this.editBtn.setColor(css(C.primary)));
-    this.editBtn.on('pointerout', () => this.editBtn.setColor(css(C.subtext)));
-    this.editBtn.on('pointerup', () => this.openEditor());
-    padHitArea(this.shuffleBtn); // 터치 타깃 ≥88px(responsive §7)
-    padHitArea(this.editBtn);
+    this.editBtn = makeSubLink(this, this.cx + LAYOUT.linkDX, LAYOUT.linksY, '✎ 칸 편집', () => this.openEditor());
 
     this.setupBoardCam();
   }
@@ -112,7 +99,7 @@ export default class PinballScene extends MiniGame {
     this.boardCam.fadeIn(160, 18, 19, 28); // main과 같은 씬 전환 페이드
     this.boardCam.ignore([
       ...(this.atmosphereLayers || []),
-      this.backBtn, this.titleText, this.resultText, this.hitText,
+      this.backBtn, this.titleText, this.taglineText, this.resultText, this.hitText,
       this.shuffleBtn, this.editBtn, this.dropBtn,
     ]);
   }
@@ -246,14 +233,15 @@ export default class PinballScene extends MiniGame {
 
   buildDropControl() {
     // 고스트 공 + 화살표(주도성: 여기서 떨어진다는 정직한 시그니파이어)
-    this.ghost = this.add.image(this.dropX, 276, 'ball').setTint(C.primary).setAlpha(0.55).setScale(this.ballScale());
+    this.ghost = this.add.image(this.dropX, 285, 'ball').setTint(C.primary).setAlpha(0.55).setScale(this.ballScale());
     this.arrow = this.add.graphics();
     this.drawArrow();
     this.cameras.main.ignore([this.ghost, this.arrow]); // 보드 카메라 전용
 
     // 상단 조작 영역: 드래그로 위치 선택, 탭으로 즉시 낙하(빠른 라운드 = 도파민)
     // 드래그는 씬 전역으로 추적 — 누른 채 영역 밖(아래)으로 끌어도 이어지고, 놓는 순간 낙하한다.
-    const zone = this.add.rectangle(this.cx, 266, RIGHT - LEFT, 150, 0xffffff, 0)
+    // 조작 영역 230–340(높이 110 ≥ 터치 타깃 88) — 문구(y190)와 겹치지 않게 압축
+    const zone = this.add.rectangle(this.cx, 285, RIGHT - LEFT, 110, 0xffffff, 0)
       .setInteractive({ useHandCursor: true });
     const follow = (p) => {
       this.dropX = Phaser.Math.Clamp(p.x, LEFT + 24, RIGHT - 24);
@@ -300,7 +288,7 @@ export default class PinballScene extends MiniGame {
     this.slowmoDone = false;
     Sfx.play('pop'); // 출발
 
-    this.ball = this.physics.add.image(this.dropX, 276, 'ball').setTint(C.text).setScale(this.ballScale());
+    this.ball = this.physics.add.image(this.dropX, 285, 'ball').setTint(C.text).setScale(this.ballScale());
     this.cameras.main.ignore(this.ball); // 보드 카메라 전용
     this.ball.body.setCircle(BALL_TEX_R); // 소스 픽셀 기준 — 동적 바디는 스케일 자동 반영(월드 r = BALL_R × 크기 스케일)
     this.ball.setBounce(0.55);
@@ -411,91 +399,37 @@ export default class PinballScene extends MiniGame {
   // ===== 칸 편집(이름 변경 + 칸 수 4–10개, 크기 스케일 연동) =====
   openEditor() {
     if (this.editor || this.locked) return;
-    const { width, height } = this.scale;
 
+    // 공통 모달 스캐폴드(제목 38·안내 22·완료 버튼·페이드) — ui.makeModal.
     // 모달은 위층(boardCam)에 배정 — main에 두면 보드 객체(위층)가 모달을 덮는다.
     // 편집은 낙하 중(locked) 열 수 없으므로 boardCam 줌과 겹칠 일 없음.
-    this.editor = this.add.container(0, 0).setDepth(100);
-    this.cameras.main.ignore(this.editor);
-    const dim = this.add.rectangle(0, 0, width, height, 0x000000, 0.72).setOrigin(0).setInteractive();
-    this.editor.add(dim);
-
-    const px = 40; const py = 260; const pw = 640; const ph = 760;
-    this.edRect = { px, py, pw };
-    const panel = this.add.graphics();
-    panel.fillStyle(C.surface, 1).fillRoundedRect(px, py, pw, ph, RADIUS);
-    panel.lineStyle(2, C.surfaceAlt, 1).strokeRoundedRect(px, py, pw, ph, RADIUS);
-    this.editor.add(panel);
-
-    this.editor.add(this.add.text(width / 2, py + 52, '칸 편집', {
-      fontFamily: FONT, fontSize: '36px', color: css(C.text), fontStyle: 'bold',
-    }).setOrigin(0.5));
-
-    this.editorNote = this.add.text(width / 2, py + 100, `칸 ${SLOT_MIN}–${SLOT_MAX}개 · 눌러서 삭제 · 이름은 보드 칸 더블탭`, {
-      fontFamily: FONT, fontSize: '22px', color: css(C.subtext),
-    }).setOrigin(0.5);
-    this.editor.add(this.editorNote);
-
-    this.chipsBox = this.add.container(0, 0);
-    this.editor.add(this.chipsBox);
-    this.renderChips(px, py, pw);
-
-    const done = makeButton(this, {
-      x: width / 2, y: py + ph - 64, w: 280, h: 84, label: '완료', variant: 'primary',
-      onClick: () => { closeTextInput(this); this.editor.destroy(); this.editor = null; },
+    const modal = makeModal(this, {
+      title: '칸 편집',
+      note: `칸 ${SLOT_MIN}–${SLOT_MAX}개 · 눌러서 삭제 · 이름은 보드 칸 더블탭`,
+      py: 260,
+      ph: 760,
+      onDone: () => { closeTextInput(this); this.editor.destroy(); this.editor = null; },
     });
-    this.editor.add(done);
-
-    // 팝 등장(주스) — 모달 공통 페이드
-    this.editor.setAlpha(0);
-    this.tweens.add({ targets: this.editor, alpha: 1, duration: 160, ease: 'Quad.easeOut' });
+    this.editor = modal.root;
+    this.cameras.main.ignore(this.editor);
+    this.editorNote = modal.noteText;
+    this.chipsBox = modal.chipsBox;
+    this.chipArea = modal.chips;
+    this.renderChips();
   }
 
-  renderChips(px, py, pw) {
+  renderChips() {
     this.chipsBox.removeAll(true);
-    const startX = px + 40;
-    const gap = 16;
-    const chipW = 176;
-    const chipH = 72;
+    const chip = chipFlow(this, this.chipsBox, this.chipArea);
+    // 칸 칩: 칸 색 = 칩 색(색상 연결) — 칩 탭 = 그 칸 삭제(룰렛 편집과 동일)
     this.slots.forEach((s, i) => {
-      const x = startX + (i % 3) * (chipW + gap);
-      const y = py + 150 + Math.floor(i / 3) * (chipH + gap);
       const color = SLICE[i % SLICE.length];
-      const g = this.add.graphics();
-      g.fillStyle(C.surfaceAlt, 1).fillRoundedRect(x, y, chipW, chipH, 14);
-      g.lineStyle(3, color, 1).strokeRoundedRect(x, y, chipW, chipH, 14);
-      const t = this.add.text(x + chipW / 2, y + chipH / 2, `${s}  ✕`, {
-        fontFamily: FONT, fontSize: '28px', color: css(color), fontStyle: 'bold',
-      }).setOrigin(0.5);
-      const hit = this.add.rectangle(x + chipW / 2, y + chipH / 2, chipW, chipH, 0xffffff, 0)
-        .setInteractive({ useHandCursor: true });
-      hit.on('pointerup', () => this.removeSlotAt(i)); // 룰렛 편집과 동일: 칩 탭 = 그 칸 삭제
-      this.chipsBox.add(g);
-      this.chipsBox.add(t);
-      this.chipsBox.add(hit);
+      chip(`${s}  ✕`, { fill: C.surfaceAlt, outline: true, color, textColor: color }, () => this.removeSlotAt(i));
     });
-
-    // 컨트롤 행(칸 그리드 아래): ＋ 칸 추가 · ↺ 기본값 — 개별 삭제가 생겨 '− 칸 빼기'는 제거
-    const rows = Math.ceil(this.slots.length / 3);
-    const cy = py + 150 + rows * (chipH + gap) + 12;
-    const controls = [
-      { label: '＋ 칸 추가', color: C.primary, onTap: () => this.addSlot() },
-      { label: '↺ 기본값', color: C.warning, onTap: () => this.resetSlots() },
-    ];
-    controls.forEach((c, i) => {
-      const x = startX + i * (chipW + gap);
-      const g = this.add.graphics();
-      g.lineStyle(2, c.color, 1).strokeRoundedRect(x, cy, chipW, 60, 14);
-      const t = this.add.text(x + chipW / 2, cy + 30, c.label, {
-        fontFamily: FONT, fontSize: '26px', color: css(c.color), fontStyle: 'bold',
-      }).setOrigin(0.5);
-      const hit = this.add.rectangle(x + chipW / 2, cy + 30, chipW, 60, 0xffffff, 0)
-        .setInteractive({ useHandCursor: true });
-      hit.on('pointerup', c.onTap);
-      this.chipsBox.add(g);
-      this.chipsBox.add(t);
-      this.chipsBox.add(hit);
-    });
+    chip.gapRow();
+    // 컨트롤 행: ＋ 칸 추가 · ↺ 기본값 — 개별 삭제가 생겨 '− 칸 빼기'는 제거
+    chip('＋ 칸 추가', { outline: true }, () => this.addSlot());
+    chip('↺ 기본값', { outline: true, color: C.warning }, () => this.resetSlots());
   }
 
   // 칸 수 변경 후 보드·크기 일괄 반영
@@ -504,7 +438,7 @@ export default class PinballScene extends MiniGame {
     this.buildSlots();
     this.buildPegs();
     this.ghost.setScale(this.ballScale());
-    this.renderChips(this.edRect.px, this.edRect.py, this.edRect.pw);
+    this.renderChips();
   }
 
   addSlot() {
@@ -525,7 +459,7 @@ export default class PinballScene extends MiniGame {
     this.buildSlots();
     this.buildPegs();
     this.ghost.setScale(this.ballScale());
-    this.renderChips(this.edRect.px, this.edRect.py, this.edRect.pw);
+    this.renderChips();
   }
 
   flashNote(msg) {
@@ -571,7 +505,7 @@ export default class PinballScene extends MiniGame {
         this.slots[i] = s;
         saveSlots(this.slots);
         this.refreshSlotLabels();
-        if (this.editor) this.renderChips(this.edRect.px, this.edRect.py, this.edRect.pw);
+        if (this.editor) this.renderChips();
       },
     });
   }

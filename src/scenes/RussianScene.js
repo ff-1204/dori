@@ -2,11 +2,14 @@
 // 정직한 확률 표시: 매 시도의 실제 확률을 화면에 그대로 보여준다(설계 원칙: 정직한 확률).
 // 유쾌한 프레이밍: 걸리면 "빵!"과 함께 벌칙 당첨 — 가볍고 웃기게(game-theory §9).
 import MiniGame from '../MiniGame.js';
-import { C, css, FONT, EASE } from '../theme.js';
-import { makeButton } from '../ui.js';
+import { C, css, FONT, EASE, LAYOUT } from '../theme.js';
+import { makeButton, makeHeader } from '../ui.js';
 import { Sfx } from '../sfx.js';
 
 const CHAMBERS = 6;
+const R = 210;       // 실린더 반지름 — 게임판 밴드(문구 아래–버튼 위)를 채우는 크기
+const RING = 130;    // 약실 배치 반지름
+const DOT_R = 40;    // 약실 반지름
 
 export default class RussianScene extends MiniGame {
   constructor() {
@@ -16,26 +19,20 @@ export default class RussianScene extends MiniGame {
   onCreate() {
     const { width } = this.scale;
     this.cx = width / 2;
-    this.cy = 560;
+    this.cy = 620; // 실린더 중심 — 게임판 밴드 광학 중심(≈600)에 맞춤
 
-    // 공통 레이아웃 패턴: 헤더 y48(⬅·제목 40px) / 태그라인128 / 문구190(32px) / 게임판 / 주 버튼
-    this.add.text(this.cx, 48, '러시안 룰렛', {
-      fontFamily: FONT, fontSize: '40px', color: css(C.text), fontStyle: 'bold',
-    }).setOrigin(0.5);
-
-    this.add.text(this.cx, 128, '한 칸에만 "빵!" — 걸리면 벌칙 당첨', {
-      fontFamily: FONT, fontSize: '24px', color: css(C.subtext),
-    }).setOrigin(0.5);
+    // 공통 레이아웃 그리드(LAYOUT): 헤더48 / 태그라인128 / 문구190 / 게임판(중심 ≈600) / 주 버튼1104
+    makeHeader(this, '러시안 룰렛', '한 칸에만 "빵!" — 걸리면 벌칙 당첨');
 
     this.buildCylinder();
     this.buildPointer();
 
-    this.hint = this.add.text(this.cx, 190, '', {
+    this.hint = this.add.text(this.cx, LAYOUT.msgY, '', {
       fontFamily: FONT, fontSize: '32px', color: css(C.subtext), fontStyle: 'bold',
     }).setOrigin(0.5);
 
     this.triggerBtn = makeButton(this, {
-      x: this.cx, y: 1100, w: 360, h: 100, label: '방아쇠', variant: 'danger',
+      x: this.cx, y: LAYOUT.btnY, w: 360, h: 100, label: '방아쇠', variant: 'danger',
       onClick: () => this.pull(),
     });
 
@@ -46,18 +43,18 @@ export default class RussianScene extends MiniGame {
     this.cylinder = this.add.container(this.cx, this.cy);
 
     const body = this.add.graphics();
-    body.fillStyle(C.surface, 1).fillCircle(0, 0, 175);
-    body.lineStyle(6, C.surfaceAlt, 1).strokeCircle(0, 0, 175);
-    body.fillStyle(C.surfaceAlt, 1).fillCircle(0, 0, 34);
+    body.fillStyle(C.surface, 1).fillCircle(0, 0, R);
+    body.lineStyle(6, C.surfaceAlt, 1).strokeCircle(0, 0, R);
+    body.fillStyle(C.surfaceAlt, 1).fillCircle(0, 0, 40);
     this.cylinder.add(body);
 
     // 약실 6칸(위 = 현재 칸)
     this.chamberDots = [];
     for (let i = 0; i < CHAMBERS; i += 1) {
       const ang = Phaser.Math.DegToRad(-90 + i * 60);
-      const x = Math.cos(ang) * 108;
-      const y = Math.sin(ang) * 108;
-      const dot = this.add.circle(x, y, 34, C.bg).setStrokeStyle(4, C.surfaceAlt);
+      const x = Math.cos(ang) * RING;
+      const y = Math.sin(ang) * RING;
+      const dot = this.add.circle(x, y, DOT_R, C.bg).setStrokeStyle(4, C.surfaceAlt);
       this.cylinder.add(dot);
       this.chamberDots.push(dot);
     }
@@ -65,7 +62,7 @@ export default class RussianScene extends MiniGame {
 
   buildPointer() {
     // 위쪽 포인터: 이번에 발사되는 칸(정직한 매핑)
-    const topY = this.cy - 175;
+    const topY = this.cy - R;
     const g = this.add.graphics();
     g.fillStyle(0x000000, 0.25).fillTriangle(this.cx - 24, topY - 42, this.cx + 24, topY - 42, this.cx, topY + 8);
     g.fillStyle(C.text, 1).fillTriangle(this.cx - 22, topY - 44, this.cx + 22, topY - 44, this.cx, topY + 4);
@@ -117,7 +114,7 @@ export default class RussianScene extends MiniGame {
       dot.setFillStyle(C.danger);
       Sfx.play('bang');
       this.time.delayedCall(350, () => Sfx.play('win')); // Peak-End: 빵 뒤 당첨 팡파르
-      this.burst(this.cx, this.cy - 175, C.danger, 40);
+      this.burst(this.cx, this.cy - R, C.danger, 40);
       this.colorFlash(C.danger, 220);
       this.shake(0.012, 260);
       this.hint.setColor(css(C.danger));
@@ -130,13 +127,13 @@ export default class RussianScene extends MiniGame {
       // 찰칵 — 빈 약실 표시(정직: 지나간 칸이 안전했음을 보여준다)
       Sfx.play('tick');
       dot.setFillStyle(C.surfaceAlt).setStrokeStyle(4, C.success);
-      const click = this.add.text(this.cx, this.cy - 230, '찰칵', {
+      const click = this.add.text(this.cx, this.cy - R - 55, '찰칵', {
         fontFamily: FONT, fontSize: '36px', color: css(C.success), fontStyle: 'bold',
       }).setOrigin(0.5).setScale(0);
       this.tweens.add({
         targets: click, scale: 1, duration: 200, ease: EASE.popIn,
         onComplete: () => {
-          this.tweens.add({ targets: click, alpha: 0, y: this.cy - 260, duration: 420, onComplete: () => click.destroy() });
+          this.tweens.add({ targets: click, alpha: 0, y: this.cy - R - 85, duration: 420, onComplete: () => click.destroy() });
         },
       });
       this.updateHint();

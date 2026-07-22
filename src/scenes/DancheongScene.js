@@ -5,8 +5,8 @@
 // 표현: 수정구가 아니라 붉/청 두 색패(色牌) — 하이라이트가 둘 사이를 오가다 한쪽에 멈춘다.
 // 정직성: 두 선택지가 항상 화면에 보이고, "동일 답" 규칙을 안내 문구로 공개. 입력은 클라이언트에서만 처리.
 import MiniGame from '../MiniGame.js';
-import { C, css, FONT, EASE } from '../theme.js';
-import { makeButton } from '../ui.js';
+import { C, css, FONT, EASE, LAYOUT } from '../theme.js';
+import { makeButton, makeHeader } from '../ui.js';
 import { Sfx } from '../sfx.js';
 
 const RED = C.danger;   // 붉
@@ -51,14 +51,8 @@ export default class DancheongScene extends MiniGame {
     const { width } = this.scale;
     this.cx = width / 2;
 
-    // 공통 레이아웃 패턴: 헤더 y48(⬅·제목 40px) / 태그라인128 — 답 공개 연출(색패·결과)은 판 중심이라 그대로 둔다
-    this.add.text(this.cx, 48, '단청', {
-      fontFamily: FONT, fontSize: '40px', color: css(C.text), fontStyle: 'bold',
-    }).setOrigin(0.5);
-
-    this.add.text(this.cx, 128, '묻고, 색으로 답을 받으세요', {
-      fontFamily: FONT, fontSize: '24px', color: css(C.subtext),
-    }).setOrigin(0.5);
+    // 공통 레이아웃 그리드(LAYOUT): 헤더48 / 태그라인128 — 답 공개 연출(색패·결과)은 판 중심이라 문구190 대신 결과 y890 유지
+    makeHeader(this, '단청', '묻고, 색으로 답을 받으세요');
 
     // 질문 입력창(HTML 오버레이 — 한글 IME 대응)
     this.inputEl = this.add.dom(this.cx, 290).createFromHTML(
@@ -94,7 +88,7 @@ export default class DancheongScene extends MiniGame {
     }).setOrigin(0.5);
 
     this.askBtn = makeButton(this, {
-      x: this.cx, y: 1100, w: 380, h: 100, label: '단청에 묻기', variant: 'primary',
+      x: this.cx, y: LAYOUT.btnY, w: 360, h: 100, label: '단청에 묻기', variant: 'primary',
       onClick: () => this.ask(),
     });
   }

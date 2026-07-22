@@ -2,8 +2,8 @@
 // 칼 구멍 중 1개가 발사 트리거(비복원 시도) — 꽂으면 해적이 날아간다.
 // 정직한 긴장: 안전 칸에 가짜 연출 없음, 남은 칸 확률을 정직하게 표시.
 import MiniGame from '../MiniGame.js';
-import { C, css, FONT, EASE } from '../theme.js';
-import { makeButton } from '../ui.js';
+import { C, css, FONT, EASE, LAYOUT } from '../theme.js';
+import { makeButton, makeHeader } from '../ui.js';
 import { Sfx } from '../sfx.js';
 
 const SLOTS = 12; // 4 × 3줄
@@ -19,23 +19,17 @@ export default class PopUpScene extends MiniGame {
     const { width } = this.scale;
     this.cx = width / 2;
 
-    // 공통 레이아웃 패턴: 헤더 y48(⬅·제목 40px) / 태그라인128 / 문구190(32px) / 게임판 / 주 버튼
-    this.add.text(this.cx, 48, '해적통', {
-      fontFamily: FONT, fontSize: '40px', color: css(C.text), fontStyle: 'bold',
-    }).setOrigin(0.5);
-
-    this.add.text(this.cx, 128, '칼을 꽂다 보면… 펑! 해적 발사', {
-      fontFamily: FONT, fontSize: '24px', color: css(C.subtext),
-    }).setOrigin(0.5);
+    // 공통 레이아웃 그리드(LAYOUT): 헤더48 / 태그라인128 / 문구190 / 게임판(중심 ≈600) / 주 버튼1104
+    makeHeader(this, '해적통', '칼을 꽂다 보면… 펑! 해적 발사');
 
     this.buildBarrel();
 
-    this.hint = this.add.text(this.cx, 190, '', {
+    this.hint = this.add.text(this.cx, LAYOUT.msgY, '', {
       fontFamily: FONT, fontSize: '32px', color: css(C.subtext), fontStyle: 'bold',
     }).setOrigin(0.5);
 
     this.resetBtn = makeButton(this, {
-      x: this.cx, y: 1100, w: 360, h: 100, label: '다시 숨기기', variant: 'primary',
+      x: this.cx, y: LAYOUT.btnY, w: 360, h: 100, label: '다시 숨기기', variant: 'primary',
       onClick: () => this.reset(),
     });
 
