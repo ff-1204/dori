@@ -48,6 +48,8 @@
 ### 개인정보·트래킹
 - 개발 중이라도 **PII 수집·쿠키를 설정하는 서드파티 스크립트**를 무단 삽입하지 않는다.
 - 분석/광고 SDK는 개인정보처리방침·동의(CMP) 전까지 **비활성 유지**(현재 `ads.js` 비활성).
+- **예외(2026-07-29 현행화)**: AdSense **로더(adsbygoogle.js)는 소유권 확인·심사용으로 로드 중** —
+  광고 게재는 없음. 이 사실은 privacy.html §4에 고지되어 있고, 게재 배선(adBreak)은 승인·CMP 후 활성화.
 
 ### Git 위생
 - 저작권 자산을 **잠깐이라도 커밋하지 않는다**(히스토리에 영구 잔존). 실수 시 히스토리 정리가 필요해진다.
@@ -114,15 +116,19 @@
 - **개인정보처리방침 + 동의(CMP)**: EEA/영국 트래픽엔 **구글 인증 CMP** 필수(§2).
 - **승인 심사**: 콘텐츠·정책 통과.
 
-**준비해 둔 것(현재 미연결·비활성)**
-- `src/ads.js`: **H5 Games Ads `adBreak` API 형태**의 어댑터(`maybeShowInterstitial`·`showRewarded`). `AdConfig.enabled=false`, `provider='none'`으로 꺼져 있음.
-- `index.html`: H5 Games Ads 스크립트를 **주석 처리**로 넣어둠(로드 안 됨).
+**준비해 둔 것(2026-07-29 현행화 — 게재 배선은 미연결·비활성)**
+- `index.html`: AdSense **로더(adsbygoogle.js, `ca-pub-2755020807980350`)를 심사용으로 로드 중**(광고 미표시).
+  `adBreak` 브리지 스크립트는 주석 상태.
+- `src/ads.js`: **H5 Games Ads `adBreak` API 형태**의 어댑터(`maybeShowInterstitial`·`showRewarded`).
+  `AdConfig.enabled=false`, `provider='none'`으로 꺼져 있음(`client`는 실제 ID로 기입 완료).
+- privacy.html §4: 로더 게재 사실·전송 정보·CMP 계획 고지 완료.
 
 **활성화 절차(나중에)**
-1. 커스텀 도메인 + 상업 허용 호스팅 이전, AdSense 승인, CMP 구비.
-2. `index.html`의 H5 Games Ads 스크립트 주석 해제 + `ca-pub-XXXX`를 실제 퍼블리셔 ID로 교체.
-3. `ads.js`의 `AdConfig.enabled=true`, `provider='google-h5'`, `client` 설정.
+1. AdSense 승인, CMP 구비(로더·도메인·ads.txt는 준비 완료).
+2. `index.html`의 `adBreak` 브리지 주석 해제 + 로더에 `data-ad-frequency-hint="30s"` 추가.
+3. `ads.js`의 `AdConfig.enabled=true`, `provider='google-h5'` 전환.
 4. 게임 종료/허브 복귀 지점에서 `maybeShowInterstitial()` 호출 배선(게임 pause/resume 연결).
+5. privacy.html §4를 '게재 중'으로 갱신 + 시행일 갱신.
 
 ## 5. 수익화 모델 (옵션)
 

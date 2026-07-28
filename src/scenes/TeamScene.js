@@ -69,7 +69,11 @@ function loadLast() {
     const raw = localStorage.getItem(LS_LAST);
     if (raw) {
       const v = JSON.parse(raw);
-      if (v && Array.isArray(v.lists) && v.lists.every((l) => Array.isArray(l))) return v;
+      // 손상 데이터 방어: 조 수·조원 형태({label,isLeader})·인원 상한까지 검증('undefined' 칩·범람 방지)
+      if (v && Array.isArray(v.lists)
+        && v.lists.length >= GROUP_MIN && v.lists.length <= GROUP_MAX
+        && v.lists.every((l) => Array.isArray(l) && l.length <= COUNT_MAX
+          && l.every((m) => m && typeof m.label === 'string'))) return v;
     }
   } catch (e) { /* 무시 */ }
   return null;
@@ -544,11 +548,20 @@ export default class TeamScene extends MiniGame {
       this.importRoster(text);
     });
     node.querySelector('#dori-paste-cancel').addEventListener('click', () => this.closePaste());
+    node.querySelector('#dori-paste').addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') this.closePaste(); // 입력 오버레이(ui.js)와 같은 문법
+    });
     node.querySelector('#dori-paste').focus();
   }
 
   closePaste() {
     if (this.pasteOverlay) { this.pasteOverlay.destroy(); this.pasteOverlay = null; }
+  }
+
+  // 뒤로가기 레이어: 붙여넣기 오버레이가 편집 모달 위에 뜨므로 먼저 닫는다
+  closeTopLayer() {
+    if (this.pasteOverlay) { this.closePaste(); return true; }
+    return super.closeTopLayer();
   }
 
   // 파싱: '조장'·'참여'·'쉼' 단어가 나오면 그 아래 이름들이 해당 그룹(제목 전까지) — 표식 문자 불필요
@@ -558,7 +571,8 @@ export default class TeamScene extends MiniGame {
     let mode = 'in';
     let skipped = 0;
     tokens.forEach((tok) => {
-      if (HEADERS[tok]) { mode = HEADERS[tok]; return; }
+      // hasOwn: 'toString' 같은 프로토타입 속성명이 제목으로 오인되면 이름이 비정상 상태로 저장·소실된다
+      if (Object.hasOwn(HEADERS, tok)) { mode = HEADERS[tok]; return; }
       const valid = tok.length <= NAME_MAX && !parsed.some((p) => p.n === tok) && parsed.length < ROSTER_MAX;
       if (valid) parsed.push({ n: tok, s: mode });
       else skipped += 1;
@@ -592,7 +606,8 @@ export default class TeamScene extends MiniGame {
       onSubmit: (raw) => {
         const name = raw.trim();
         if (!name) return;
-        if (HEADERS[name]) { this.flashNote('조장·참여·쉼은 이름으로 쓸 수 없어요'); return; }
+        if (Object.hasOwn(HEADERS, name)) { this.flashNote('조장·참여·쉼은 이름으로 쓸 수 없어요'); return; }
+        if (/[\s,·]/.test(name)) { this.flashNote('공백·쉼표·가운뎃점은 쓸 수 없어요'); return; } // 복사 형식의 구분자 — 왕복 시 이름이 갈라진다
         if (this.roster.some((r) => r.n === name)) { this.flashNote('이미 있는 이름이에요'); return; }
         this.roster.push({ n: name, s: 'in' });
         saveRoster(this.roster);

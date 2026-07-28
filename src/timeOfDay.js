@@ -93,7 +93,8 @@ function fnv1a(str) {
 
 export function greetingForPhase(phase) {
   const list = GREETINGS[phase.key] ?? [phase.greeting];
-  const windowId = Math.floor((Date.now() + 9 * 3600 * 1000) / 3600000);
+  // 1시간 창 — 정시마다 회전, 모든 접속자 동일 문구(에포크 기준이라 시간대 오프셋 불필요)
+  const windowId = Math.floor(Date.now() / 3600000);
   return list[fnv1a(`인사|${phase.key}|${windowId}`) % list.length];
 }
 

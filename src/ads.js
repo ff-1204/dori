@@ -3,14 +3,14 @@
 // 원칙: 플레이 중 삽입 금지 · 경계(결과 후/허브 복귀)에서만 · 보상형은 자발적만 · 다크패턴 금지.
 //
 // [활성화 절차]
-//  1) 커스텀 도메인 + 상업 허용 호스팅으로 이전, AdSense 승인, 동의(CMP) 구비
-//  2) index.html의 H5 Games Ads 스크립트 주석 해제 + ca-pub-XXXX 교체
-//  3) 아래 AdConfig.enabled = true, provider = 'google-h5', client 설정
+//  1) AdSense 승인 + 동의(CMP) 구비 — 로더는 index.html에서 심사용으로 이미 로드 중
+//  2) index.html의 adBreak 브리지 주석 해제 + 로더에 data-ad-frequency-hint 추가
+//  3) 아래 AdConfig.enabled = true, provider = 'google-h5' 전환
 
 export const AdConfig = {
   enabled: false,                     // 전역 스위치(준비 완료 전까지 false)
   provider: 'none',                   // 'none' | 'google-h5'
-  client: 'ca-pub-XXXXXXXXXXXXXXXX',  // AdSense 퍼블리셔 ID(승인 후 교체)
+  client: 'ca-pub-2755020807980350',  // AdSense 퍼블리셔 ID(index.html 로더·ads.txt와 동일)
   interstitialEvery: 3,               // N판마다 전면광고(빈도 제한)
 };
 

@@ -66,6 +66,12 @@ export function padHitArea(t, minW = 88, minH = 56) {
 export function openTextInput(scene, { title, hint, inputmode = 'text', maxLength = 12, y = 560, onSubmit }) {
   if (scene.inputOverlay) return;
   const cx = scene.scale.width / 2;
+  // 배경 차단 딤: 입력 중 뒤 화면(보드·버튼) 조작 방지 + 바깥 탭 = 취소(모달과 같은 문법)
+  scene.inputOverlayDim = scene.add.rectangle(0, 0, scene.scale.width, scene.scale.height, 0x000000, 0.45)
+    .setOrigin(0).setDepth(299).setInteractive();
+  scene.inputOverlayDim.on('pointerup', () => closeTextInput(scene));
+  // 멀티 카메라 씬(핀볼): 모달과 같은 규칙 — 위층 카메라에만 렌더(입력 차단은 카메라와 무관)
+  if (scene.cameras.cameras.length > 1) scene.cameras.main.ignore(scene.inputOverlayDim);
   scene.inputOverlay = scene.add.dom(cx, y).createFromHTML(
     `<div style="width:520px;background:${css(C.surface)};border:2px solid ${css(C.surfaceAlt)};border-radius:16px;padding:20px;font-family:sans-serif;">`
     + `<div style="color:${css(C.text)};font-size:24px;font-weight:bold;text-align:center;margin-bottom:12px;">${title}</div>`
@@ -88,6 +94,7 @@ export function openTextInput(scene, { title, hint, inputmode = 'text', maxLengt
   node.querySelector('#dori-input-ok').addEventListener('click', submit);
   node.querySelector('#dori-input-cancel').addEventListener('click', () => closeTextInput(scene));
   field.addEventListener('keydown', (e) => {
+    if (e.isComposing || e.keyCode === 229) return; // 한글 IME 조합 확정 Enter는 제출이 아니다
     if (e.key === 'Enter') submit();
     if (e.key === 'Escape') closeTextInput(scene);
   });
@@ -96,6 +103,7 @@ export function openTextInput(scene, { title, hint, inputmode = 'text', maxLengt
 
 export function closeTextInput(scene) {
   if (scene.inputOverlay) { scene.inputOverlay.destroy(); scene.inputOverlay = null; }
+  if (scene.inputOverlayDim) { scene.inputOverlayDim.destroy(); scene.inputOverlayDim = null; }
 }
 
 // 공통 헤더 — 제목(40px, y48) + 태그라인(24px, y128). 모든 잼잼 씬의 첫 블록(LAYOUT 그리드).
@@ -155,18 +163,26 @@ export function makeModal(scene, { title, note, py = 180, ph = 900, doneLabel = 
   root.add(doneBtn);
   root.setAlpha(0);
   scene.tweens.add({ targets: root, alpha: 1, duration: 160, ease: 'Quad.easeOut' });
+  // 뒤로가기 레이어 등록 — 백 제스처·⬅·ESC가 완료 버튼과 같은 경로로 모달을 닫는다(MiniGame.closeTopLayer)
+  scene.activeModal = { root, close: () => onDone && onDone() };
+  root.once('destroy', () => {
+    if (scene.activeModal && scene.activeModal.root === root) scene.activeModal = null;
+  });
   return {
     root, titleText, noteText, chipsBox, doneBtn, px, py, pw, ph,
-    chips: { startX: px + 32, startY: py + 150, maxX: px + pw - 32 },
+    // maxY: 완료 버튼(py+ph-64, 높이 84) 위 여백까지 — 칩이 버튼·패널을 침범하지 않는 세로 상한
+    chips: { startX: px + 32, startY: py + 150, maxX: px + pw - 32, maxY: py + ph - 120 },
   };
 }
 
 // 칩 플로우 — 편집 모달의 항목 칩 공통 문법(높이 64·폰트 26·간격 12, 줄바꿈 자동).
 // add(label, opts, onTap) → 칩 컨테이너(chipW 보관). onTap이 없으면 히트 없이 반환(씬이 직접 붙임).
 // opts: { fill, outline, color(외곽선), textColor } / add.section(라벨) = 구분 제목 행 / add.gapRow(추가여백) = 줄 띄움.
-export function chipFlow(scene, box, { startX, startY, maxX, gap = 12, chipH = 64 }) {
+export function chipFlow(scene, box, { startX, startY, maxX, maxY = null, gap = 12, chipH = 64 }) {
   let x = startX;
   let y = startY;
+  let hiddenCount = 0;
+  let moreLabel = null;
   const add = (label, opts = {}, onTap) => {
     const t = scene.add.text(0, 0, label, {
       fontFamily: FONT, fontSize: '26px',
@@ -175,6 +191,18 @@ export function chipFlow(scene, box, { startX, startY, maxX, gap = 12, chipH = 6
     }).setOrigin(0.5);
     const w = Math.ceil(t.width) + 40;
     if (x + w > maxX) { x = startX; y += chipH + gap; }
+    // 세로 상한(maxY): 넘치는 칩은 숨기고 개수만 표기 — 완료 버튼·패널 침범 방지(정직한 표시)
+    const overflow = maxY != null && y + chipH > maxY;
+    if (overflow) {
+      hiddenCount += 1;
+      if (!moreLabel) {
+        moreLabel = scene.add.text(startX, Math.min(y + 20, maxY), '', {
+          fontFamily: FONT, fontSize: '24px', color: css(C.subtext), fontStyle: 'bold',
+        }).setOrigin(0, 0.5);
+        box.add(moreLabel);
+      }
+      moreLabel.setText(`…외 ${hiddenCount}개 — 항목을 지우면 보여요`);
+    }
     const g = scene.add.graphics();
     const fill = opts.fill ?? (opts.outline ? null : C.surfaceAlt);
     if (fill != null) g.fillStyle(fill, 1).fillRoundedRect(0, 0, w, chipH, 14);
@@ -188,6 +216,7 @@ export function chipFlow(scene, box, { startX, startY, maxX, gap = 12, chipH = 6
       hit.on('pointerup', onTap);
       con.add(hit);
     }
+    if (overflow) con.setVisible(false); // 숨김 칩은 히트도 안 잡힌다(Phaser는 비표시 객체를 히트 대상에서 제외)
     box.add(con);
     x += w + gap;
     return con;

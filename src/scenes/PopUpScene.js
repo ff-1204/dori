@@ -33,6 +33,11 @@ export default class PopUpScene extends MiniGame {
       onClick: () => this.reset(),
     });
 
+    // 표시 리스트 밖 마스크(maskG)는 씬 셧다운이 정리하지 못한다 — 칼이 꽂힌 채 나가도 남지 않게 직접 정리
+    this.events.once('shutdown', () => {
+      (this.slots || []).forEach((s) => { if (s.maskG) { s.maskG.destroy(); s.maskG = null; } });
+    });
+
     this.reset();
   }
 
@@ -92,6 +97,7 @@ export default class PopUpScene extends MiniGame {
   }
 
   reset() {
+    if (this.locked) return; // 칼 꽂힘 트윈(140ms) 중 리셋 금지 — 새 판 위에서 이전 판정(오발) 실행 방지
     this.trigger = this.rng.between(0, SLOTS - 1); // SETUP: 트리거 재배치
     this.doneCount = 0;
     this.launched = false;

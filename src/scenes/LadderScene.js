@@ -25,7 +25,9 @@ function loadList(key, fallback) {
     const raw = localStorage.getItem(key);
     if (raw) {
       const a = JSON.parse(raw);
-      if (Array.isArray(a) && a.length >= MIN_P) return a;
+      // 손상 데이터 방어: 개수 2–6 + 문자열만 — 범위 밖이면 기본값(PLAYER[6] 색 참조 크래시 방지)
+      if (Array.isArray(a) && a.length >= MIN_P && a.length <= MAX_P
+        && a.every((v) => typeof v === 'string')) return a;
     }
   } catch (e) { /* 무시 */ }
   return [...fallback];
@@ -263,6 +265,12 @@ export default class LadderScene extends MiniGame {
 
   closeResults() {
     if (this.resultsOverlay) { this.resultsOverlay.destroy(); this.resultsOverlay = null; }
+  }
+
+  // 뒤로가기 레이어: 전체 결과 팝업도 '위부터 닫기' 대상(공통 레이어는 super가 처리)
+  closeTopLayer() {
+    if (!this.inputOverlay && this.resultsOverlay) { this.closeResults(); return true; }
+    return super.closeTopLayer();
   }
 
   // ===== 경로 추적 =====

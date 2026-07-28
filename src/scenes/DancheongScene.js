@@ -62,16 +62,18 @@ export default class DancheongScene extends MiniGame {
       + 'text-align:center;font-family:sans-serif;">',
     );
     this.inputNode = this.inputEl.node.querySelector('input');
-    // 마지막 질문 복원(기기 내 저장분)
+    // 마지막 질문 복원(기기 내 저장분) — maxlength 속성은 스크립트 대입에 안 걸리므로 직접 자른다
     try {
       const saved = localStorage.getItem(LS_QUESTION);
-      if (saved && this.inputNode) this.inputNode.value = saved;
+      if (saved && this.inputNode) this.inputNode.value = String(saved).slice(0, 24);
     } catch (e) { /* 무시 */ }
     // 모바일 자판 제어 — Phaser가 캔버스 터치에 preventDefault를 걸어 기본 blur가 막히므로 직접 처리:
     // 입력창 밖(캔버스) 탭이면 자판을 내리고, Enter(모바일 '완료/이동')는 바로 묻기로 잇는다
     if (this.inputNode) {
       this.inputNode.addEventListener('keydown', (ev) => {
+        if (ev.isComposing || ev.keyCode === 229) return; // 한글 IME 조합 확정 Enter는 제출이 아니다
         if (ev.key === 'Enter') { ev.preventDefault(); this.ask(); }
+        if (ev.key === 'Escape') this.inputNode.blur(); // ESC = 자판/포커스 해제(공통 입력 오버레이와 일관)
       });
       this.input.on('pointerdown', () => this.inputNode.blur());
     }
@@ -150,23 +152,25 @@ export default class DancheongScene extends MiniGame {
     this.resetTiles(); // 이전 결과는 여기서 해제(버튼 누를 때까지 유지)
     Sfx.play('pop');
 
+    // 답은 묻는 시점에 확정 — 연출(약 1.65초) 중 4시간 창 경계를 넘어도 답이 바뀌지 않는다
+    const answer = pickColor(q);
     // 빌드업: 하이라이트가 두 패 사이를 튕기다 점점 느려진다(기대 → 긴장)
     const steps = [130, 130, 130, 130, 170, 170, 210, 260, 320];
-    this.bounceStep(q, 0, steps);
+    this.bounceStep(q, 0, steps, answer);
   }
 
-  bounceStep(q, i, steps) {
-    if (i >= steps.length) { this.reveal(q); return; }
+  bounceStep(q, i, steps, answer) {
+    if (i >= steps.length) { this.reveal(q, answer); return; }
     const on = this.tiles[i % 2];
     const off = this.tiles[(i + 1) % 2];
     on.setAlpha(1).setScale(1.07);
     off.setAlpha(0.4).setScale(0.94);
     Sfx.play('tick');
-    this.time.delayedCall(steps[i], () => this.bounceStep(q, i + 1, steps));
+    this.time.delayedCall(steps[i], () => this.bounceStep(q, i + 1, steps, answer));
   }
 
-  reveal(q) {
-    const isRed = pickColor(q) === 0;
+  reveal(q, answer) {
+    const isRed = answer === 0;
     const chosen = this.tiles[isRed ? 0 : 1];
     const other = this.tiles[isRed ? 1 : 0];
     const color = chosen.color;

@@ -13,6 +13,7 @@
   <!-- ===== PWA (홈 화면/바탕화면 바로가기) ===== -->
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#12131c">
+  <link rel="icon" href="assets/icon-192.png">
   <link rel="apple-touch-icon" href="assets/icon-192.png">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="dori">
@@ -72,6 +73,7 @@
       height: 100%;
       background: #12131c;
       overflow: hidden;
+      overscroll-behavior: none; /* 모바일 당겨서 새로고침·바운스 차단 — 드래그 조작(핀볼 등) 중 이탈 방지 */
     }
     /* 레터박스(넓은 화면비의 캔버스 밖 영역): 빈 검은 띠 대신 은은한 비네트 —
        캔버스(#12131c)보다 살짝 어둡게 해 잼잼 영역이 무대처럼 떠 보인다 */
@@ -79,7 +81,13 @@
       background: radial-gradient(120% 90% at 50% 40%, #171827 0%, #0d0e16 70%, #0a0b11 100%);
     }
     /* 100vh는 모바일에서 하단 툴바 뒤 영역까지 포함해 캔버스가 잘림 — dvh로 실제 보이는 높이 사용 */
-    #game { width: 100vw; height: 100vh; height: 100dvh; }
+    #game {
+      width: 100vw; height: 100vh; height: 100dvh;
+      /* 캔버스 롱프레스 돋보기(iOS)·드래그 선택(PC) 방지 — 입력 필드는 아래에서 예외 */
+      -webkit-user-select: none; user-select: none;
+      -webkit-touch-callout: none;
+    }
+    #game input, #game textarea { -webkit-user-select: text; user-select: text; }
     canvas { display: block; }
   </style>
 </head>

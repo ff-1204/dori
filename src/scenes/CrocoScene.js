@@ -80,6 +80,7 @@ export default class CrocoScene extends MiniGame {
   }
 
   reset() {
+    if (this.locked) return; // 판정 트윈(눌림 110ms) 중 리셋 금지 — 새 판 위에서 이전 판정이 실행되는 레이스 방지
     this.trap = this.rng.between(0, TEETH - 1); // SETUP: 함정 재배치(학습 방지)
     this.doneCount = 0;
     this.bitten = false;

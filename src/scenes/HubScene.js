@@ -3,7 +3,7 @@
 import { C, css, FONT, SP } from '../theme.js';
 import { makeButton, padHitArea } from '../ui.js';
 import { applyTimeAtmosphere, mealForPhase, MEAL_LABEL, greetingForPhase } from '../timeOfDay.js';
-import { pushGameState, consumeDeepLink } from '../nav.js';
+import { pushGameState, consumeDeepLink, pushLayerState, popLayerState } from '../nav.js';
 import { Sfx } from '../sfx.js';
 
 // 시간대별 룰렛 이모지(라벨과 함께 바뀐다)
@@ -52,6 +52,7 @@ export default class HubScene extends Phaser.Scene {
     this.qrModal = null;
     this.guideModal = null;
     this.toastBox = null;
+    this.input.keyboard?.on('keydown-ESC', () => this.closeTopLayer()); // ESC(PC) = 모달 닫기
     this.cameras.main.setBackgroundColor(C.bg);
     this.cameras.main.fadeIn(160, 18, 19, 28); // 씬 전환을 부드럽게(하드 컷 방지)
     const phase = applyTimeAtmosphere(this); // 시간대 분위기(생리적 패턴)
@@ -210,17 +211,18 @@ export default class HubScene extends Phaser.Scene {
       this.toast('이미 바로가기로 실행 중이에요');
       return;
     }
-    // Chrome/Edge/안드로이드: 잡아둔 설치 프롬프트를 바로 띄운다
+    // Chrome/Edge/안드로이드: 잡아둔 설치 프롬프트를 바로 띄운다.
+    // prompt()는 1회용 — 거절해도 재사용 불가라 결과와 무관하게 참조를 비운다(재탭 시 안내 모달 폴백).
     const evt = window.__deferredInstall;
     if (evt) {
-      evt.prompt();
+      window.__deferredInstall = null;
       try {
+        evt.prompt();
         const choice = await evt.userChoice;
-        if (choice && choice.outcome === 'accepted') {
-          this.toast('바로가기가 추가되었어요');
-          window.__deferredInstall = null;
-        }
-      } catch (e) { /* 사용자가 닫음 */ }
+        if (choice && choice.outcome === 'accepted') this.toast('바로가기가 추가되었어요');
+      } catch (e) {
+        this.openInstallGuide(); // 프롬프트가 이미 소비됐거나 실패 — 방법 안내로 폴백
+      }
       return;
     }
     // iOS 사파리 등 프롬프트 미지원: 방법 안내 모달
@@ -233,8 +235,9 @@ export default class HubScene extends Phaser.Scene {
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
 
     this.guideModal = this.add.container(0, 0).setDepth(200);
+    pushLayerState(); // 모바일 뒤로가기 = 모달 닫기(사이트 이탈 아님)
     const dim = this.add.rectangle(0, 0, width, height, 0x000000, 0.75).setOrigin(0).setInteractive();
-    dim.on('pointerup', () => { this.guideModal.destroy(); this.guideModal = null; });
+    dim.on('pointerup', () => this.closeGuide());
     this.guideModal.add(dim);
 
     const pw = 560; const ph = 380;
@@ -258,12 +261,19 @@ export default class HubScene extends Phaser.Scene {
     const close = this.add.text(width / 2, py + ph - 56, '✕ 닫기', {
       fontFamily: FONT, fontSize: '30px', color: css(C.subtext), fontStyle: 'bold',
     }).setOrigin(0.5).setInteractive({ useHandCursor: true });
-    close.on('pointerup', () => { this.guideModal.destroy(); this.guideModal = null; });
+    close.on('pointerup', () => this.closeGuide());
     this.guideModal.add(close);
 
     // 팝 등장(주스) — QR 모달과 같은 페이드
     this.guideModal.setAlpha(0);
     this.tweens.add({ targets: this.guideModal, alpha: 1, duration: 180, ease: 'Quad.easeOut' });
+  }
+
+  closeGuide() {
+    if (!this.guideModal) return;
+    this.guideModal.destroy();
+    this.guideModal = null;
+    popLayerState(); // 화면 버튼으로 닫으면 가드 소비(뒤로가기 경유면 이미 소비돼 no-op)
   }
 
   // ===== 상단 바: QR(좌) · 공유(우) — 제목(중앙)과 좌표 겹침 없음 =====
@@ -304,6 +314,7 @@ export default class HubScene extends Phaser.Scene {
 
     const { width, height } = this.scale;
     this.qrModal = this.add.container(0, 0).setDepth(200);
+    pushLayerState(); // 모바일 뒤로가기 = 모달 닫기(사이트 이탈 아님)
 
     const dim = this.add.rectangle(0, 0, width, height, 0x000000, 0.75).setOrigin(0).setInteractive();
     dim.on('pointerup', () => this.closeQr());
@@ -357,6 +368,14 @@ export default class HubScene extends Phaser.Scene {
     if (!this.qrModal) return;
     this.qrModal.destroy();
     this.qrModal = null;
+    popLayerState(); // 화면 버튼으로 닫으면 가드 소비(뒤로가기 경유면 이미 소비돼 no-op)
+  }
+
+  // 뒤로가기·ESC의 '위 레이어부터 닫기'(nav.js popstate에서 호출). 닫았으면 true.
+  closeTopLayer() {
+    if (this.qrModal) { this.closeQr(); return true; }
+    if (this.guideModal) { this.closeGuide(); return true; }
+    return false;
   }
 
   // 토스트 — 알약형 카드(라운드·그림자·팔레트 토큰), 아래에서 떠오르며 등장

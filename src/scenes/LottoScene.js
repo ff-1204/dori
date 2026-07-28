@@ -31,7 +31,16 @@ function loadState() {
     const raw = localStorage.getItem(LS_KEY);
     if (raw) {
       const s = JSON.parse(raw);
-      if (s && Array.isArray(s.lines)) return s;
+      // 손상 데이터 방어: 줄(6개·1–45 정수)·개수·시각을 정규화해 반환 — count가 NaN으로 고착되는 것 방지
+      if (s && Array.isArray(s.lines) && s.lines.length <= MAX_LINES
+        && s.lines.every((l) => Array.isArray(l) && l.length === 6
+          && l.every((n) => Number.isInteger(n) && n >= 1 && n <= 45))) {
+        return {
+          lines: s.lines,
+          hour: Number.isInteger(s.hour) ? s.hour : null,
+          count: Number.isInteger(s.count) ? Math.min(Math.max(s.count, MIN_LINES), MAX_LINES) : 1,
+        };
+      }
     }
   } catch (e) { /* 무시 */ }
   return null;
@@ -52,8 +61,10 @@ export default class LottoScene extends MiniGame {
 
     const saved = loadState();
     this.lines = saved ? saved.lines : [];
-    this.lineCount = saved ? Math.min(Math.max(saved.count || 1, MIN_LINES), MAX_LINES) : 1;
+    this.lineCount = saved ? saved.count : 1;
     this.drawnHour = saved ? saved.hour : null;
+    // 기기 시계를 되돌려 기록이 '미래 시각'이 된 경우 현재 창으로 보정 — 잠금이 무한 해제되는 우회 축소
+    if (this.drawnHour !== null && this.drawnHour > hourWindow()) this.drawnHour = hourWindow();
 
     // 공통 레이아웃 그리드(LAYOUT): 헤더48 / 태그라인128 / 문구190 / 게임판 / 링크1002(±150) / 주 버튼1104
     makeHeader(this, '로또 추첨', '이번 주, 당신의 여섯 숫자');
@@ -78,6 +89,16 @@ export default class LottoScene extends MiniGame {
 
     this.renderLines();
     this.refreshLockState();
+
+    // 정각 경과 감시: 씬을 켜둔 채 정각이 지나면 잠금을 자동 해제(재진입 없이) — 10초 간격 상태 비교
+    this.time.addEvent({
+      delay: 10000,
+      loop: true,
+      callback: () => {
+        if (this.locked) return; // 추첨 연출 중에는 건드리지 않는다(연출 끝에 refreshLockState가 돈다)
+        if (this.lockShown !== this.isLocked()) this.refreshLockState();
+      },
+    });
   }
 
   isLocked() {
@@ -90,6 +111,7 @@ export default class LottoScene extends MiniGame {
   }
 
   refreshLockState() {
+    this.lockShown = this.isLocked(); // 정각 경과 감시 타이머의 비교 기준(화면에 반영된 상태)
     if (this.isLocked()) {
       this.drawBtn.disableButton();
       this.drawBtn.setLabel('추첨 완료');

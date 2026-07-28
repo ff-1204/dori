@@ -12,6 +12,7 @@
 |------|------|----------|-----------|------|
 | Phaser | 3.80.1 | MIT | ✅ | https://github.com/phaserjs/phaser (CDN: jsdelivr) |
 | qrcode-generator | 1.4.4 | MIT | ✅ | https://github.com/kazuhikoarase/qrcode-generator (CDN: jsdelivr) — QR 접속 모달용 |
+| Google AdSense 로더 (adsbygoogle.js) | — | Google 서비스 약관 | ✅(퍼블리셔 계약) | index.html에서 로드 — 소유권 확인·심사용, 광고 게재 전(2026-07-29 기록). 개인정보 고지는 privacy.html §4 |
 
 > **MIT 고지 의무**: 두 라이브러리는 저장소에 번들하지 않고 **CDN 원본 파일을 그대로 로드**하므로
 > 원저작자의 라이선스 고지가 파일 내에 보존된다(재배포 아님). 추후 파일을 번들할 경우 LICENSE 사본 동봉 필요.

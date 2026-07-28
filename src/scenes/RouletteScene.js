@@ -66,8 +66,10 @@ function loadItems(mealKey, defaults) {
     const raw = localStorage.getItem(keyFor(mealKey));
     if (raw) {
       const a = JSON.parse(raw);
-      // 1개(감자튀김만)도 유효 — '모두 지우기' 상태 유지(스핀은 2개 미만이면 잠김)
-      if (Array.isArray(a) && a.length >= 1) return a;
+      // 1개(감자튀김만)도 유효 — '모두 지우기' 상태 유지(칸 1개 스핀 허용은 문서화된 설계, game.md).
+      // 손상 데이터 방어: 상한 16 + 문자열만(범위 밖이면 기본값)
+      if (Array.isArray(a) && a.length >= 1 && a.length <= 16
+        && a.every((v) => typeof v === 'string')) return a;
     }
   } catch (e) { /* 저장소 접근 불가 시 무시 */ }
   return [...defaults];
@@ -98,6 +100,7 @@ export default class RouletteScene extends MiniGame {
     this.fryHint = null; // 남아 있으면 재진입 시 보증 예고 반짝임이 안 뜬다
     this.clearBlink = null; // 죽은 트윈에 stop() 호출 방지
     this.clearChip = null;
+    this.confirmClear = false; // '모두 지우기' 2단 확인 — 확인 창(1.4초) 중 이탈해도 재진입 시 초기 상태
     this.lastTap = null;
     // 공통 레이아웃 그리드(LAYOUT): 헤더48 / 태그라인128 / 문구190(156–224) / 포인터284–336 / 원판330–930 / 편집 링크1002 / 주 버튼1104 / 제외 토글·취소1200
     // 크기 위계: 제목 40px > 문구 32px > 태그라인·편집 26/24px > 제외 토글·취소 24px
@@ -304,6 +307,7 @@ export default class RouletteScene extends MiniGame {
   // 참고: 제외 목록 초기화는 호출자가 결정 — 모드 전환은 setupItems가 모드별로 복원하고,
   // 메뉴 편집(추가/삭제/기본값)은 clearExclusions()로 명시적으로 비운다(공정성).
   rebuildWheel() {
+    if (this.fryHint) this.fryHint.forEach((o) => this.tweens.killTweensOf(o)); // repeat:-1 트윈 정리(누수 방지)
     if (this.wheel) this.wheel.destroy();
     this.fryHint = null; // 휠과 함께 파괴됨(제외 오버레이도 함께)
     this.wheelAngle = 0;
@@ -334,7 +338,11 @@ export default class RouletteScene extends MiniGame {
     const pity = parseInt(loadStr(LS_SPINS, '0'), 10) || 0;
     const need = pity >= PITY - 1 && this.items.indexOf(FRY) !== -1;
     if (!need) {
-      if (this.fryHint) { this.fryHint.forEach((o) => o.destroy()); this.fryHint = null; }
+      if (this.fryHint) {
+        // repeat:-1 트윈은 대상 destroy로 멈추지 않는다 — 먼저 죽여 트윈 누적(누수) 방지
+        this.fryHint.forEach((o) => { this.tweens.killTweensOf(o); o.destroy(); });
+        this.fryHint = null;
+      }
       return;
     }
     if (this.fryHint) return;
@@ -381,6 +389,8 @@ export default class RouletteScene extends MiniGame {
 
   spin(forceIdx = null) {
     if (this.locked) return;
+    // 더블탭 확정 인덱스 검증 — 반짝임(330ms) 사이에 편집으로 칸이 줄었을 수 있다
+    if (forceIdx !== null && (forceIdx < 0 || forceIdx >= this.items.length)) forceIdx = null;
     // 비복원: 남은 풀 계산 — 모두 나왔으면 스핀 대신 안내(정직: 빈 풀에서 돌리지 않는다)
     const pool = this.items.map((_, i) => i)
       .filter((i) => !this.excludeMode || !this.excluded.has(this.items[i]));
@@ -409,9 +419,9 @@ export default class RouletteScene extends MiniGame {
     if (forceIdx !== null) winner = forceIdx; // 더블탭 치트(선택 메뉴 확정)
     else if (pity >= PITY && fryAvailable) winner = fryIdx;
     else winner = pool[this.rng.between(0, pool.length - 1)];
-    // 감자튀김이 나오면(보증이든 자연이든) 카운터 리셋
+    // 감자튀김이 나오면(보증이든 자연이든) 카운터 리셋.
+    // 저장은 스핀 완료 시점(onComplete) — 회전 중 이탈한 '결과를 못 본 스핀'은 보증 카운트에 넣지 않는다
     if (this.items[winner] === FRY) pity = 0;
-    saveStr(LS_SPINS, String(pity));
     const winnerCenter = (winner + 0.5) * this.sliceAngle;
 
     const spins = 4;
@@ -438,6 +448,7 @@ export default class RouletteScene extends MiniGame {
       },
       onComplete: () => {
         this.wheelAngle = finalAngle;
+        saveStr(LS_SPINS, String(pity)); // reveal의 updateFryHint가 최신 카운터를 읽도록 먼저 저장
         this.reveal(winner);
       },
     });

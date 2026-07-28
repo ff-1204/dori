@@ -24,7 +24,9 @@ function loadSlots() {
     const raw = localStorage.getItem(LS_SLOTS);
     if (raw) {
       const a = JSON.parse(raw);
-      if (Array.isArray(a) && a.length >= SLOT_MIN && a.length <= SLOT_MAX) return a;
+      // 손상 데이터 방어: 개수 범위 + 문자열만('null' 라벨·비문자 렌더 방지)
+      if (Array.isArray(a) && a.length >= SLOT_MIN && a.length <= SLOT_MAX
+        && a.every((v) => typeof v === 'string')) return a;
     }
   } catch (e) { /* 무시 */ }
   return [...DEFAULT_SLOTS];
@@ -158,6 +160,8 @@ export default class PinballScene extends MiniGame {
       const label = this.add.text(x, 921, this.slots[i], {
         fontFamily: FONT, fontSize: `${fs}px`, color: css(color), fontStyle: 'bold',
       }).setOrigin(0.5);
+      // 좁은 칸 + 긴 이름: 칸 폭에 맞춰 축소(이웃 칸 침범 방지 — 룰렛 라벨과 같은 규칙)
+      label.setScale(Math.min(1, (slotW - 14) / Math.max(1, label.width)));
       this.slotBox.add(rect);
       this.slotBox.add(label);
       // 더블탭 = 이름 수정(사다리·뽑기와 같은 숨은 어포던스 — 한 번 탭하면 힌트)
@@ -217,7 +221,8 @@ export default class PinballScene extends MiniGame {
     this.cameras.main.ignore(this.pegs.getChildren()); // 보드 카메라 전용(섞을 때마다 재등록)
   }
 
-  // 맵 섞기: 핀 배치 재생성 + 결과 칸 순서 셔플(화면 표시만 — 저장 안 함, 재진입 시 저장분 복원)
+  // 맵 섞기: 핀 배치 재생성 + 결과 칸 순서 셔플. 섞기 자체는 저장하지 않음(재진입 시 저장분 복원).
+  // 단, 섞은 뒤 이름 수정/칸 추가 등 편집을 하면 그 시점의(섞인) 배열이 저장된다 — 화면=저장(정직한 매핑) 우선.
   shuffleMap() {
     if (this.locked) return;
     for (let i = this.slots.length - 1; i > 0; i -= 1) {
@@ -284,6 +289,7 @@ export default class PinballScene extends MiniGame {
     this.dropBtn.disableButton();
     this.hits = 0;
     this.hitText.setText('');
+    this.toastPrev = null; // 대기 중 토스트 복원 타이머가 진행/결과 문구를 덮지 않게 해제
     this.resultText.setColor(css(C.subtext)).setText('...').setScale(1);
     this.slowmoDone = false;
     Sfx.play('pop'); // 출발
@@ -511,6 +517,10 @@ export default class PinballScene extends MiniGame {
   }
 
   refreshSlotLabels() {
-    this.slotLabels.forEach((l, i) => l.setText(this.slots[i]));
+    const slotW = (RIGHT - LEFT) / this.slots.length;
+    this.slotLabels.forEach((l, i) => {
+      l.setText(this.slots[i]).setScale(1);
+      l.setScale(Math.min(1, (slotW - 14) / Math.max(1, l.width))); // 칸 폭 맞춤(buildSlots와 동일)
+    });
   }
 }

@@ -17,7 +17,9 @@ function loadItems() {
     const raw = localStorage.getItem(LS_ITEMS);
     if (raw) {
       const a = JSON.parse(raw);
-      if (Array.isArray(a) && a.length >= MIN_I) return a;
+      // 손상 데이터 방어: 상한 12 + 문자열만(칩 범람·'[object Object]' 표시 방지)
+      if (Array.isArray(a) && a.length >= MIN_I && a.length <= MAX_I
+        && a.every((v) => typeof v === 'string')) return a;
     }
   } catch (e) { /* 무시 */ }
   return [...DEFAULTS];
@@ -130,6 +132,7 @@ export default class DrawScene extends MiniGame {
     if (pool.length === 0) { this.flashHint('모두 뽑았어요 — 전부 되돌리기!'); return; }
     this.lock();
     this.drawBtn.disableButton();
+    this.toastPrev = null; // 대기 중 토스트 복원 타이머가 이번 판 결과 문구를 덮지 않게 해제
     if (this.card) { this.card.destroy(); this.card = null; }
 
     // 상자 흔들림(기대감 빌드업) — 덜컹거리는 틱과 함께
@@ -182,6 +185,7 @@ export default class DrawScene extends MiniGame {
 
   resetDrawn() {
     if (this.locked) return;
+    this.toastPrev = null; // 이전 판 문구가 토스트 복원으로 되살아나지 않게
     this.drawn.clear();
     if (this.card) { this.card.destroy(); this.card = null; }
     this.renderPool();
