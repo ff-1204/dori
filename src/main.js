@@ -11,6 +11,7 @@ import PopUpScene from './scenes/PopUpScene.js';
 import DancheongScene from './scenes/DancheongScene.js';
 import LottoScene from './scenes/LottoScene.js';
 import TeamScene from './scenes/TeamScene.js';
+import BingoScene from './scenes/BingoScene.js';
 import { enforceHostLock } from './guard.js';
 import { initNav } from './nav.js';
 
@@ -33,7 +34,7 @@ if (enforceHostLock()) {
       BootScene, PreloadScene, HubScene,
       RouletteScene, LadderScene, PinballScene,
       DrawScene, RussianScene, CrocoScene, PopUpScene,
-      DancheongScene, LottoScene, TeamScene,
+      DancheongScene, LottoScene, TeamScene, BingoScene,
     ],
   };
 
