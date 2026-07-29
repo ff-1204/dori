@@ -20,14 +20,20 @@ workflow.md §1 파이프라인의 뒷부분(검산 이후)을 실행 체크리�
 
 - 정적 서버 + 헤드리스 Edge(720×1280) 스크린샷으로 **영향받는 씬 전부** 확인
 - Node는 이 PC에 있다 — PATH만 지정: `export PATH="/c/Program Files/nodejs:$PATH"` (bash)
-  / `$env:Path = "C:\Program Files\nodejs;$env:Path"` (PowerShell). `npx http-server`나
-  puppeteer-core 자동화 가능 (fries-get-cold `scripts/verify.mjs` 참고 — 자동 주파·스크린샷 패턴)
-- 임시 테스트 페이지·서버는 사용 후 즉시 정리
+  / `$env:Path = "C:\Program Files\nodejs;$env:Path"` (PowerShell).
+  puppeteer-core 자동화는 2026-07-30 첫 적용 완료 (workflow.md §1-5 — 딥링크 진입·탭 시퀀스·
+  localStorage 시드로 씬 상태 자동 촬영)
+- **씬 상태를 미리 심을 땐 localStorage 시드가 로더 검증을 통과하는 값**이어야 한다
+  (전 씬 로더가 개수·타입·범위를 검증 — 어긋나면 조용히 기본값 폴백되어 엉뚱한 화면을 찍는다)
+- 임시 테스트 페이지·서버는 사용 후 즉시 정리 (백그라운드 종료 후에도 자식 프로세스가
+  포트를 물고 남을 수 있다 — `Get-NetTCPConnection -LocalPort <포트>` 확인)
 
 ## 3. 문서화 (코드와 같은 커밋에)
 
 - 기능/상태 → docs/game.md, 구조 → docs/development.md, 절차·새로 배운 규칙 →
   docs/workflow.md("배운 것" 표), 서드파티 → docs/licenses.md (**즉시**)
+- **이번 작업에서 실수를 겪었다면**: workflow.md §4 표에 규칙으로 승격. 절차 규칙이면
+  이 스킬에도 반영하고, **자매 프로젝트(fries-get-cold) 반영도 검토**한다
 - 사용자 노출 문면이 바뀌면: 대외 워딩 규칙 점검 ('게임'·'플레이'·배너식 표현 금지 — CLAUDE.md)
 
 ## 4. 보고·확인 ← 여기서 멈춘다
