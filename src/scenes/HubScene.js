@@ -27,6 +27,7 @@ const GAMES = [
       { key: 'Draw', name: '🎁 뽑기 상자', ready: true },
       { key: 'Lotto', name: '🎱 로또 추첨', ready: true },
       { key: 'Bingo', name: '🔢 빙고 뽑기', ready: true },
+      { key: 'BingoCard', name: '🎟️ 빙고판', ready: true },
     ],
   },
   {
@@ -91,7 +92,7 @@ export default class HubScene extends Phaser.Scene {
     this.tweens.add({ targets: greeting, alpha: 1, y: 208, duration: 600, delay: 250, ease: 'Quad.easeOut' });
 
     // 범주별 게임 목록 — 2열 그리드(게임 수 확장 대응)
-    // 레이아웃 검산(11개·6행): 인사말 ~223 /(여백 51)/ 목록 288–1124 /(여백 49)/ 페이지 링크 1184 / 하단 바 1236
+    // 레이아웃 검산(12개·6행): 인사말 ~223 /(여백 51)/ 목록 288–1124 /(여백 49)/ 페이지 링크 1184 / 하단 바 1236
     // 행 간격 20px·범주 간 44px
     let y = 288;
     const colW = 304;
