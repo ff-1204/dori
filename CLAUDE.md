@@ -9,6 +9,8 @@ Claude Code가 이 저장소에서 작업할 때 따르는 가이드입니다. �
 
 - 배포 주소: https://dori.io.kr/
 - 원격: https://github.com/ff-1204/dori.git
+- 자매 프로젝트: `C:\Users\moon\Project\fries-get-cold` — 문서·커밋 컨벤션을 공유한다.
+  한쪽에서 좋은 규칙이 생기면 다른 쪽 반영을 검토 (예: /ship 스킬, "배운 것" 표, 검증 스크립트화).
 
 ## ⭐ 설계 최우선 원칙
 
