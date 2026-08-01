@@ -38,6 +38,7 @@ export default class DrawScene extends MiniGame {
     const { width } = this.scale;
     this.cx = width / 2;
     this.inputOverlay = null; // 재진입 시 stale 참조 초기화
+    this.editor = null; // 편집 모달을 연 채 떠나면 openEditor 가드에 걸려 다시 안 열린다(다른 씬과 동일 규칙)
     this.card = null;
     this.toastPrev = null; // 남아 있으면 이전 판의 문구가 토스트 복원으로 되살아난다
     this.lastItemTap = null;
@@ -194,6 +195,7 @@ export default class DrawScene extends MiniGame {
   }
 
   flashHint(msg) {
+    this.toastPrev = null; // 대기 중 토스트 복원 타이머가 이 경고를 이전 문구로 되돌리지 않게
     this.hint.setColor(css(C.warning)).setText(msg);
   }
 
@@ -207,7 +209,7 @@ export default class DrawScene extends MiniGame {
       note: `항목 ${MIN_I}–${MAX_I}개 · 눌러서 삭제 · 이름은 칩 더블탭으로 수정`,
       py: 220,
       ph: 780,
-      onDone: () => { closeTextInput(this); this.editor.destroy(); this.editor = null; },
+      onDone: () => { closeTextInput(this); if (this.editor) { this.editor.destroy(); this.editor = null; } },
     });
     this.editor = modal.root;
     this.editorNote = modal.noteText;

@@ -75,7 +75,9 @@ export default class DancheongScene extends MiniGame {
         if (ev.key === 'Enter') { ev.preventDefault(); this.ask(); }
         if (ev.key === 'Escape') this.inputNode.blur(); // ESC = 자판/포커스 해제(공통 입력 오버레이와 일관)
       });
-      this.input.on('pointerdown', () => this.inputNode.blur());
+      // 빈 캔버스 탭만 자판 내리기 — 버튼 위 pointerdown에서 blur하면 자판이 닫히며 레이아웃이 밀려
+      // pointerup 시점에 버튼을 벗어나 탭이 삼켜진다(Android). 인터랙티브 위 탭은 건드리지 않는다.
+      this.input.on('pointerdown', (p, over) => { if (!over.length) this.inputNode.blur(); });
     }
 
     this.buildTiles();

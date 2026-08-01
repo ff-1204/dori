@@ -84,6 +84,8 @@ export default class CrocoScene extends MiniGame {
     this.trap = this.rng.between(0, TEETH - 1); // SETUP: 함정 재배치(학습 방지)
     this.doneCount = 0;
     this.bitten = false;
+    // 물림 뒤 '입 다시 열기' 트윈(delay 600)이 진행 중이면 죽인다 — 새 판 위로 입이 다시 닫혔다 열리는 것 방지
+    this.tweens.killTweensOf(this.upperJaw);
     this.upperJaw.y = JAW_REST;
     this.teeth.forEach((t) => {
       t.pressed = false;

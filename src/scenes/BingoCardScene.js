@@ -90,8 +90,8 @@ export default class BingoCardScene extends MiniGame {
     this.calledView = null;
     this.boardLayer = null;
     this.callStrip = null;
-    this.newArmedAt = 0;   // '새 판' 두 번 탭 확정 타이머
-    this.clearArmedAt = 0; // '표시 지우기' 두 번 탭 확정 타이머
+    this.newArmedAt = -Infinity;   // '새 판' 두 번 탭 확정 타이머 — 0이면 기동 1.6초 안 첫 탭이 확정으로 오인된다
+    this.clearArmedAt = -Infinity; // '표시 지우기' 두 번 탭 확정 타이머
     this.toastPrev = null;
 
     const saved = loadState();
@@ -425,7 +425,8 @@ export default class BingoCardScene extends MiniGame {
     if (this.locked) return;
     const now = this.time.now;
     if (now - this.newArmedAt < 1600) {
-      this.newArmedAt = 0;
+      this.newArmedAt = -Infinity;
+      this.toastPrev = null; // 대기 중 토스트 복원이 새 판 안내를 옛 문구('빙고 N줄!')로 되돌리지 않게
       this.nums = this.genCard();
       this.marks = new Array(25).fill(false);
       this.called = [];
@@ -448,7 +449,8 @@ export default class BingoCardScene extends MiniGame {
     if (!this.marks.some(Boolean)) { this.toastHint('지울 표시가 없어요'); return; }
     const now = this.time.now;
     if (now - this.clearArmedAt < 1600) {
-      this.clearArmedAt = 0;
+      this.clearArmedAt = -Infinity;
+      this.toastPrev = null; // 대기 중 토스트 복원이 갱신된 안내를 덮지 않게
       this.marks = new Array(25).fill(false);
       this.save();
       for (let i = 0; i < 25; i += 1) this.redrawCell(i);
@@ -503,6 +505,7 @@ export default class BingoCardScene extends MiniGame {
       this.buildBoard();
       this.lines = 0;
       this.refreshCallStrip();
+      this.mainBtn.setLabel(this.caller ? '뽑기' : '새 판'); // '끝!'(전부 뽑음) 라벨 해제 — 새 판이라 뽑기 가능
       this.updateHint();
       Sfx.play('pop');
     }

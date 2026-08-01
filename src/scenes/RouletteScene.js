@@ -372,10 +372,11 @@ export default class RouletteScene extends MiniGame {
 
   flashSlice(i, onDone) {
     Sfx.play('pop');
+    this.lock(); // 반짝임(약 660ms) 동안 편집·제외 조작 차단 — 스핀 직전 칸 변경으로 인한 결과 공개 크래시 방지
     const g = this.sliceOverlay(i);
     this.tweens.add({
       targets: g, alpha: 0.7, duration: 110, yoyo: true, repeat: 2, ease: 'Quad.easeInOut',
-      onComplete: () => { g.destroy(); onDone(); },
+      onComplete: () => { g.destroy(); this.unlock(); onDone(); },
     });
   }
 

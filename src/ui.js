@@ -60,6 +60,33 @@ export function padHitArea(t, minW = 88, minH = 56) {
   t.input.hitArea.setTo((t.width - w) / 2, (t.height - h) / 2, w, h);
 }
 
+// 클립보드 복사 — Clipboard API가 없거나 차단된 환경(카카오톡·네이버 등 인앱 브라우저, 구형 브라우저)은
+// 임시 textarea + execCommand 폴백으로 복사한다. 성공 여부(boolean)를 돌려준다.
+export async function copyText(text) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch (e) { /* 권한 거부·차단 → 아래 폴백 시도 */ }
+  }
+  return legacyCopy(text);
+}
+
+// 레거시 폴백: 화면 밖 readonly textarea를 선택해 execCommand('copy')
+function legacyCopy(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.setAttribute('readonly', ''); // 모바일 자판 열림 방지
+  ta.style.cssText = 'position:fixed;top:-200px;left:0;opacity:0;';
+  document.body.appendChild(ta);
+  ta.select();
+  ta.setSelectionRange(0, ta.value.length); // iOS는 select()만으로 선택되지 않는다
+  let ok = false;
+  try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+  ta.remove();
+  return ok;
+}
+
 // 한 줄 입력 오버레이 — window.prompt 대체(테마 일치·Enter 확정·inputmode로 모바일 자판 선택).
 // 씬당 1개(scene.inputOverlay)만 유지. 씬 전환 시 DOM은 Phaser가 함께 파괴하므로
 // 재진입하는 씬은 onCreate에서 scene.inputOverlay = null 로 stale 참조를 초기화할 것.
@@ -102,7 +129,13 @@ export function openTextInput(scene, { title, hint, inputmode = 'text', maxLengt
 }
 
 export function closeTextInput(scene) {
-  if (scene.inputOverlay) { scene.inputOverlay.destroy(); scene.inputOverlay = null; }
+  if (scene.inputOverlay) {
+    // iOS: 포커스된 필드를 그대로 destroy하면 자판·밀린 뷰포트가 남을 수 있어 먼저 blur
+    const f = scene.inputOverlay.node && scene.inputOverlay.node.querySelector('input, textarea');
+    if (f) f.blur();
+    scene.inputOverlay.destroy();
+    scene.inputOverlay = null;
+  }
   if (scene.inputOverlayDim) { scene.inputOverlayDim.destroy(); scene.inputOverlayDim = null; }
 }
 

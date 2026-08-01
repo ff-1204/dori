@@ -5,7 +5,7 @@
 // 공 색은 공식 로또 색 구간(1-10 노랑, 11-20 파랑, 21-30 빨강, 31-40 회색, 41-45 초록)을 팔레트로 매핑.
 import MiniGame from '../MiniGame.js';
 import { C, css, FONT, EASE, LAYOUT } from '../theme.js';
-import { makeButton, makeHeader, makeSubLink } from '../ui.js';
+import { makeButton, makeHeader, makeSubLink, copyText } from '../ui.js';
 import { Sfx } from '../sfx.js';
 
 const LS_KEY = 'dori.lotto';
@@ -60,6 +60,7 @@ export default class LottoScene extends MiniGame {
     this.cx = width / 2;
 
     const saved = loadState();
+    this.toastPrev = null; // 토스트 복원 원본(중첩 호출에도 최초 문구 유지 — 확률 고지가 지워지지 않게)
     this.lines = saved ? saved.lines : [];
     this.lineCount = saved ? saved.count : 1;
     this.drawnHour = saved ? saved.hour : null;
@@ -111,6 +112,7 @@ export default class LottoScene extends MiniGame {
   }
 
   refreshLockState() {
+    this.toastPrev = null; // 상태 문구를 새로 쓰므로 대기 중인 토스트 복원은 무효화(옛 문구 부활 방지)
     this.lockShown = this.isLocked(); // 정각 경과 감시 타이머의 비교 기준(화면에 반영된 상태)
     if (this.isLocked()) {
       this.drawBtn.disableButton();
@@ -234,20 +236,21 @@ export default class LottoScene extends MiniGame {
 
   // ===== 복사 · 공유 =====
   numbersText() {
-    if (!this.lines.length) return null;
-    const rows = this.lines.map((nums, i) => `${LINE_LABELS[i]}  ${nums.map((n) => String(n).padStart(2, '0')).join(' ')}`);
+    // 화면에 보이는 줄까지만 — 잠금 해제 후 줄 수를 줄이면 기록엔 남아도 표시가 진실(정직한 매핑)
+    const rows = this.lines.slice(0, this.lineCount)
+      .map((nums, i) => `${LINE_LABELS[i]}  ${nums.map((n) => String(n).padStart(2, '0')).join(' ')}`);
+    if (!rows.length) return null;
     return rows.join('\n');
   }
 
   async copyNumbers() {
     const text = this.numbersText();
     if (!text) { this.toastHint('먼저 추첨해 주세요'); return; }
-    try {
-      await navigator.clipboard.writeText(text);
+    if (await copyText(text)) {
       this.toastHint('번호가 복사됐어요');
       Sfx.play('pop');
-    } catch (e) {
-      this.toastHint('복사에 실패했어요');
+    } else {
+      this.toastHint('복사가 막힌 브라우저예요');
     }
   }
 
@@ -256,25 +259,27 @@ export default class LottoScene extends MiniGame {
     if (!text) { this.toastHint('먼저 추첨해 주세요'); return; }
     const body = `오늘의 여섯 숫자 🎱\n${text}\n${SITE_URL}`;
     if (navigator.share) {
-      try { await navigator.share({ title: 'dori 로또 번호', text: body }); } catch (e) { /* 취소 */ }
-      return;
+      try {
+        await navigator.share({ title: 'dori 로또 번호', text: body });
+        return;
+      } catch (e) {
+        if (e && e.name === 'AbortError') return; // 사용자 취소 — 조용히 종료
+        // 공유 차단(인앱 브라우저·데스크톱 등) → 아래 클립보드 폴백으로 진행
+      }
     }
-    try {
-      await navigator.clipboard.writeText(body);
-      this.toastHint('공유 문구가 복사됐어요');
-    } catch (e) {
-      this.toastHint('공유에 실패했어요');
-    }
+    if (await copyText(body)) this.toastHint('공유 문구가 복사됐어요');
+    else this.toastHint('공유가 막힌 브라우저예요');
   }
 
+  // 토스트 중첩 시 원본은 최초 1회만 캡처(빙고와 같은 문법) — 토스트 문구가 원본으로 저장돼
+  // 확률 고지 라인이 영구 대체되는 것을 방지. refreshLockState가 toastPrev를 비우면 복원도 무효.
   toastHint(msg) {
-    const prev = this.hint.text;
-    const prevColor = this.hint.style.color;
+    if (!this.toastPrev) this.toastPrev = { text: this.hint.text, color: this.hint.style.color };
     this.hint.setColor(css(C.warning)).setText(msg);
     this.time.delayedCall(1400, () => {
-      if (this.hint && this.hint.active) {
-        this.hint.setColor(prevColor).setText(prev);
-      }
+      if (!this.hint || !this.hint.active || !this.toastPrev) return;
+      this.hint.setColor(this.toastPrev.color).setText(this.toastPrev.text);
+      this.toastPrev = null;
     });
   }
 }

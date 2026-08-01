@@ -411,10 +411,14 @@ export default class LadderScene extends MiniGame {
   }
 
   flashHint(msg) {
-    const orig = this.started ? '이름을 눌러 출발!' : HINT_SETUP;
     this.hint.setColor(css(C.warning)).setText(msg);
+    // 복귀 문구는 발화 시점의 상태로 계산 — 경고 1.2초 사이 시작/전원 도착으로 단계가 바뀌어도 거짓 안내가 없다
     this.time.delayedCall(1200, () => {
-      if (this.hint.active) this.hint.setColor(css(C.subtext)).setText(orig);
+      if (!this.hint.active) return;
+      const orig = !this.started ? HINT_SETUP
+        : this.traced.size === this.names.length ? '모두 도착! 새 판으로 계속'
+          : '이름을 눌러 출발!';
+      this.hint.setColor(css(C.subtext)).setText(orig);
     });
   }
 

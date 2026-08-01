@@ -86,8 +86,15 @@
       /* 캔버스 롱프레스 돋보기(iOS)·드래그 선택(PC) 방지 — 입력 필드는 아래에서 예외 */
       -webkit-user-select: none; user-select: none;
       -webkit-touch-callout: none;
+      /* 더블탭 줌 차단 — viewport의 user-scalable=no는 iOS가 무시한다.
+         캔버스는 Phaser가 처리하지만 DOM 오버레이(입력창·버튼)는 이 선언이 필요(더블탭이 1급 조작인 씬 보호) */
+      touch-action: manipulation;
     }
-    #game input, #game textarea { -webkit-user-select: text; user-select: text; }
+    /* touch-callout도 함께 복원 — 없으면 iOS에서 입력 필드 길게 눌러 붙여넣기가 차단된다(명단 붙여넣기 동선) */
+    #game input, #game textarea {
+      -webkit-user-select: text; user-select: text;
+      -webkit-touch-callout: default;
+    }
     canvas { display: block; }
   </style>
 </head>

@@ -1,7 +1,7 @@
 // 허브 씬 — 게임 선택 포털. 정체성(결정 돕기·랜덤 뽑기·복불복)을 범주로 노출.
 // 미구현 게임은 '준비 중'으로 흐리게 표시(정직한 어포던스: 누를 수 없음을 드러냄).
 import { C, css, FONT, SP } from '../theme.js';
-import { makeButton, padHitArea } from '../ui.js';
+import { makeButton, padHitArea, copyText } from '../ui.js';
 import { applyTimeAtmosphere, mealForPhase, MEAL_LABEL, greetingForPhase } from '../timeOfDay.js';
 import { pushGameState, consumeDeepLink, pushLayerState, popLayerState } from '../nav.js';
 import { Sfx } from '../sfx.js';
@@ -172,7 +172,11 @@ export default class HubScene extends Phaser.Scene {
     }).setOrigin(0.5).setInteractive({ useHandCursor: true });
     credit.on('pointerover', () => credit.setColor(css(C.primary)));
     credit.on('pointerout', () => credit.setColor(css(C.subtext)));
-    credit.on('pointerup', () => window.open('https://github.com/ff-1204', '_blank'));
+    credit.on('pointerup', () => {
+      // 인앱 브라우저·팝업 차단 환경에서는 null 반환 — 죽은 버튼 대신 정직한 피드백
+      const w = window.open('https://github.com/ff-1204', '_blank');
+      if (!w) this.toast('새 창이 막혔어요 — github.com/ff-1204');
+    });
 
     // 바로가기(PWA 설치) — 지원 브라우저는 즉시 설치, 아니면 방법 안내
     const install = this.add.text(width - SP.md, by, '📲 바로가기', {
@@ -208,8 +212,9 @@ export default class HubScene extends Phaser.Scene {
   }
 
   async installShortcut() {
-    // 이미 앱(standalone)으로 실행 중이면 안내만
-    if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) {
+    // 이미 앱(standalone)으로 실행 중이면 안내만 — iOS 16.4 미만은 display-mode 쿼리가 없어 navigator.standalone 병행
+    if ((window.matchMedia && window.matchMedia('(display-mode: standalone)').matches)
+      || window.navigator.standalone === true) {
       this.toast('이미 바로가기로 실행 중이에요');
       return;
     }
@@ -221,9 +226,10 @@ export default class HubScene extends Phaser.Scene {
       try {
         evt.prompt();
         const choice = await evt.userChoice;
+        if (!this.scene.isActive()) return; // await 사이 씬이 종료됐으면 토스트 생략
         if (choice && choice.outcome === 'accepted') this.toast('바로가기가 추가되었어요');
       } catch (e) {
-        this.openInstallGuide(); // 프롬프트가 이미 소비됐거나 실패 — 방법 안내로 폴백
+        if (this.scene.isActive()) this.openInstallGuide(); // 프롬프트가 이미 소비됐거나 실패 — 방법 안내로 폴백
       }
       return;
     }
@@ -234,7 +240,9 @@ export default class HubScene extends Phaser.Scene {
   openInstallGuide() {
     if (this.guideModal) return;
     const { width, height } = this.scale;
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    // iPadOS 13+ Safari는 UA를 'Macintosh'로 보고한다 — 터치 지점 수로 iPad를 함께 판정
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+      || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
 
     this.guideModal = this.add.container(0, 0).setDepth(200);
     pushLayerState(); // 모바일 뒤로가기 = 모달 닫기(사이트 이탈 아님)
@@ -253,9 +261,13 @@ export default class HubScene extends Phaser.Scene {
       fontFamily: FONT, fontSize: '36px', color: css(C.text), fontStyle: 'bold',
     }).setOrigin(0.5));
 
-    const body = isIOS
-      ? 'Safari 하단의 공유 버튼(□↑)을 누른 뒤\n\'홈 화면에 추가\'를 선택하세요'
-      : '브라우저 메뉴(⋮) 또는 주소창의 설치 아이콘에서\n\'홈 화면에 추가\'/\'설치\'를 선택하세요';
+    // 인앱 브라우저(카카오톡·네이버·인스타 등)는 설치 자체가 불가 — 기본 브라우저로 안내
+    const isInApp = /KAKAOTALK|NAVER\(inapp|Instagram|FBAN|FBAV|Line\//i.test(navigator.userAgent);
+    const body = isInApp
+      ? '앱 속 브라우저에서는 설치할 수 없어요\n메뉴(⋮ 또는 공유)에서\n\'다른 브라우저로 열기\'를 선택해 주세요'
+      : isIOS
+        ? 'Safari의 공유 버튼(□↑)을 누른 뒤\n\'홈 화면에 추가\'를 선택하세요'
+        : '브라우저 메뉴(⋮) 또는 주소창의 설치 아이콘에서\n\'홈 화면에 추가\'/\'설치\'를 선택하세요';
     this.guideModal.add(this.add.text(width / 2, py + 170, body, {
       fontFamily: FONT, fontSize: '28px', color: css(C.subtext), align: 'center', lineSpacing: 12,
     }).setOrigin(0.5));
@@ -300,13 +312,11 @@ export default class HubScene extends Phaser.Scene {
   }
 
   async doShare() {
-    // 주소 복사만 — 어디서나 같은 동작(정직한 피드백 토스트)
-    try {
-      await navigator.clipboard.writeText(SITE_URL);
-      this.toast('주소가 복사됐어요');
-    } catch (e) {
-      this.toast('복사 실패 — 주소창에서 복사해 주세요');
-    }
+    // 주소 복사만 — 어디서나 같은 동작(정직한 피드백 토스트). 인앱 브라우저는 copyText가 폴백 처리.
+    const ok = await copyText(SITE_URL);
+    if (!this.scene.isActive()) return; // await 사이 씬이 종료됐으면 토스트 생략
+    if (ok) this.toast('주소가 복사됐어요');
+    else this.toast('복사가 막힌 브라우저예요 — 주소창에서 복사해 주세요');
   }
 
   // ===== QR 모달: 흰 배경(스캔 대비) + 여백(quiet zone) =====
@@ -339,17 +349,23 @@ export default class HubScene extends Phaser.Scene {
     panel.fillStyle(0xffffff, 1).fillRoundedRect(px, py, panelW, panelH, 20);
     this.qrModal.add(panel);
 
+    // 셀 수백 개짜리 Graphics는 매 프레임 커맨드를 다시 처리한다(모달 열린 내내 발열·프레임 저하) —
+    // 한 번 텍스처로 구워 Image로 표시. URL이 고정이라 최초 1회만 생성해 재사용.
     const cell = qrSize / count;
-    const mods = this.add.graphics();
-    mods.fillStyle(0x12131c, 1);
-    for (let r = 0; r < count; r += 1) {
-      for (let c = 0; c < count; c += 1) {
-        if (qr.isDark(r, c)) {
-          mods.fillRect(px + pad + c * cell, py + pad + r * cell, Math.ceil(cell), Math.ceil(cell));
+    if (!this.textures.exists('qr-site')) {
+      const mods = this.add.graphics();
+      mods.fillStyle(0x12131c, 1);
+      for (let r = 0; r < count; r += 1) {
+        for (let c = 0; c < count; c += 1) {
+          if (qr.isDark(r, c)) {
+            mods.fillRect(c * cell, r * cell, Math.ceil(cell), Math.ceil(cell));
+          }
         }
       }
+      mods.generateTexture('qr-site', qrSize, qrSize);
+      mods.destroy();
     }
-    this.qrModal.add(mods);
+    this.qrModal.add(this.add.image(px + pad, py + pad, 'qr-site').setOrigin(0));
 
     this.qrModal.add(this.add.text(width / 2, py + pad + qrSize + 48, '카메라로 스캔하면 바로 접속!', {
       fontFamily: FONT, fontSize: '28px', color: '#12131c', fontStyle: 'bold',

@@ -6,7 +6,7 @@
 // 색상 연결: 조마다 고유색(PLAYER 팔레트) — 라벨·테두리·칩·완료 연출이 같은 색.
 import MiniGame from '../MiniGame.js';
 import { C, css, FONT, EASE, RADIUS, PLAYER, LAYOUT } from '../theme.js';
-import { makeButton, makeHeader, makeSubLink, makeModal, chipFlow, openTextInput, closeTextInput, padHitArea } from '../ui.js';
+import { makeButton, makeHeader, makeSubLink, makeModal, chipFlow, openTextInput, closeTextInput, padHitArea, copyText } from '../ui.js';
 import { Sfx } from '../sfx.js';
 
 // 명단 텍스트의 그룹 제목 단어 — 이름으로 쓰면 붙여넣기 왕복 시 제목으로 오해석되므로 금지
@@ -135,6 +135,10 @@ export default class TeamScene extends MiniGame {
   restoreLast() {
     const saved = loadLast();
     if (!saved || saved.lists.length < GROUP_MIN || saved.lists.length > GROUP_MAX) return;
+    // 지난 편성의 조 수가 현재 인원 상한을 넘으면 복원하지 않는다 —
+    // 조 수를 되올려 '참여 인원 < 조 수' 배정 불가 상태로 고착시키지 않게(명단 축소 후 재진입·편집 완료 경로)
+    const maxByPeople = this.useRoster() ? this.activePeople().length : this.count;
+    if (saved.lists.length > maxByPeople) return;
     if (saved.lists.length !== this.groups) {
       this.groups = saved.lists.length;
       saveStr(LS_GROUPS, this.groups);
@@ -147,10 +151,16 @@ export default class TeamScene extends MiniGame {
     this.panels.forEach((p, i) => { p.expected = saved.lists[i].length; });
     saved.lists.forEach((list, g) => list.forEach((item) => this.makeChip(this.panels[g], item)));
     this.lastLists = saved.lists;
-    const sizes = saved.lists.map((l) => l.length);
-    const n = sizes.reduce((a, b) => a + b, 0);
-    this.hint.setColor(css(C.subtext)).setText(`지난 편성 · ${n}명 → ${this.groups}조 (${sizes.join('·')}명)`);
+    this.showLastSummary();
     this.copyBtn.setVisible(true);
+  }
+
+  // 지난 편성 요약 문구 — 복원 직후와 경고(flashHint) 복귀가 같은 문면을 쓴다
+  showLastSummary() {
+    const sizes = this.lastLists.map((l) => l.length);
+    const n = sizes.reduce((a, b) => a + b, 0);
+    this.hint.setColor(css(C.subtext)).setScale(1)
+      .setText(`지난 편성 · ${n}명 → ${this.lastLists.length}조 (${sizes.join('·')}명)`);
   }
 
   // ===== 명단 상태 =====
@@ -240,7 +250,12 @@ export default class TeamScene extends MiniGame {
 
   flashHint(msg) {
     this.hint.setColor(css(C.warning)).setText(msg).setScale(1);
-    this.time.delayedCall(1500, () => { if (this.hint.active && !this.lastLists) this.resetHint(); });
+    // 복귀: 지난 편성이 떠 있으면 그 요약으로, 아니면 기본 안내로 — 경고가 영구히 남지 않게
+    this.time.delayedCall(1500, () => {
+      if (!this.hint.active) return;
+      if (this.lastLists) this.showLastSummary();
+      else this.resetHint();
+    });
   }
 
   // 조 패널 — 색상 연결(조 색 = 라벨·테두리·칩), 조 수에 맞춰 높이 자동
@@ -433,12 +448,8 @@ export default class TeamScene extends MiniGame {
     });
     const n = this.lastLists.reduce((a, l) => a + l.length, 0);
     const text = `dori 조 배정 — ${n}명 → ${this.groups}조\n${lines.join('\n')}\nhttps://dori.io.kr/#team`;
-    try {
-      await navigator.clipboard.writeText(text);
-      this.flashCopy('✓ 복사됐어요');
-    } catch (e) {
-      this.flashCopy('복사 실패 — 다시 시도해 주세요');
-    }
+    if (await copyText(text)) this.flashCopy('✓ 복사됐어요');
+    else this.flashCopy('복사가 막힌 브라우저예요 — 화면을 캡처해 주세요');
   }
 
   flashCopy(msg) {
@@ -517,19 +528,22 @@ export default class TeamScene extends MiniGame {
       section('참여', names('in')),
       section('쉼', names('out')),
     ].join('\n\n');
-    try {
-      await navigator.clipboard.writeText(text);
+    if (await copyText(text)) {
       this.flashNote(this.roster.length
         ? '명단이 복사됐어요 — 메모장 등에 붙여넣어 보관하세요'
         : '빈 명단 양식이 복사됐어요 — 채워서 붙여넣기 하세요');
-    } catch (e) {
-      this.flashNote('복사 실패 — 다시 시도해 주세요');
+    } else {
+      this.flashNote('복사가 막힌 브라우저예요');
     }
   }
 
   // 명단 가져오기 — 여러 줄 입력이 필요해 DOM 텍스트영역 오버레이 사용(prompt는 줄바꿈이 깨짐)
   pasteRoster() {
     if (this.pasteOverlay) return;
+    // 배경 차단 딤 — 입력 중 뒤 편집 모달 조작 방지 + 바깥 탭 = 취소(공용 입력 오버레이와 같은 문법)
+    this.pasteDim = this.add.rectangle(0, 0, this.scale.width, this.scale.height, 0x000000, 0.45)
+      .setOrigin(0).setDepth(299).setInteractive();
+    this.pasteDim.on('pointerup', () => this.closePaste());
     this.pasteOverlay = this.add.dom(this.cx, 620).createFromHTML(
       '<div style="width:560px;background:#1d1f2b;border:2px solid #2a2f42;border-radius:16px;padding:20px;font-family:sans-serif;">'
       + '<div style="color:#f2f3f7;font-size:24px;font-weight:bold;text-align:center;margin-bottom:12px;">명단 붙여넣기</div>'
@@ -555,7 +569,14 @@ export default class TeamScene extends MiniGame {
   }
 
   closePaste() {
-    if (this.pasteOverlay) { this.pasteOverlay.destroy(); this.pasteOverlay = null; }
+    if (this.pasteOverlay) {
+      // iOS: 포커스된 채 destroy하면 자판·밀린 뷰포트가 남을 수 있어 먼저 blur(ui.closeTextInput과 동일)
+      const f = this.pasteOverlay.node && this.pasteOverlay.node.querySelector('#dori-paste');
+      if (f) f.blur();
+      this.pasteOverlay.destroy();
+      this.pasteOverlay = null;
+    }
+    if (this.pasteDim) { this.pasteDim.destroy(); this.pasteDim = null; }
   }
 
   // 뒤로가기 레이어: 붙여넣기 오버레이가 편집 모달 위에 뜨므로 먼저 닫는다

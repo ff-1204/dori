@@ -47,7 +47,7 @@ export default class BingoScene extends MiniGame {
     this.inputOverlay = null; // 재진입 시 stale 참조 초기화
     this.rangeModal = null;
     this.gridLayer = null;
-    this.resetArmedAt = 0; // '새 판' 두 번 탭 확정 타이머
+    this.resetArmedAt = -Infinity; // '새 판' 두 번 탭 확정 타이머 — 0이면 기동 1.6초 안 첫 탭이 확정으로 오인된다
     this.toastPrev = null;
 
     const saved = loadState();
@@ -230,7 +230,7 @@ export default class BingoScene extends MiniGame {
     if (!this.order.length) { this.toastHint('이미 새 판이에요'); return; }
     const now = this.time.now;
     if (now - this.resetArmedAt < 1600) {
-      this.resetArmedAt = 0;
+      this.resetArmedAt = -Infinity;
       this.applyReset();
     } else {
       this.resetArmedAt = now;

@@ -414,7 +414,7 @@ export default class PinballScene extends MiniGame {
       note: `칸 ${SLOT_MIN}–${SLOT_MAX}개 · 눌러서 삭제 · 이름은 보드 칸 더블탭`,
       py: 260,
       ph: 760,
-      onDone: () => { closeTextInput(this); this.editor.destroy(); this.editor = null; },
+      onDone: () => { closeTextInput(this); if (this.editor) { this.editor.destroy(); this.editor = null; } },
     });
     this.editor = modal.root;
     this.cameras.main.ignore(this.editor);
@@ -436,6 +436,8 @@ export default class PinballScene extends MiniGame {
     // 컨트롤 행: ＋ 칸 추가 · ↺ 기본값 — 개별 삭제가 생겨 '− 칸 빼기'는 제거
     chip('＋ 칸 추가', { outline: true }, () => this.addSlot());
     chip('↺ 기본값', { outline: true, color: C.warning }, () => this.resetSlots());
+    // Camera.ignore는 호출 시점의 자식만 반영 — 칩을 새로 그릴 때마다 위층(boardCam) 전용으로 재지정(이중 렌더 방지)
+    if (this.editor) this.cameras.main.ignore(this.editor);
   }
 
   // 칸 수 변경 후 보드·크기 일괄 반영
