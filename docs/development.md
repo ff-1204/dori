@@ -26,7 +26,7 @@ dori/
 ├── src/
 │   ├── main.js           # 게임 설정 + 씬 등록
 │   ├── theme.js          # 디자인 토큰(팔레트·간격·이징·씬 레이아웃 그리드 LAYOUT) — visual-polish 기준
-│   ├── ui.js             # 공통 UI(버튼 makeButton·헤더 makeHeader·보조 링크 makeSubLink·모달 makeModal·칩 chipFlow·뒤로가기·입력 오버레이 openTextInput·padHitArea)
+│   ├── ui.js             # 공통 UI(버튼 makeButton·헤더 makeHeader·보조 링크 makeSubLink·모달 makeModal·칩 chipFlow·뒤로가기·입력 오버레이 openTextInput·padHitArea·클립보드 copyText[인앱 브라우저 폴백])
 │   ├── MiniGame.js       # 미니게임 공통 베이스(FSM·시드 RNG·입력 잠금·시간 분위기·연출 헬퍼 burst/colorFlash/shake)
 │   ├── timeOfDay.js      # 시간대 분위기(서카디안) — affective-design 기준
 │   ├── nav.js            # 뒤로가기 통합(popstate ↔ 씬 전환, 열린 레이어부터 닫기 closeTopLayer) + 해시 딥링크(#roulette 등) + 허브 모달 히스토리 가드(pushLayerState/popLayerState)
