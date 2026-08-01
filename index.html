@@ -51,15 +51,14 @@
   }
   </script>
 
-  <!-- AdSense 소유권 확인·심사용 로더 — 승인 전에는 광고가 표시되지 않는다.
-       게재 배선(adBreak·빈도 제한)은 승인 후 7단계에서 활성화. (docs/commercial-plan.md) -->
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2755020807980350"
-    crossorigin="anonymous"></script>
-
   <!-- ===== 광고 게재 준비: Google H5 Games Ads (전면·보상형) =====
-       로더는 위에서 이미 로드 중. 승인·CMP 완료 후 아래 주석을 해제하고
-       위 로더 태그에 data-ad-frequency-hint="30s"를 추가한 뒤
-       src/ads.js의 AdConfig.enabled=true, provider='google-h5'로 전환. (docs/commercial.md)
+       심사 기간 동안 AdSense 로더는 이 화면(전면 캔버스 — 크롤러에겐 콘텐츠 없음)에 두지 않고
+       안내 페이지(about/guide/guide-*/faq/privacy)에만 배치한다. 소유권은 ads.txt로 유지.
+       ("게시자 콘텐츠가 없는 화면에 광고" 판정 대응 — docs/commercial-plan.md 6-1)
+       승인·CMP 완료 후 아래 주석을 해제하고 로더 태그(data-ad-frequency-hint="30s" 포함)를
+       이 위치에 추가한 뒤 src/ads.js의 AdConfig.enabled=true, provider='google-h5'로 전환. (docs/commercial.md)
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2755020807980350"
+    data-ad-frequency-hint="30s" crossorigin="anonymous"></script>
   <script>
     window.adsbygoogle = window.adsbygoogle || [];
     window.adBreak = window.adConfig = function (o) { adsbygoogle.push(o); };

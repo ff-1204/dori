@@ -188,7 +188,7 @@ export default class HubScene extends Phaser.Scene {
     padHitArea(install);
 
     // 정적 페이지 링크(하단 바 위 한 줄) — 소개·사용 안내·개인정보처리방침(신뢰 신호, AdSense 요건)
-    const pages = [['소개', 'about.html'], ['사용 안내', 'guide.html'], ['개인정보처리방침', 'privacy.html']];
+    const pages = [['소개', 'about.html'], ['사용 안내', 'guide.html'], ['FAQ', 'faq.html'], ['개인정보처리방침', 'privacy.html']];
     const parts = [];
     pages.forEach(([label, href], i) => {
       if (i) {
