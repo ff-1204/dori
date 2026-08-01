@@ -87,7 +87,8 @@ export default class DancheongScene extends MiniGame {
     }).setOrigin(0.5);
 
     // 규칙 공개(정직성): 동일 답 안내
-    this.noteText = this.add.text(this.cx, 990, '같은 질문은 어디서 물어도 4시간 동안 같은 답이에요', {
+    // '4시간 동안'은 부정확(창 경계 직전엔 곧 바뀜) — 갱신 주기로 정직하게 표현
+    this.noteText = this.add.text(this.cx, 990, '같은 질문은 어디서 물어도 같은 답 — 4시간마다 새로워져요', {
       fontFamily: FONT, fontSize: '24px', color: css(C.subtext),
     }).setOrigin(0.5);
 
