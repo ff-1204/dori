@@ -3,8 +3,8 @@
 // 원칙: 플레이 중 삽입 금지 · 경계(결과 후/허브 복귀)에서만 · 보상형은 자발적만 · 다크패턴 금지.
 //
 // [활성화 절차]
-//  1) AdSense 승인 + 동의(CMP) 구비 — 로더는 index.html에서 심사용으로 이미 로드 중
-//  2) index.html의 adBreak 브리지 주석 해제 + 로더에 data-ad-frequency-hint 추가
+//  1) AdSense 승인 + 동의(CMP) 구비 — 심사 기간 로더는 안내 페이지에만 배치(commercial-plan 6-1)
+//  2) index.html의 로더+adBreak 브리지 주석 해제(data-ad-frequency-hint 포함)
 //  3) 아래 AdConfig.enabled = true, provider = 'google-h5' 전환
 
 export const AdConfig = {
