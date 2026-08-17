@@ -18,6 +18,7 @@
   <meta property="og:image" content="https://dori.io.kr/assets/og.png">
   <meta property="og:locale" content="ko_KR">
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2755020807980350" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="site.css">
   <style>
     :root { color-scheme: dark; }
     * { box-sizing: border-box; }
@@ -27,15 +28,6 @@
       line-height: 1.75; font-size: 17px;
     }
     .wrap { max-width: 720px; margin: 0 auto; padding: 28px 20px 60px; }
-    header { text-align: center; padding: 18px 0 6px; }
-    header .logo {
-      font-family: 'Segoe UI', sans-serif; font-size: 44px; font-weight: bold;
-      color: #f2f3f7; text-decoration: none; letter-spacing: 2px;
-    }
-    header .logo:hover { color: #6cc7ff; }
-    nav { text-align: center; margin: 10px 0 6px; color: #4a4f66; font-size: 15px; }
-    nav a { color: #8b90a8; text-decoration: none; display: inline-block; padding: 12px 8px; margin: 0 2px; } /* 터치 타깃 ≈46px */
-    nav a:hover, nav a.here { color: #6cc7ff; }
     h1 { font-size: 30px; margin: 36px 0 8px; }
     h2 { font-size: 24px; margin: 36px 0 4px; }
     h3 { font-size: 20px; margin: 22px 0 2px; }
@@ -54,11 +46,18 @@
   </style>
 </head>
 <body>
-<div class="wrap">
-  <header><a class="logo" href="./">dori</a></header>
-  <nav>
-    <a href="./">홈</a>·<a href="about.html">소개</a>·<a class="here" href="guide.html">사용 안내</a>·<a href="read.html">읽을거리</a>·<a href="faq.html">FAQ</a>·<a href="privacy.html">개인정보처리방침</a>
+<header class="site-top">
+  <a class="brand" href="./">dori</a>
+  <span class="desc">결정 룰렛 · 사다리타기 · 복불복 뽑기 도구</span>
+  <nav aria-label="사이트 안내">
+    <a href="about.html">소개</a>
+    <a class="here" href="guide.html">사용 안내</a>
+    <a href="read.html">읽을거리</a>
+    <a href="faq.html">FAQ</a>
+    <a href="privacy.html">개인정보</a>
   </nav>
+</header>
+<div class="wrap">
 
   <h1>사용 안내</h1>
   <p>dori의 도리 12가지입니다. 모든 도리는 <strong>화면에 보이는 그대로 뽑는 정직한 랜덤</strong>이
@@ -169,11 +168,7 @@
     <li><a href="read-decision-fatigue.html">점심 메뉴를 못 고르는 이유</a> — 선택 과부하와 결정 피로</li>
   </ul>
   <p>공통 궁금증은 <a href="faq.html">FAQ</a>에 정리되어 있습니다.</p>
-
-  <footer>
-    <p><a href="./">홈</a> · <a href="about.html">소개</a> · <a href="read.html">읽을거리</a> · <a href="faq.html">FAQ</a> · <a href="privacy.html">개인정보처리방침</a></p>
-    <p>© 2026 ff-1204 · All Rights Reserved · 모든 도구는 오락 목적입니다</p>
-  </footer>
 </div>
+<div class="site-bottom">© 2026 ff-1204 · <span class="long">All Rights Reserved · </span>모든 도구는 오락 목적입니다</div>
 </body>
 </html>

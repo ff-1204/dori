@@ -1,22 +1,48 @@
-/* dori 정적 페이지 공통 스타일 — 도구별 안내·FAQ 페이지가 공유한다.
-   (about/guide/privacy는 초기 인라인 스타일 유지 — 시각 동일) */
+/* dori 정적 페이지 공통 스타일 — 모든 안내·읽을거리 페이지가 공유한다.
+   (about/guide/privacy는 인라인 스타일을 유지하되 이 파일을 함께 불러 고정 바를 공유한다) */
 :root { color-scheme: dark; }
 * { box-sizing: border-box; }
 body {
   margin: 0; background: #12131c; color: #f2f3f7;
   font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
   line-height: 1.75; font-size: 17px;
+  padding: 48px 0; /* 위아래 고정 바 높이만큼 비워 둔다 */
 }
-.wrap { max-width: 720px; margin: 0 auto; padding: 28px 20px 60px; }
-header { text-align: center; padding: 18px 0 6px; }
-header .logo {
-  font-family: 'Segoe UI', sans-serif; font-size: 44px; font-weight: bold;
-  color: #f2f3f7; text-decoration: none; letter-spacing: 2px;
+
+/* ===== 전 페이지 공통 고정 바 (index.html도 같은 모양) ===== */
+.site-top {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+  display: flex; align-items: center; gap: 12px; height: 48px; padding: 0 14px;
+  background: #0f1018; border-bottom: 1px solid #23263a;
+  white-space: nowrap; overflow-x: auto; scrollbar-width: none;
 }
-header .logo:hover { color: #6cc7ff; }
-nav { text-align: center; margin: 10px 0 6px; color: #4a4f66; font-size: 15px; }
-nav a { color: #8b90a8; text-decoration: none; display: inline-block; padding: 12px 8px; margin: 0 2px; } /* 터치 타깃 ≈46px */
-nav a:hover, nav a.here { color: #6cc7ff; }
+.site-top::-webkit-scrollbar { display: none; }
+.site-top .brand {
+  flex: none; color: #f2f3f7; text-decoration: none;
+  font-family: 'Segoe UI', sans-serif; font-size: 17px; font-weight: bold; letter-spacing: 1px;
+}
+.site-top .brand:hover { color: #6cc7ff; }
+.site-top .desc { flex: none; color: #5a6078; font-size: 12px; }
+.site-top nav { display: flex; flex: none; align-self: stretch; margin-left: auto; gap: 10px; }
+.site-top nav a {
+  display: flex; align-items: center; align-self: stretch; /* 터치 타깃 = 바 높이 */
+  color: #8b90a8; font-size: 13px; text-decoration: none; padding: 0 3px;
+}
+.site-top nav a:hover, .site-top nav a.here { color: #6cc7ff; }
+.site-bottom {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 50;
+  display: flex; align-items: center; justify-content: center; height: 48px; padding: 0 14px;
+  background: #0f1018; border-top: 1px solid #23263a;
+  color: #6b7086; font-size: 12px; text-align: center;
+}
+@media (max-width: 620px) {
+  .site-top { gap: 8px; padding: 0 10px; }
+  .site-top .desc { display: none; }
+  .site-top nav { margin-left: 8px; gap: 8px; }
+  .site-bottom .long { display: none; }
+}
+
+.wrap { max-width: 720px; margin: 0 auto; padding: 28px 20px 40px; }
 h1 { font-size: 30px; margin: 36px 0 8px; }
 h2 { font-size: 24px; margin: 40px 0 6px; }
 h3 { font-size: 17px; margin: 18px 0 4px; color: #6cc7ff; }

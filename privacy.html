@@ -19,6 +19,7 @@
   <meta name="theme-color" content="#12131c">
   <!-- AdSense 로더 — 게시자 콘텐츠가 있는 페이지에만 배치한다(정책 요건). 승인 전이라 광고는 표시되지 않는다 -->
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2755020807980350" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="site.css">
   <style>
     :root { color-scheme: dark; }
     * { box-sizing: border-box; }
@@ -28,15 +29,6 @@
       line-height: 1.75; font-size: 17px;
     }
     .wrap { max-width: 720px; margin: 0 auto; padding: 28px 20px 60px; }
-    header { text-align: center; padding: 18px 0 6px; }
-    header .logo {
-      font-family: 'Segoe UI', sans-serif; font-size: 44px; font-weight: bold;
-      color: #f2f3f7; text-decoration: none; letter-spacing: 2px;
-    }
-    header .logo:hover { color: #6cc7ff; }
-    nav { text-align: center; margin: 10px 0 6px; color: #4a4f66; font-size: 15px; }
-    nav a { color: #8b90a8; text-decoration: none; display: inline-block; padding: 12px 8px; margin: 0 2px; } /* 터치 타깃 ≈46px */
-    nav a:hover, nav a.here { color: #6cc7ff; }
     h1 { font-size: 30px; margin: 36px 0 4px; }
     h2 { font-size: 21px; margin: 34px 0 8px; color: #6cc7ff; }
     p, li { color: #c9cddd; }
@@ -53,11 +45,18 @@
   </style>
 </head>
 <body>
-<div class="wrap">
-  <header><a class="logo" href="./">dori</a></header>
-  <nav>
-    <a href="./">홈</a>·<a href="about.html">소개</a>·<a href="guide.html">사용 안내</a>·<a href="read.html">읽을거리</a>·<a href="faq.html">FAQ</a>·<a class="here" href="privacy.html">개인정보처리방침</a>
+<header class="site-top">
+  <a class="brand" href="./">dori</a>
+  <span class="desc">결정 룰렛 · 사다리타기 · 복불복 뽑기 도구</span>
+  <nav aria-label="사이트 안내">
+    <a href="about.html">소개</a>
+    <a href="guide.html">사용 안내</a>
+    <a href="read.html">읽을거리</a>
+    <a href="faq.html">FAQ</a>
+    <a class="here" href="privacy.html">개인정보</a>
   </nav>
+</header>
+<div class="wrap">
 
   <h1>개인정보처리방침</h1>
   <p class="date">시행일: 2026-08-17 (최초 시행 2026-07-18)</p>
@@ -149,11 +148,7 @@
     will be updated accordingly. Privacy contact:
     <a href="mailto:dorimhan@kakao.com">dorimhan@kakao.com</a>.</p>
   </div>
-
-  <footer>
-    <p><a href="./">홈</a> · <a href="about.html">소개</a> · <a href="guide.html">사용 안내</a> · <a href="read.html">읽을거리</a> · <a href="faq.html">FAQ</a></p>
-    <p>© 2026 ff-1204 · All Rights Reserved · 모든 도구는 오락 목적입니다</p>
-  </footer>
 </div>
+<div class="site-bottom">© 2026 ff-1204 · <span class="long">All Rights Reserved · </span>모든 도구는 오락 목적입니다</div>
 </body>
 </html>

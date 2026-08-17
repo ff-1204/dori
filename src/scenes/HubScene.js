@@ -60,8 +60,10 @@ export default class HubScene extends Phaser.Scene {
     const phase = applyTimeAtmosphere(this); // 시간대 분위기(생리적 패턴)
 
     // 타이틀 "dori" — 그라디언트·그림자·강조선·은은한 호흡(미학-사용성 효과)
+    // 크기는 104 → 70px(1/3 축소, 2026-08-17) — 상단 사이트 헤더가 생겨 브랜드가 두 번 보이므로
+    // 캔버스 타이틀의 무게를 덜었다. 강조선도 같은 비율로 줄인다.
     const title = this.add.text(width / 2, 104, 'dori', {
-      fontFamily: FONT, fontSize: '104px', fontStyle: 'bold', color: css(C.text),
+      fontFamily: FONT, fontSize: '70px', fontStyle: 'bold', color: css(C.text),
     }).setOrigin(0.5);
     title.setLetterSpacing(6);
     title.setShadow(0, 7, '#000000', 16, false, true); // 깊이감
@@ -72,7 +74,7 @@ export default class HubScene extends Phaser.Scene {
     title.setFill(grad);
 
     // 강조선(장식) — 타이틀 크기에 맞춰 비례 축소
-    this.add.rectangle(width / 2, 170, 84, 5, C.primary).setOrigin(0.5).setAlpha(0.9);
+    this.add.rectangle(width / 2, 152, 58, 4, C.primary).setOrigin(0.5).setAlpha(0.9);
 
     // 등장(팝) 후 은은한 호흡 — 살짝 움직이는 화면이 비싸 보인다
     title.setScale(0.9).setAlpha(0);
