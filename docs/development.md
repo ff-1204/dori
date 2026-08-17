@@ -17,7 +17,12 @@ dori/
 ├── index.html            # Phaser CDN 로드 + SEO/OG 메타 + 캔버스 컨테이너
 ├── README.md             # 프로젝트 소개(핵심 요약)
 ├── CHANGELOG.md          # 릴리즈 노트
-├── robots.txt / sitemap.xml   # 검색 엔진용
+├── .nojekyll             # GitHub Pages의 Jekyll 처리 끔 — docs/*.md가 HTML 페이지로 공개되는 것 방지
+├── robots.txt / sitemap.xml   # 검색 엔진용(24 URL, /docs/는 Disallow)
+├── about.html / faq.html / privacy.html   # 소개·FAQ·개인정보처리방침
+├── guide.html + guide-<도구>.html × 12     # 도구별 사용 안내(목차 + 개별 페이지)
+├── read.html + read-<주제>.html × 6        # 읽을거리 — 확률·심리 원고(편당 약 4,000자)
+├── site.css              # 정적 페이지 공통 스타일(guide-*·faq·read-* 공유)
 ├── manifest.json         # PWA 매니페스트(바로가기 설치)
 ├── sw.js                 # 최소 서비스워커(설치 조건용, 캐시 없음)
 ├── assets/

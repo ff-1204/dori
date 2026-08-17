@@ -23,7 +23,7 @@
 <div class="wrap">
   <header><a class="logo" href="./">dori</a></header>
   <nav>
-    <a href="./">홈</a>·<a href="about.html">소개</a>·<a class="here" href="guide.html">사용 안내</a>·<a href="faq.html">FAQ</a>·<a href="privacy.html">개인정보처리방침</a>
+    <a href="./">홈</a>·<a href="about.html">소개</a>·<a class="here" href="guide.html">사용 안내</a>·<a href="read.html">읽을거리</a>·<a href="faq.html">FAQ</a>·<a href="privacy.html">개인정보처리방침</a>
   </nav>
 
   <h1>사다리타기 <span class="cat">결정 돕기</span></h1>
@@ -32,7 +32,7 @@
   공개한 채</strong> 타는 것이 특징입니다. 숨겨진 다리가 없으니 "미리 다 정해져 있던 것
   아니야?"라는 의심이 끼어들 틈이 없습니다.</p>
 
-  <h2>이렇게 해요</h2>
+  <h2>판을 만들고 타는 순서</h2>
   <ol>
     <li><strong>참가자 편집</strong>에서 인원(2–6명)을 맞춥니다. 시작 전에는 <strong>이름과 결과 칸을 더블탭</strong>해서 바로 고칠 수 있습니다(이름은 4자까지).</li>
     <li>버튼 하나로 <strong>당첨 1개 + 나머지 벌칙</strong> 구성을 만들 수 있습니다. 당첨이 어느 칸에 갈지는 무작위입니다.</li>
@@ -49,7 +49,46 @@
   다른 출발점은 반드시 서로 다른 도착점에 닿으므로, 두 사람이 같은 결과에 도착하는 일도
   없습니다.</p>
 
-  <h2>이럴 때 좋아요</h2>
+  <h2>인원이 늘면 다리도 늘어납니다</h2>
+  <p>사다리에서 가로 다리가 하는 일은 딱 하나입니다 — <strong>인접한 두 줄을 맞바꾸기.</strong>
+  그래서 다리가 적으면 출발한 줄에서 멀리 가지 못하고, 도착 지점이 <strong>출발 줄 근처로
+  쏠립니다.</strong> 종이에 사다리를 그릴 때 다리를 인색하게 그리면 실제로 이런 일이 생깁니다.</p>
+  <p>dori는 이 편향을 줄이려고 다리 행 수를 고정하지 않고 <strong>참가자 수에 비례해 늘립니다.</strong></p>
+  <table>
+    <tr><th>참가자</th><th>다리 행 수</th></tr>
+    <tr><td>2명</td><td>8행</td></tr>
+    <tr><td>3명</td><td>10행</td></tr>
+    <tr><td>4명</td><td>12행</td></tr>
+    <tr><td>5명</td><td>14행</td></tr>
+    <tr><td>6명</td><td>16행</td></tr>
+  </table>
+  <p>사람이 한 명 늘 때마다 두 행씩 더합니다. 여기에 더해 <strong>인접한 두 줄 사이에는
+  다리가 최소 하나 이상 반드시 생기도록</strong> 보장합니다. 어느 줄 경계에 다리가 하나도 없으면
+  그 경계를 사이에 둔 양쪽이 서로 섞이지 않아, 사다리가 두 덩어리로 쪼개지기 때문입니다.</p>
+  <p>정직하게 덧붙이면 이렇게 해도 <strong>수학적으로 완벽하게 균등하지는 않습니다.</strong>
+  편향을 실용적인 수준까지 줄이는 것이지 0으로 만드는 것은 아닙니다. 완전한 균등이 필요하다면
+  처음부터 순열을 무작위로 뽑는 <a href="guide-team.html">조 배정</a> 방식이 더 정확합니다.
+  그럼에도 사다리를 쓰는 이유는 <strong>과정이 눈에 보이기 때문</strong>입니다.
+  자세한 계산은 <a href="read-ladder-fairness.html">읽을거리</a>에 정리해 두었습니다.</p>
+
+  <h2>종이 사다리와 다른 점</h2>
+  <p>손으로 그리던 사다리와 비교하면 세 가지가 달라집니다.</p>
+  <ul>
+    <li><strong>그리는 사람이 없습니다.</strong> 종이 사다리의 가장 큰 허점은 다리를 그리는 사람이
+    참가자 중 한 명이라는 것입니다. 그리면서 자기 줄의 경로를 계산할 수 있으니까요.
+    dori에서는 시작 버튼을 누르는 순간 다리가 한꺼번에 생성됩니다.</li>
+    <li><strong>다리를 가리지 않습니다.</strong> 종이 사다리는 보통 접거나 가리고 줄을 고르게 하는데,
+    dori는 반대로 전부 공개한 상태에서 탑니다. 여러 줄이 얽히면 눈으로 결과를 미리 좇기 어렵고,
+    공개된 판 위에서 경로가 그려지는 쪽이 훨씬 공정하게 느껴지기 때문입니다.</li>
+    <li><strong>다시 섞기가 정직합니다.</strong> 판이 마음에 들지 않으면 다시 섞기로 다리를 통째로
+    새로 만들 수 있습니다 — 이것도 전부 공개된 채로 일어납니다. 다만 결과를 보고 나서 다시 섞는 것은
+    추첨이 아니라 선택입니다. 시작 전에 "다시 섞기는 여기까지"를 정해 두는 편이 깔끔합니다.</li>
+  </ul>
+  <p>바뀌지 않는 것도 있습니다. 사다리를 아래에서 위로 거꾸로 따라가면 정확히 원래 자리로
+  돌아옵니다 — 맞바꾸기는 되돌릴 수 있는 연산이니까요. 결과에서 출발점을 역추적할 수 있다는
+  뜻이고, 이것이 사다리를 <strong>검산 가능한 추첨</strong>으로 만듭니다.</p>
+
+  <h2>이런 자리에서</h2>
   <ul>
     <li>오늘 커피 사는 사람 정하기</li>
     <li>청소·설거지 당번 정하기</li>
@@ -57,7 +96,7 @@
     <li>소소한 상품 나누기(당첨 1 + 꽝 구성)</li>
   </ul>
 
-  <h2>자주 묻는 질문</h2>
+  <h2>궁금한 것들</h2>
   <h3>다리를 숨기고 긴장감 있게 할 수는 없나요?</h3>
   <p>dori는 공개 방식을 택했습니다. 다리가 보여도 여러 줄이 얽히면 눈으로 결과를 미리
   좇기는 어렵고, 공개된 판 위에서 경로가 그려지는 쪽이 훨씬 공정하게 느껴지기 때문입니다.
@@ -72,10 +111,11 @@
     <a href="guide-team.html">조 배정</a> ·
     <a href="guide-pinball.html">랜덤 핀볼</a> ·
     <a href="guide-russian.html">러시안 룰렛</a></p>
+  <p class="rel" style="margin-top:10px">더 읽어보기 — <a href="read-ladder-fairness.html">사다리타기는 정말 공평할까</a></p>
   <p style="text-align:center"><a class="cta" href="./#ladder">사다리타기 바로 하기</a></p>
 
   <footer>
-    <p><a href="./">홈</a> · <a href="about.html">소개</a> · <a href="guide.html">사용 안내</a> · <a href="faq.html">FAQ</a> · <a href="privacy.html">개인정보처리방침</a></p>
+    <p><a href="./">홈</a> · <a href="about.html">소개</a> · <a href="guide.html">사용 안내</a> · <a href="read.html">읽을거리</a> · <a href="faq.html">FAQ</a> · <a href="privacy.html">개인정보처리방침</a></p>
     <p>© 2026 ff-1204 · All Rights Reserved · 모든 도구는 오락 목적입니다</p>
   </footer>
 </div>

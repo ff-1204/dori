@@ -29,6 +29,17 @@
 
 > 🍟 어딘가에 이스터에그가 숨어 있습니다.
 
+## 읽을거리
+
+도구를 만들며 정리한 확률·심리 이야기 — [dori.io.kr/read.html](https://dori.io.kr/read.html)
+
+[사다리타기는 정말 공평할까](https://dori.io.kr/read-ladder-fairness.html) ·
+[러시안 룰렛의 확률은 왜 올라갈까](https://dori.io.kr/read-conditional-probability.html) ·
+[복원 추출과 비복원 추출](https://dori.io.kr/read-without-replacement.html) ·
+[빙고 규칙 총정리 — 75볼과 90볼](https://dori.io.kr/read-bingo-rules.html) ·
+[무작위는 왜 뭉쳐 보일까](https://dori.io.kr/read-randomness-illusion.html) ·
+[점심 메뉴를 못 고르는 이유](https://dori.io.kr/read-decision-fatigue.html)
+
 ## 설계 원칙
 
 - **정직함이 최우선** — 화면에 보이는 것과 결과가 항상 일치(정직한 매핑·확률 공개), 다크 패턴 없음

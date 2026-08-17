@@ -2,6 +2,14 @@
 User-agent: *
 Allow: /
 
+# 개발 문서는 방문자용 콘텐츠가 아니다 — 색인 대상에서 제외한다.
+# (저장소에 함께 배포될 뿐 사이트 콘텐츠가 아니며, 사이트 어디에서도 링크하지 않는다.
+#  루트의 .nojekyll로 Jekyll의 .md → .html 변환도 꺼 두었다.)
+Disallow: /docs/
+Disallow: /CLAUDE.md
+Disallow: /CHANGELOG.md
+Disallow: /README.md
+
 # ===== AI 학습 크롤러 차단 (검색 노출에는 영향 없음) =====
 # OpenAI 학습
 User-agent: GPTBot

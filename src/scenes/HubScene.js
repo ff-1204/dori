@@ -187,8 +187,11 @@ export default class HubScene extends Phaser.Scene {
     install.on('pointerup', () => this.installShortcut());
     padHitArea(install);
 
-    // 정적 페이지 링크(하단 바 위 한 줄) — 소개·사용 안내·개인정보처리방침(신뢰 신호, AdSense 요건)
-    const pages = [['소개', 'about.html'], ['사용 안내', 'guide.html'], ['FAQ', 'faq.html'], ['개인정보처리방침', 'privacy.html']];
+    // 정적 페이지 링크(하단 바 위 한 줄) — 소개·사용 안내·읽을거리·FAQ·개인정보처리방침(신뢰 신호, AdSense 요건)
+    const pages = [
+      ['소개', 'about.html'], ['사용 안내', 'guide.html'], ['읽을거리', 'read.html'],
+      ['FAQ', 'faq.html'], ['개인정보처리방침', 'privacy.html'],
+    ];
     const parts = [];
     pages.forEach(([label, href], i) => {
       if (i) {

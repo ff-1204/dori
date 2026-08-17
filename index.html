@@ -52,9 +52,9 @@
   </script>
 
   <!-- ===== 광고 게재 준비: Google H5 Games Ads (전면·보상형) =====
-       심사 기간 동안 AdSense 로더는 이 화면(전면 캔버스 — 크롤러에겐 콘텐츠 없음)에 두지 않고
-       안내 페이지(about/guide/guide-*/faq/privacy)에만 배치한다. 소유권은 ads.txt로 유지.
-       ("게시자 콘텐츠가 없는 화면에 광고" 판정 대응 — docs/commercial-plan.md 6-1)
+       이 화면은 첫 화면이 전면 캔버스라 AdSense 로더를 두지 않는다. 광고는 게시자 콘텐츠가 있는
+       페이지(about/guide/guide-*/read*/faq/privacy)에만 붙인다는 원칙에 따른 것이며,
+       사이트 소유권은 ads.txt로 유지된다. 캔버스 아래 #site-info는 별개의 읽을거리 안내 콘텐츠다.
        승인·CMP 완료 후 아래 주석을 해제하고 로더 태그(data-ad-frequency-hint="30s" 포함)를
        이 위치에 추가한 뒤 src/ads.js의 AdConfig.enabled=true, provider='google-h5'로 전환. (docs/commercial.md)
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2755020807980350"
@@ -79,10 +79,45 @@
        캔버스(#12131c)보다 살짝 어둡게 해 잼잼 영역이 무대처럼 떠 보인다 */
     body {
       background: radial-gradient(120% 90% at 50% 40%, #171827 0%, #0d0e16 70%, #0a0b11 100%);
+      /* 플렉스 컬럼 — 블록 사이 공백 텍스트 노드가 줄 박스(27px)를 만들어 헤더·캔버스·띠 사이에
+         빈틈이 생기고 안내 띠가 화면 밖으로 밀리던 문제를 없앤다(플렉스는 공백 노드를 무시). */
+      display: flex; flex-direction: column; min-height: 100dvh;
     }
-    /* 100vh는 모바일에서 하단 툴바 뒤 영역까지 포함해 캔버스가 잘림 — dvh로 실제 보이는 높이 사용 */
+    .site-top, #game, .scroll-cue { flex: none; }
+    /* 상단 사이트 헤더 — 첫 화면에 항상 보이는 사이트 이름·설명·안내 링크.
+       전면 캔버스만 보이던 첫 인상을 "사이트 안의 도구"로 바꾸고, 크롤러·방문자 모두에게
+       사이트 구조를 즉시 드러낸다. 좁은 화면에서는 가로 스크롤로 링크를 모두 유지한다. */
+    .site-top {
+      /* 테두리 포함 정확히 48px — #game의 calc(100dvh - 96px)와 합이 딱 맞아야 띠가 화면 안에 남는다 */
+      box-sizing: border-box;
+      display: flex; align-items: center; gap: 12px; height: 48px; padding: 0 14px;
+      background: #0f1018; border-bottom: 1px solid #23263a;
+      font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+      white-space: nowrap; overflow-x: auto; scrollbar-width: none;
+    }
+    .site-top::-webkit-scrollbar { display: none; }
+    .site-top .brand {
+      flex: none; color: #f2f3f7; font-family: 'Segoe UI', sans-serif;
+      font-size: 17px; font-weight: bold; letter-spacing: 1px;
+    }
+    .site-top .desc { flex: none; color: #5a6078; font-size: 12px; }
+    /* align-self: stretch 로 nav가 헤더 높이를 채워야 그 안의 링크도 48px 터치 타깃이 된다 */
+    .site-top nav { display: flex; flex: none; align-self: stretch; margin-left: auto; gap: 10px; }
+    .site-top nav a {
+      display: flex; align-items: center; align-self: stretch; /* 터치 타깃 = 헤더 높이 48px */
+      color: #8b90a8; font-size: 13px; text-decoration: none; padding: 0 3px;
+    }
+    .site-top nav a:hover { color: #6cc7ff; }
+    @media (max-width: 620px) {
+      .site-top { gap: 8px; padding: 0 10px; }
+      .site-top .desc { display: none; }
+      .site-top nav { margin-left: 8px; gap: 8px; }
+    }
+    /* 100vh는 모바일에서 하단 툴바 뒤 영역까지 포함해 캔버스가 잘림 — dvh로 실제 보이는 높이 사용.
+       위 헤더 48px + 아래 안내 띠 48px = 96px를 덜어낸다. 아래 띠는 "더 있다"는 시그니파이어이자,
+       캔버스는 Phaser가 터치를 잡아 쓸어올려도 스크롤되지 않으므로 소개 섹션에 닿는 유일한 경로다. */
     #game {
-      width: 100vw; height: 100vh; height: 100dvh;
+      width: 100vw; height: calc(100vh - 96px); height: calc(100dvh - 96px);
       /* 캔버스 롱프레스 돋보기(iOS)·드래그 선택(PC) 방지 — 입력 필드는 아래에서 예외 */
       -webkit-user-select: none; user-select: none;
       -webkit-touch-callout: none;
@@ -96,54 +131,153 @@
       -webkit-touch-callout: default;
     }
     canvas { display: block; }
+    /* 캔버스 아래 안내 띠 — 첫 화면에 항상 보이는 "아래에 내용이 있다"는 어포던스이자,
+       터치를 Phaser가 가져가는 모바일에서 소개 섹션에 도달하는 통로. */
+    .scroll-cue {
+      box-sizing: border-box; /* 테두리 포함 48px — 위 헤더와 합쳐 정확히 96px */
+      display: block; height: 48px; line-height: 46px; text-align: center;
+      background: #0f1018; border-top: 1px solid #23263a;
+      color: #8b90a8; font-size: 14px; text-decoration: none;
+      font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+    }
+    .scroll-cue:hover { color: #6cc7ff; }
     /* 사이트 소개 섹션 — 항상 DOM에 렌더되는 게시자 콘텐츠(첫 화면 아래).
        크롤러가 홈에서 도구별 안내로 이어지는 실제 링크를 읽는다. */
     #site-info {
-      max-width: 720px; margin: 0 auto; padding: 44px 20px 60px;
+      max-width: 720px; margin: 0 auto; padding: 40px 20px 60px;
       color: #c9cddd; font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
-      font-size: 15px; line-height: 1.85;
+      font-size: 16px; line-height: 1.85;
     }
-    #site-info h1 { font-size: 21px; color: #f2f3f7; margin: 0 0 10px; }
-    #site-info h2 { font-size: 16px; color: #8b90a8; margin: 26px 0 4px; }
-    #site-info a { color: #6cc7ff; text-decoration: none; display: inline-block; padding: 5px 12px 5px 0; }
-    #site-info a:hover { text-decoration: underline; }
-    #site-info .pages { margin-top: 26px; padding-top: 14px; border-top: 1px solid #2a2f42; }
-    #site-info .pages a { color: #8b90a8; }
-    #site-info .note { color: #8b90a8; font-size: 13px; margin-top: 14px; }
+    #site-info h1 { font-size: 24px; color: #f2f3f7; margin: 0 0 12px; }
+    #site-info h2 { font-size: 19px; color: #f2f3f7; margin: 34px 0 8px; }
+    #site-info h3 { font-size: 16px; color: #6cc7ff; margin: 20px 0 2px; }
+    #site-info p { margin: 8px 0; }
+    #site-info a { color: #6cc7ff; }
+    #site-info ul { padding-left: 20px; margin: 8px 0; }
+    #site-info li { margin: 5px 0; }
+    #site-info .tool { margin: 16px 0 0; }
+    #site-info .tool p { margin: 2px 0 0; color: #c9cddd; }
+    #site-info .pages {
+      margin-top: 32px; padding-top: 16px; border-top: 1px solid #2a2f42; color: #8b90a8;
+    }
+    #site-info .pages a { color: #8b90a8; display: inline-block; padding: 6px 4px; }
+    #site-info .note { color: #8b90a8; font-size: 14px; margin-top: 14px; }
   </style>
 </head>
 <body>
+  <!-- 사이트 헤더 — 캔버스 위에 항상 보인다(첫 화면에서 사이트 구조를 드러내는 역할) -->
+  <header class="site-top">
+    <span class="brand">dori</span>
+    <span class="desc">결정 룰렛 · 사다리타기 · 복불복 뽑기 도구</span>
+    <nav aria-label="사이트 안내">
+      <a href="about.html">소개</a>
+      <a href="guide.html">사용 안내</a>
+      <a href="read.html">읽을거리</a>
+      <a href="faq.html">FAQ</a>
+      <!-- 좁은 폰에서도 한 줄에 들어가도록 이 헤더에서만 짧은 라벨 — 전체 명칭은 아래 소개 섹션과 각 페이지에 있다 -->
+      <a href="privacy.html">개인정보</a>
+    </nav>
+  </header>
   <div id="game"></div>
+  <a class="scroll-cue" href="#site-info">아래로 — dori 소개 · 도구 안내 · 읽을거리</a>
   <!-- 사이트 소개 — 항상 렌더되는 DOM 콘텐츠(캔버스 아래). 크롤러와 데스크톱 스크롤 사용자용 -->
   <section id="site-info">
     <h1>dori — 결정 룰렛·사다리타기·복불복 뽑기 도구</h1>
-    <p>뭐 먹지? 누가 하지? 결정이 필요한 순간, 도리 12종이 대신 골라 드립니다.
-    화면에 보이는 그대로 뽑는 <strong>정직한 랜덤</strong>이 원칙 — 결과를 조작하는 코드도,
-    숨은 가중치도 없습니다. 회원가입 없이 쓰고, 입력한 내용은 기기 안에만 저장됩니다.</p>
+    <p>뭐 먹지? 누가 하지? 하루에도 몇 번씩 마주치는 작은 결정에서, 고민하는 시간이 결정 자체보다
+    길어질 때가 있습니다. dori는 그 순간을 대신 끝내 주는 <strong>도리 12종</strong> 모음입니다.
+    룰렛을 돌리고, 사다리를 타고, 핀볼을 떨어뜨리면 남는 것은 결과를 함께 보는 즐거움뿐입니다.</p>
+    <p>회원가입도, 앱 설치도 필요 없습니다. 입력한 메뉴나 명단은 서버로 전송되지 않고
+    이용 중인 브라우저 안에만 남습니다.</p>
     <!-- 이모지 없이 텍스트만 — 심사·미리보기 렌더러는 이모지 폰트가 없어 '??'로 깨진다 -->
+
+    <h2>정직한 랜덤 — dori가 지키는 세 가지</h2>
+    <ul>
+      <li><strong>화면에 보이는 그대로 뽑습니다.</strong> 룰렛 포인터가 가리키는 칸이 곧 결과이고,
+      사다리는 다리가 전부 공개된 상태에서 경로를 그립니다. 뒤에서 결과를 바꾸는 코드도, 숨은 가중치도 없습니다.</li>
+      <li><strong>확률을 숨기지 않습니다.</strong> 러시안 룰렛은 매 시도의 실제 확률(1/6 → 1/5 → …)을
+      화면에 표시하고, 로또 추첨에는 "모든 조합의 확률은 같아요"를 항상 함께 적어 둡니다.
+      메뉴 룰렛의 특별 규칙(감자튀김 10회 보증)도 화면과 안내 문서에 미리 공개합니다.</li>
+      <li><strong>재촉하지 않습니다.</strong> 카운트다운, 한정 이벤트, 결제 유도 같은 다크 패턴을 쓰지 않습니다.
+      모든 도구는 오락 목적이며 금전이 걸린 내기에 쓰도록 만들지 않았습니다.</li>
+    </ul>
+
     <h2>결정 돕기</h2>
-    <nav aria-label="결정 돕기 안내">
-      <a href="guide-roulette.html">메뉴 룰렛</a> ·
-      <a href="guide-ladder.html">사다리타기</a> ·
-      <a href="guide-pinball.html">랜덤 핀볼</a> ·
-      <a href="guide-team.html">조 배정</a>
-    </nav>
+    <div class="tool">
+      <h3><a href="guide-roulette.html">메뉴 룰렛</a></h3>
+      <p>지금 시간대(아침·점심·저녁·야식)에 맞는 메뉴가 원판에 올라옵니다. 후보는 2–16개까지
+      직접 편집하고, '나온 건 제외'를 켜면 이미 나온 메뉴를 빼고 돌립니다.</p>
+    </div>
+    <div class="tool">
+      <h3><a href="guide-ladder.html">사다리타기</a></h3>
+      <p>참가자 2–6명. 시작하면 다리가 전부 공개되고, 이름을 누르면 그 사람 색으로 경로가 그려집니다.
+      당첨 1명과 나머지 벌칙 구성은 버튼 하나로 만들어집니다.</p>
+    </div>
+    <div class="tool">
+      <h3><a href="guide-pinball.html">랜덤 핀볼</a></h3>
+      <p>떨어뜨릴 위치는 내가 고르고, 그 다음은 물리에 맡깁니다. 결과 칸은 4–10개로 조절하고
+      맵 섞기로 핀 배치를 매번 새로 만들 수 있습니다.</p>
+    </div>
+    <div class="tool">
+      <h3><a href="guide-team.html">조 배정</a></h3>
+      <p>번호 2–60명 또는 이름 명단으로 2–6개 조를 나눕니다. 조장 지정, 쉬는 사람 제외,
+      편성 결과 복사까지 됩니다.</p>
+    </div>
+
     <h2>랜덤 뽑기</h2>
-    <nav aria-label="랜덤 뽑기 안내">
-      <a href="guide-draw.html">뽑기 상자</a> ·
-      <a href="guide-lotto.html">로또 추첨</a> ·
-      <a href="guide-bingo.html">빙고 뽑기</a> ·
-      <a href="guide-bingocard.html">빙고판</a>
-    </nav>
+    <div class="tool">
+      <h3><a href="guide-draw.html">뽑기 상자</a></h3>
+      <p>항목 2–12개를 넣고 하나씩 꺼냅니다. 뽑힌 항목은 풀에서 빠지고, 남은 후보는 항상 화면에 보입니다.</p>
+    </div>
+    <div class="tool">
+      <h3><a href="guide-lotto.html">로또 추첨</a></h3>
+      <p>1–45에서 6개씩 최대 5줄. 추첨은 매 정각에 한 번이고, 뽑은 번호는 복사·공유할 수 있습니다.</p>
+    </div>
+    <div class="tool">
+      <h3><a href="guide-bingo.html">빙고 뽑기</a></h3>
+      <p>빙고 진행자를 위한 숫자 콜. 기본 1–75이고 최대 숫자는 10–99로 바꿉니다.
+      나온 숫자는 판에 색으로 남아 누구나 확인할 수 있습니다.</p>
+    </div>
+    <div class="tool">
+      <h3><a href="guide-bingocard.html">빙고판</a></h3>
+      <p>참가자용 5×5 카드. 탭해서 표시하면 줄은 저절로 판정됩니다.
+      '뽑기 겸하기'를 켜면 이 화면 하나로 콜까지 진행할 수 있습니다.</p>
+    </div>
+
     <h2>복불복</h2>
-    <nav aria-label="복불복 안내">
-      <a href="guide-russian.html">러시안 룰렛</a> ·
-      <a href="guide-croco.html">악어 이빨</a> ·
-      <a href="guide-popup.html">해적통</a> ·
-      <a href="guide-dancheong.html">단청</a>
-    </nav>
+    <div class="tool">
+      <h3><a href="guide-russian.html">러시안 룰렛</a></h3>
+      <p>6개의 칸 중 하나가 당첨. 시도할 때마다 남은 칸이 줄어들고, 지금 확률이 화면에 그대로 적힙니다.</p>
+    </div>
+    <div class="tool">
+      <h3><a href="guide-croco.html">악어 이빨</a></h3>
+      <p>이빨 12개 중 함정은 하나. 누르면 즉시 결과가 나오고, 걸린 이빨은 빨간색으로 공개됩니다.</p>
+    </div>
+    <div class="tool">
+      <h3><a href="guide-popup.html">해적통</a></h3>
+      <p>구멍 12개 중 하나가 트리거. 칼을 꽂다 보면 언젠가 해적이 튀어나옵니다.</p>
+    </div>
+    <div class="tool">
+      <h3><a href="guide-dancheong.html">단청</a></h3>
+      <p>붉을 단, 푸를 청 — 두 갈래로 답하는 오라클. 같은 질문이면 어느 기기에서 물어도 같은 답이 나오고,
+      답은 4시간마다 새로워집니다.</p>
+    </div>
+
+    <h2>읽을거리 — 무작위와 결정에 관하여</h2>
+    <p>도구를 만들면서 정리한 확률과 심리 이야기입니다. 사다리타기가 정말 공평한지,
+    무작위가 왜 뭉쳐 보이는지, 점심 메뉴를 못 고르는 이유가 무엇인지 다룹니다.</p>
+    <ul>
+      <li><a href="read-ladder-fairness.html">사다리타기는 정말 공평할까</a></li>
+      <li><a href="read-conditional-probability.html">러시안 룰렛의 확률은 왜 올라갈까</a></li>
+      <li><a href="read-without-replacement.html">복원 추출과 비복원 추출, 언제 무엇을 쓸까</a></li>
+      <li><a href="read-bingo-rules.html">빙고 규칙 총정리 — 75볼과 90볼</a></li>
+      <li><a href="read-randomness-illusion.html">무작위는 왜 뭉쳐 보일까</a></li>
+      <li><a href="read-decision-fatigue.html">점심 메뉴를 못 고르는 이유</a></li>
+    </ul>
+    <p><a href="read.html">읽을거리 전체 보기</a></p>
+
     <p class="pages"><a href="about.html">소개</a> · <a href="guide.html">사용 안내</a> ·
-    <a href="faq.html">자주 묻는 질문</a> · <a href="privacy.html">개인정보처리방침</a></p>
+    <a href="read.html">읽을거리</a> · <a href="faq.html">자주 묻는 질문</a> ·
+    <a href="privacy.html">개인정보처리방침</a></p>
     <p class="note">모든 도구는 오락 목적이며, 금전이 걸린 도박·사행 행위 등 비윤리적 목적의
     사용을 금지합니다. © 2026 ff-1204 · All Rights Reserved</p>
   </section>

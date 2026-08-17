@@ -30,6 +30,22 @@ a { color: #6cc7ff; }
   padding: 13px 30px; border-radius: 12px; text-decoration: none; margin-top: 10px;
 }
 .rel { color: #8b90a8; font-size: 15px; margin-top: 34px; }
+/* 읽을거리(read-*.html) 본문 서식 */
+.lead { font-size: 18px; color: #dfe3ef; }
+.meta { color: #8b90a8; font-size: 14px; margin: 6px 0 0; }
+.toc { background: #1d1f2b; border-radius: 14px; padding: 12px 22px; margin: 20px 0; }
+.toc a { display: inline-block; padding: 7px 0; }
+table { border-collapse: collapse; width: 100%; margin: 16px 0; font-size: 15px; }
+th, td { border: 1px solid #2a2f42; padding: 9px 11px; text-align: left; color: #c9cddd; }
+th { background: #1d1f2b; color: #f2f3f7; }
+blockquote {
+  margin: 18px 0; padding: 12px 20px; background: #171826;
+  border-left: 3px solid #6cc7ff; color: #c9cddd;
+}
+blockquote p { margin: 4px 0; }
+.art { margin: 18px 0; padding-bottom: 16px; border-bottom: 1px solid #2a2f42; }
+.art h3 { font-size: 19px; margin: 0 0 4px; }
+.art p { margin: 4px 0 0; }
 footer { margin-top: 56px; padding-top: 18px; border-top: 1px solid #2a2f42;
   color: #8b90a8; font-size: 14px; text-align: center; }
 footer a { color: #8b90a8; display: inline-block; padding: 8px 6px; }
