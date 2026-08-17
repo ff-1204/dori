@@ -14,7 +14,7 @@
 
 ```
 dori/
-├── index.html            # Phaser CDN 로드 + SEO/OG 메타 + 캔버스 컨테이너
+├── index.html            # Phaser CDN 로드 + SEO/OG 메타 + 상단 헤더(.site-top)·캔버스·안내 띠(.scroll-cue)·소개 섹션(#site-info)
 ├── README.md             # 프로젝트 소개(핵심 요약)
 ├── CHANGELOG.md          # 릴리즈 노트
 ├── .nojekyll             # GitHub Pages의 Jekyll 처리 끔 — docs/*.md가 HTML 페이지로 공개되는 것 방지

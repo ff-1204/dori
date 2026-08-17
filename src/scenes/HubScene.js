@@ -187,31 +187,9 @@ export default class HubScene extends Phaser.Scene {
     install.on('pointerup', () => this.installShortcut());
     padHitArea(install);
 
-    // 정적 페이지 링크(하단 바 위 한 줄) — 소개·사용 안내·읽을거리·FAQ·개인정보처리방침(신뢰 신호, AdSense 요건)
-    const pages = [
-      ['소개', 'about.html'], ['사용 안내', 'guide.html'], ['읽을거리', 'read.html'],
-      ['FAQ', 'faq.html'], ['개인정보처리방침', 'privacy.html'],
-    ];
-    const parts = [];
-    pages.forEach(([label, href], i) => {
-      if (i) {
-        parts.push(this.add.text(0, by - 52, '·', {
-          fontFamily: FONT, fontSize: '22px', color: css(C.subtext),
-        }).setOrigin(0, 0.5).setAlpha(0.5));
-      }
-      const link = this.add.text(0, by - 52, label, {
-        fontFamily: FONT, fontSize: '22px', color: css(C.subtext),
-      }).setOrigin(0, 0.5).setAlpha(0.8).setInteractive({ useHandCursor: true });
-      link.on('pointerover', () => link.setColor(css(C.primary)));
-      link.on('pointerout', () => link.setColor(css(C.subtext)));
-      link.on('pointerup', () => { location.href = href; }); // 같은 탭 이동 — 브라우저 뒤로가기로 복귀
-      parts.push(link);
-    });
-    // 가운데 정렬: 전체 폭을 잰 뒤 왼쪽부터 배치
-    const gap = 14;
-    const total = parts.reduce((s, p) => s + p.width, 0) + gap * (parts.length - 1);
-    let lx = (width - total) / 2;
-    parts.forEach((p) => { p.setX(lx); lx += p.width + gap; });
+    // 정적 페이지 링크(소개·사용 안내·읽을거리·FAQ·개인정보처리방침)는 캔버스 밖 상단 헤더
+    // (index.html `.site-top`)가 담당한다 — 캔버스 안에 같은 줄을 두면 한 화면에 같은 링크가
+    // 두 번 보이고, DOM `<a>`가 크롤러·접근성 면에서도 낫다(2026-08-17 이관).
   }
 
   async installShortcut() {
