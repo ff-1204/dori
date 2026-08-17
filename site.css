@@ -43,6 +43,13 @@ blockquote {
   border-left: 3px solid #6cc7ff; color: #c9cddd;
 }
 blockquote p { margin: 4px 0; }
+/* 출처 표기 — 글에서 언급한 연구·기록의 근거를 밝힌다(외부 링크 없이 서지 정보만) */
+.src {
+  margin: 30px 0 0; padding: 14px 18px; background: #171826; border-radius: 12px;
+  color: #8b90a8; font-size: 14px; line-height: 1.7;
+}
+.src strong { color: #c9cddd; display: block; margin-bottom: 4px; font-size: 15px; }
+.src li { color: #8b90a8; margin: 3px 0; }
 .art { margin: 18px 0; padding-bottom: 16px; border-bottom: 1px solid #2a2f42; }
 .art h3 { font-size: 19px; margin: 0 0 4px; }
 .art p { margin: 4px 0 0; }
