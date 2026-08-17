@@ -51,13 +51,16 @@
   }
   </script>
 
+  <!-- AdSense 로더 — 게시자 콘텐츠가 있는 페이지에만 배치한다(정책 요건). 승인 전이라 광고는 표시되지 않는다.
+       2026-08-17 홈에 소개 섹션(#site-info)이 생겨 조건을 충족하므로 다른 안내 페이지와 같은 태그를 둔다.
+       게재 페이지 목록은 privacy.html 4항·FAQ에 고지되어 있으므로 배치가 바뀌면 그 문면도 함께 고친다. -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2755020807980350" crossorigin="anonymous"></script>
+
   <!-- ===== 광고 게재 준비: Google H5 Games Ads (전면·보상형) =====
-       홈에는 아직 AdSense 로더를 두지 않는다. 광고는 게시자 콘텐츠가 있는 페이지
-       (about/guide/guide-*/read*/faq/privacy)에만 붙인다는 원칙에 따른 것이며, 사이트 소유권은 ads.txt로 유지된다.
-       2026-08-17 홈에 소개 섹션(#site-info)이 생겨 이 조건 자체는 충족되지만, 로더를 추가하려면
-       privacy.html 4항과 FAQ의 '게재 페이지' 고지를 함께 갱신해야 하므로 별도 판단으로 미뤄 둔다.
-       승인·CMP 완료 후 아래 주석을 해제하고 로더 태그(data-ad-frequency-hint="30s" 포함)를
-       이 위치에 추가한 뒤 src/ads.js의 AdConfig.enabled=true, provider='google-h5'로 전환. (docs/commercial.md)
+       승인·CMP 완료 후 아래 주석을 해제해 로더에 data-ad-frequency-hint="30s"를 더한 태그로 교체하고
+       src/ads.js의 AdConfig.enabled=true, provider='google-h5'로 전환. (docs/commercial.md)
+       ⚠ 첫 화면은 캔버스(게시자 콘텐츠 없음)다 — 자동 광고를 켤 때 AdSense 콘솔의 '제외된 영역'으로
+       이 영역을 빼 둔다. 1차 심사의 "게시자 콘텐츠가 없는 화면에 광고" 지적이 이 자리였다.
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2755020807980350"
     data-ad-frequency-hint="30s" crossorigin="anonymous"></script>
   <script>

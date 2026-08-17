@@ -12,7 +12,7 @@
 |------|------|----------|-----------|------|
 | Phaser | 3.80.1 | MIT | ✅ | https://github.com/phaserjs/phaser — **자체 호스팅** `vendor/phaser-3.80.1.min.js`(2026-08-17 CDN에서 전환) |
 | qrcode-generator | 1.4.4 | MIT | ✅ | https://github.com/kazuhikoarase/qrcode-generator — **자체 호스팅** `vendor/qrcode-1.4.4.min.js`, QR 접속 모달용 |
-| Google AdSense 로더 (adsbygoogle.js) | — | Google 서비스 약관 | ✅(퍼블리셔 계약) | index.html에서 로드 — 소유권 확인·심사용, 광고 게재 전(2026-07-29 기록). 개인정보 고지는 privacy.html §4 |
+| Google AdSense 로더 (adsbygoogle.js) | — | Google 서비스 약관 | ✅(퍼블리셔 계약) | 홈·소개·사용 안내·도구별 안내·읽을거리·FAQ·방침에서 로드(로또 추첨 안내 제외) — 소유권 확인·심사용, 광고 게재 전. 2026-08-17 홈에 소개 섹션이 생겨 홈에도 배치. 개인정보 고지는 privacy.html §4 |
 
 > **MIT 고지 의무(2026-08-17 갱신)**: 두 라이브러리를 `vendor/`에 **번들**하므로 재배포에 해당한다.
 > 축소본에는 원본의 고지가 남아 있지 않아, ① 각 파일 **머리에 저작권·라이선스 배너**를 붙이고

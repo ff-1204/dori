@@ -117,8 +117,11 @@
 - **승인 심사**: 콘텐츠·정책 통과.
 
 **준비해 둔 것(2026-07-29 현행화 — 게재 배선은 미연결·비활성)**
-- `index.html`: AdSense **로더(adsbygoogle.js, `ca-pub-2755020807980350`)를 심사용으로 로드 중**(광고 미표시).
-  `adBreak` 브리지 스크립트는 주석 상태.
+- AdSense **로더(adsbygoogle.js, `ca-pub-2755020807980350`)를 심사용으로 로드 중**(광고 미표시) —
+  **게시자 콘텐츠가 있는 페이지에만**: 홈(`index.html`, 2026-08-17 소개 섹션 추가로 조건 충족)·소개·사용 안내·
+  도구별 안내·읽을거리·FAQ·방침. **로또 추첨 안내는 제외**(도박 인접 주제 보수 운용).
+  `index.html`의 `adBreak` 브리지 스크립트는 주석 상태.
+  게재 페이지가 바뀌면 **privacy.html §4·FAQ 문면을 같은 커밋에서 함께 고친다**(고지 정합).
 - `src/ads.js`: **H5 Games Ads `adBreak` API 형태**의 어댑터(`maybeShowInterstitial`·`showRewarded`).
   `AdConfig.enabled=false`, `provider='none'`으로 꺼져 있음(`client`는 실제 ID로 기입 완료).
 - privacy.html §4: 로더 게재 사실·전송 정보·CMP 계획 고지 완료.
@@ -126,6 +129,8 @@
 **활성화 절차(나중에)**
 1. AdSense 승인, CMP 구비(로더·도메인·ads.txt는 준비 완료).
 2. `index.html`의 `adBreak` 브리지 주석 해제 + 로더에 `data-ad-frequency-hint="30s"` 추가.
+   ⚠ 자동 광고를 켤 때는 **첫 화면(캔버스)을 AdSense 콘솔의 '제외된 영역'으로 빼 둔다** —
+   게시자 콘텐츠가 없는 화면이라 1차 심사에서 지적받은 자리다.
 3. `ads.js`의 `AdConfig.enabled=true`, `provider='google-h5'` 전환.
 4. 게임 종료/허브 복귀 지점에서 `maybeShowInterstitial()` 호출 배선(게임 pause/resume 연결).
 5. privacy.html §4를 '게재 중'으로 갱신 + 시행일 갱신.
