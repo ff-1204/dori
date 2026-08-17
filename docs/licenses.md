@@ -10,12 +10,15 @@
 
 | 항목 | 버전 | 라이선스 | 상업 사용 | 출처 |
 |------|------|----------|-----------|------|
-| Phaser | 3.80.1 | MIT | ✅ | https://github.com/phaserjs/phaser (CDN: jsdelivr) |
-| qrcode-generator | 1.4.4 | MIT | ✅ | https://github.com/kazuhikoarase/qrcode-generator (CDN: jsdelivr) — QR 접속 모달용 |
+| Phaser | 3.80.1 | MIT | ✅ | https://github.com/phaserjs/phaser — **자체 호스팅** `vendor/phaser-3.80.1.min.js`(2026-08-17 CDN에서 전환) |
+| qrcode-generator | 1.4.4 | MIT | ✅ | https://github.com/kazuhikoarase/qrcode-generator — **자체 호스팅** `vendor/qrcode-1.4.4.min.js`, QR 접속 모달용 |
 | Google AdSense 로더 (adsbygoogle.js) | — | Google 서비스 약관 | ✅(퍼블리셔 계약) | index.html에서 로드 — 소유권 확인·심사용, 광고 게재 전(2026-07-29 기록). 개인정보 고지는 privacy.html §4 |
 
-> **MIT 고지 의무**: 두 라이브러리는 저장소에 번들하지 않고 **CDN 원본 파일을 그대로 로드**하므로
-> 원저작자의 라이선스 고지가 파일 내에 보존된다(재배포 아님). 추후 파일을 번들할 경우 LICENSE 사본 동봉 필요.
+> **MIT 고지 의무(2026-08-17 갱신)**: 두 라이브러리를 `vendor/`에 **번들**하므로 재배포에 해당한다.
+> 축소본에는 원본의 고지가 남아 있지 않아, ① 각 파일 **머리에 저작권·라이선스 배너**를 붙이고
+> ② `vendor/LICENSE-phaser.txt` · `vendor/LICENSE-qrcode-generator.txt`에 **전문 사본**을 둔다.
+> 버전을 올릴 때 배너와 사본을 다시 확인한다. (전환 이유·절차는 [development.md](./development.md) '라이브러리 자체 호스팅')
+> 참고: qrcode-generator의 'QR Code'는 DENSO WAVE의 등록상표 — 표기 시 상표임을 존중하고 브랜드로 쓰지 않는다.
 
 ## 폰트
 

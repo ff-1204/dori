@@ -4,7 +4,7 @@
 
 ## 기술 스택
 
-- **Phaser 3** (v3.80.1) — CDN으로 로드, 별도 빌드 도구 없음
+- **Phaser 3** (v3.80.1) — `vendor/`에서 **자체 호스팅**, 별도 빌드 도구 없음
 - **바닐라 JS (ES 모듈)** — `import`/`export` 사용
 - **GitHub Pages** — 정적 호스팅, `main` 브랜치 루트에서 직접 배포
 
@@ -14,7 +14,8 @@
 
 ```
 dori/
-├── index.html            # Phaser CDN 로드 + SEO/OG 메타 + 고정 상단바(.site-top)·캔버스·고정 하단바(.site-bottom)
+├── index.html            # 라이브러리 로드 + SEO/OG 메타 + 고정 상단바(.site-top)·캔버스·고정 하단바(.site-bottom)
+│                         #   캔버스 자리에 정적 폴백(#fallback) — 아래 '정적 폴백' 절 참고
 ├── README.md             # 프로젝트 소개(핵심 요약)
 ├── CHANGELOG.md          # 릴리즈 노트
 ├── .nojekyll             # GitHub Pages의 Jekyll 처리 끔 — docs/*.md가 HTML 페이지로 공개되는 것 방지
@@ -28,6 +29,9 @@ dori/
 ├── assets/
 │   ├── og.png            # 링크 미리보기 이미지(자체 제작 1200×630)
 │   └── icon-192/512.png  # PWA 아이콘(자체 제작 룰렛 심볼)
+├── vendor/               # 서드파티 라이브러리 자체 호스팅(MIT) — CDN 단일 실패점 제거
+│   ├── phaser-3.80.1.min.js / qrcode-1.4.4.min.js   # 머리에 저작권 배너 유지
+│   └── LICENSE-phaser.txt / LICENSE-qrcode-generator.txt  # MIT 고지 사본(번들 조건)
 ├── src/
 │   ├── main.js           # 게임 설정 + 씬 등록
 │   ├── theme.js          # 디자인 토큰(팔레트·간격·이징·씬 레이아웃 그리드 LAYOUT) — visual-polish 기준
@@ -66,12 +70,12 @@ dori/
 ES 모듈은 `file://`에서 CORS로 막히므로 **로컬 정적 서버**가 필요합니다.
 
 ```bash
-# Python
-python -m http.server 8000
-# → http://localhost:8000
-
-# 또는 Node가 있다면
+# Node (이 개발 환경 기준 — Node는 C:\Program Files\nodejs 에 있고 PATH에는 없다)
 npx serve
+# → http://localhost:3000
+
+# Python이 설치된 환경이라면
+python -m http.server 8000
 ```
 
 > 브라우저에서 직접 `index.html`을 여는 방식은 모듈 로딩이 실패하니 사용하지 않습니다.
@@ -81,6 +85,29 @@ npx serve
 1. 변경 사항 커밋 ([git.md](./git.md) 컨벤션 준수)
 2. `git push`
 3. 약 20초 후 `https://dori.io.kr/` 반영
+
+## 정적 폴백 (첫 화면)
+
+첫 화면은 전면 캔버스라 **스크립트가 실행되지 않으면 위아래 띠 사이가 통째로 빈 검은 상자**가 된다.
+2026-08-17 AdSense **'광고 설정 미리보기'에서 실제로 그 상태로 보이는 것**을 확인했고,
+같은 화면은 스크립트 차단·CDN 차단 두 조건 모두에서 재현된다(puppeteer 실측).
+
+- `index.html`의 `#game` 안에 **정적 폴백 `#fallback`**을 둔다 — 소개 한 문단 + 도리 12종(각 안내 페이지 링크) + 읽을거리.
+  서버가 그대로 내려주는 HTML이므로 렌더러·크롤러가 스크립트 없이도 읽는다.
+- 제거 시점은 **`BootScene.create()`** — Phaser가 살아 있음이 확인된 순간이다. 부팅이 실패하면 폴백이 그대로 남는다.
+- 사용자에게 글이 번쩍이지 않도록 폴백은 **600ms 지연 후 페이드 인**한다(정상 부팅은 그 전에 끝나 화면에 뜨지 않는다 — 실측 200ms 이내 제거).
+  지연은 CSS 애니메이션이라 스크립트가 없어도 그대로 동작하고, DOM 자체는 처음부터 있으므로 크롤러에는 지연이 무의미하다.
+- 대체 문구를 페이지 **맨 끝**(`<noscript>`)에 두면 첫 화면 밖으로 밀려 아무 역할을 못 한다 — 폴백은 **캔버스와 같은 자리**에 있어야 한다.
+- 내용은 `about.html`과 **겹치지 않게 짧게** 유지한다(중복 콘텐츠 회피). 도구 이름·수치가 바뀌면 여기도 함께 고친다.
+
+## 라이브러리 자체 호스팅
+
+Phaser와 qrcode-generator는 `vendor/`에 두고 같은 출처에서 로드한다(2026-08-17 전환).
+
+- 이유: CDN 한 곳이 막히면 **사이트 전체가 검은 화면**이 되는 단일 실패점이었다. 자체 호스팅으로 SRI 부재 문제도 함께 사라진다.
+- MIT 조건: 번들하면 CDN 원본의 고지가 사라지므로 **파일 머리에 저작권 배너**를 유지하고 `vendor/LICENSE-*.txt`에 전문을 둔다([licenses.md](./licenses.md)).
+- 버전 올릴 때: 파일명에 버전을 넣어 교체(`phaser-<버전>.min.js`) → 배너 다시 붙이기 → `index.html`·licenses.md·이 문서 갱신.
+- `robots.txt`에서 `/vendor/`를 **막지 않는다** — Google이 페이지를 렌더링하려면 스크립트를 가져갈 수 있어야 한다.
 
 ## 바로가기 (PWA)
 
