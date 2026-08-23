@@ -96,7 +96,15 @@ export function openTextInput(scene, { title, hint, inputmode = 'text', maxLengt
   // 배경 차단 딤: 입력 중 뒤 화면(보드·버튼) 조작 방지 + 바깥 탭 = 취소(모달과 같은 문법)
   scene.inputOverlayDim = scene.add.rectangle(0, 0, scene.scale.width, scene.scale.height, 0x000000, 0.45)
     .setOrigin(0).setDepth(299).setInteractive();
-  scene.inputOverlayDim.on('pointerup', () => closeTextInput(scene));
+  scene.inputOverlayDim.on('pointerup', (pointer) => {
+    // Phaser는 window에서도 pointerup을 듣는다 — 캔버스 위에 떠 있는 HTML 오버레이(입력창·버튼)를
+    // 눌러도 그 아래 딤이 함께 눌린 것으로 잡혀, 필드를 클릭하는 순간 창이 닫혔다.
+    // 오버레이 안에서 일어난 이벤트는 '바깥 탭'이 아니므로 무시한다.
+    const t = pointer && pointer.event && pointer.event.target;
+    if (t && scene.inputOverlay && scene.inputOverlay.node
+      && scene.inputOverlay.node.contains(t)) return;
+    closeTextInput(scene);
+  });
   // 멀티 카메라 씬(핀볼): 모달과 같은 규칙 — 위층 카메라에만 렌더(입력 차단은 카메라와 무관)
   if (scene.cameras.cameras.length > 1) scene.cameras.main.ignore(scene.inputOverlayDim);
   scene.inputOverlay = scene.add.dom(cx, y).createFromHTML(
@@ -113,7 +121,10 @@ export function openTextInput(scene, { title, hint, inputmode = 'text', maxLengt
   ).setDepth(300);
   const node = scene.inputOverlay.node;
   const field = node.querySelector('#dori-input');
+  let done = false; // keydown·keyup 양쪽에서 Enter를 받으므로 중복 제출 방지
   const submit = () => {
+    if (done) return;
+    done = true;
     const v = field.value;
     closeTextInput(scene);
     onSubmit(v);
@@ -124,6 +135,12 @@ export function openTextInput(scene, { title, hint, inputmode = 'text', maxLengt
     if (e.isComposing || e.keyCode === 229) return; // 한글 IME 조합 확정 Enter는 제출이 아니다
     if (e.key === 'Enter') submit();
     if (e.key === 'Escape') closeTextInput(scene);
+  });
+  // 한글은 마지막 글자가 조합 중이라 Enter 한 번이 '조합 확정'으로 먹힌다(위에서 걸러진다) —
+  // 그 Enter의 keyup은 조합이 끝난 뒤에 오므로 여기서 받아 한 번에 확정한다.
+  // (이게 없으면 한글 이름은 Enter를 두 번 눌러야 적용됐다.)
+  field.addEventListener('keyup', (e) => {
+    if (e.key === 'Enter' && !e.isComposing) submit();
   });
   field.focus();
 }
