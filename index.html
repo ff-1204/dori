@@ -94,7 +94,7 @@
       flex: none;
       width: 100vw; height: calc(100vh - 96px); height: calc(100dvh - 96px);
       scroll-margin-top: 48px; /* '↑ 도리 화면으로'가 고정 상단바 아래에 정확히 맞도록 */
-      position: relative; /* 정적 폴백(#fallback)을 캔버스 자리에 겹쳐 놓기 위한 기준 */
+      position: relative; /* Phaser DOM 오버레이(입력창)가 캔버스 자리에 겹치는 기준 */
       /* 캔버스 롱프레스 돋보기(iOS)·드래그 선택(PC) 방지 — 입력 필드는 아래에서 예외 */
       -webkit-user-select: none; user-select: none;
       -webkit-touch-callout: none;
@@ -113,24 +113,6 @@
     main { display: flex; flex-direction: column; }
     /* 건너뛰기·페이지 내 이동의 착지점 — 프로그램 포커스만 받으므로 링을 그리지 않는다 */
     #game:focus, #site-info:focus { outline: none; }
-    /* 정적 폴백 — 스크립트가 실행되지 않는 환경(심사·미리보기 렌더러, 크롤러, 스크립트 차단,
-       라이브러리 로드 실패)에서 캔버스 자리가 빈 검은 상자로 남지 않게 한다.
-       내용은 아래 소개(#site-info)가 담당하므로 여기서는 상황 안내와 길 안내만 짧게.
-       Phaser 부팅이 확인되면 BootScene이 제거하므로 정상 이용자에게는 남지 않는다. */
-    #fallback {
-      position: absolute; inset: 0; overflow-y: auto; touch-action: auto;
-      display: flex; align-items: center; justify-content: center;
-      padding: 26px 20px; text-align: center;
-      color: #c9cddd; font-size: 16px;
-      /* 정상 부팅은 이 지연 안에 끝난다 — 캔버스 직전에 글이 번쩍이는 것을 막기 위한 장치이며,
-         렌더러·크롤러는 지연과 무관하게 DOM을 그대로 읽는다. */
-      opacity: 0; animation: fb-in 200ms ease-out 600ms both;
-    }
-    @keyframes fb-in { from { opacity: 0 } to { opacity: 1 } }
-    @media (prefers-reduced-motion: reduce) { #fallback { animation-delay: 600ms; animation-duration: 1ms } }
-    #fallback .fb-inner { max-width: 560px; }
-    #fallback .fb-title { color: #f2f3f7; font-size: 22px; font-weight: bold; margin: 0 0 10px; }
-    #fallback p { margin: 8px 0; }
     /* 하단바 왼쪽의 '둘러보기' 조작 — 캔버스가 터치를 잡아 첫 화면에서 쓸어올려 내려갈 수 없으므로
        길을 눈에 보이게 둔다. 저작권 문구와 겹치지 않도록 자리를 나눠 갖고(절대 배치 금지 —
        360px에서 실제로 겹쳤다), 데스크톱에서는 오른쪽에 같은 폭의 빈 칸을 둬 문구를 정중앙에 유지한다. */
@@ -168,19 +150,7 @@
     </nav>
   </header>
   <main>
-  <div id="game" tabindex="-1">
-    <!-- 도리 화면이 뜨지 못하는 환경(스크립트 차단·로드 실패)에서 이 자리가 빈 검은 상자로
-         남지 않게 하는 안내. 사이트 내용은 아래 소개 섹션이 담당하므로 여기서는 길만 알린다. -->
-    <div id="fallback">
-      <div class="fb-inner">
-        <p class="fb-title">도리 화면을 불러오지 못했습니다</p>
-        <p>이 화면은 JavaScript로 움직입니다. 브라우저에서 켜고 새로고침하면
-        룰렛·사다리타기·복불복 12종을 바로 쓸 수 있습니다.</p>
-        <p>지금 상태에서도 <a href="#site-info">어떤 도구가 있는지</a>,
-        <a href="guide.html">어떻게 쓰는지</a>, <a href="read.html">읽을거리</a>는 그대로 읽을 수 있습니다.</p>
-      </div>
-    </div>
-  </div>
+  <div id="game" tabindex="-1"></div>
   <!-- ===== 첫 화면 아래 — 이 화면에서 무엇을 할 수 있는지. 운영자·이용 안내 등 사이트 자체의
        소개는 about.html이 담당한다(역할 분담: 여기는 '무엇을 정하나', 저기는 '누가 만들었나'). -->
   <section id="site-info" class="wrap" tabindex="-1">
