@@ -91,11 +91,23 @@ function fnv1a(str) {
   return h >>> 0;
 }
 
+// 마무리 섞기(murmur3 fmix32) — FNV-1a의 최하위 비트는 입력 문자 코드의 홀짝 합과 같아서
+// 창이 1씩 오를 때 인사 번호의 홀짝이 규칙적으로 교대한다. 단청과 같은 이유로 함께 섞는다.
+function fmix32(h) {
+  let x = h;
+  x ^= x >>> 16;
+  x = Math.imul(x, 0x85ebca6b);
+  x ^= x >>> 13;
+  x = Math.imul(x, 0xc2b2ae35);
+  x ^= x >>> 16;
+  return x >>> 0;
+}
+
 export function greetingForPhase(phase) {
   const list = GREETINGS[phase.key] ?? [phase.greeting];
   // 1시간 창 — 정시마다 회전, 모든 접속자 동일 문구(에포크 기준이라 시간대 오프셋 불필요)
   const windowId = Math.floor(Date.now() / 3600000);
-  return list[fnv1a(`인사|${phase.key}|${windowId}`) % list.length];
+  return list[fmix32(fnv1a(`인사|${phase.key}|${windowId}`)) % list.length];
 }
 
 // 시간대 → 식사 종류(룰렛 등 음식 관련 게임 공용)

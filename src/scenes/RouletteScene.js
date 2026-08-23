@@ -395,7 +395,13 @@ export default class RouletteScene extends MiniGame {
     // 비복원: 남은 풀 계산 — 모두 나왔으면 스핀 대신 안내(정직: 빈 풀에서 돌리지 않는다)
     const pool = this.items.map((_, i) => i)
       .filter((i) => !this.excludeMode || !this.excluded.has(this.items[i]));
-    if (pool.length === 0) {
+    // 🍟 감자튀김은 제외되지 않으므로 풀이 0이 되는 일은 없다 — 그래서 '전부 나왔어요' 안내가
+    // 닿지 못한 채, 다른 메뉴가 모두 나온 뒤로는 아무 설명 없이 감자튀김만 계속 나왔다.
+    // 감자튀김을 뺀 나머지가 비었으면 그 시점이 한 판의 끝이다(다른 메뉴가 있을 때만).
+    const realLeft = pool.filter((i) => this.items[i] !== FRY).length;
+    // 더블탭 확정(치트)은 사용자가 그 칸을 직접 고른 것이므로 막지 않는다
+    if (pool.length === 0
+      || (forceIdx === null && this.excludeMode && realLeft === 0 && this.items.length > 1)) {
       this.resultText.setColor(css(C.warning)).setText('전부 나왔어요!\n↺ 제외 취소로 되돌리기').setScale(1);
       return;
     }

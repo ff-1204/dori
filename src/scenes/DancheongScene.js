@@ -28,6 +28,20 @@ function fnv1a(str) {
   return h >>> 0;
 }
 
+// 마무리 섞기(murmur3 fmix32, 퍼블릭 도메인) — FNV-1a의 최하위 비트는 홀수와의 곱셈에
+// 보존되어 '입력 문자 코드의 홀짝 합'과 같아진다. 그대로 %2를 쓰면 물음표 하나만 붙여도
+// 답이 반드시 뒤집히고, 4시간 창이 넘어갈 때마다 붉↔청이 규칙적으로 교대한다.
+// 상위 비트를 하위로 접어 넣어 모든 입력 비트가 결과에 고루 퍼지게 한다.
+function fmix32(h) {
+  let x = h;
+  x ^= x >>> 16;
+  x = Math.imul(x, 0x85ebca6b);
+  x ^= x >>> 13;
+  x = Math.imul(x, 0xc2b2ae35);
+  x ^= x >>> 16;
+  return x >>> 0;
+}
+
 // 같은 질문이 같은 답을 받도록 정규화(공백·유니코드·대소문자)
 function normalize(s) {
   return s.normalize('NFC').trim().replace(/\s+/g, ' ').toLowerCase();
@@ -37,9 +51,9 @@ function windowIndex(now = Date.now()) {
   return Math.floor((now + KST_OFFSET) / WINDOW_MS);
 }
 
-// 0 = 붉, 1 = 청
+// 0 = 붉, 1 = 청 — 요약한 숫자가 짝수면 붉, 홀수면 청(guide-dancheong.html 공개 규칙)
 function pickColor(text, now = Date.now()) {
-  return fnv1a(`단청|${normalize(text)}|${windowIndex(now)}`) % 2;
+  return fmix32(fnv1a(`단청|${normalize(text)}|${windowIndex(now)}`)) % 2;
 }
 
 export default class DancheongScene extends MiniGame {
