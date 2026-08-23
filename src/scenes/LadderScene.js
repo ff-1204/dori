@@ -8,8 +8,8 @@ import { C, css, FONT, PLAYER, RADIUS, EASE, LAYOUT } from '../theme.js';
 import { makeButton, makeHeader, makeSubLink, makeModal, chipFlow, openTextInput, closeTextInput } from '../ui.js';
 import { Sfx } from '../sfx.js';
 
-// 가로 다리 행 수는 인원 비례(rowCount) — 인접 교환 셔플은 열 수 대비 행이 많아야
-// 충분히 섞인다(적으면 출발 열 근처 도착으로 편향). 2명=8행 … 6명=16행.
+// 가로 다리 행 수는 인원 비례(rowCount) — 2명=8행 … 6명=16행.
+// 위쪽은 보기 좋은 무작위 다리, 아래 n행은 균등한 목표 순열로 데려가는 보정(buildRungs 참고).
 const MIN_P = 2;
 const MAX_P = 6; // 모바일 가독성 한계(responsive-design §7)
 const NAME_MAX = 4; // 라벨 겹침 방지(글자 수 제한)
@@ -166,29 +166,77 @@ export default class LadderScene extends MiniGame {
     });
   }
 
-  // ===== 다리 생성 (편향 없는 랜덤 + 경계당 최소 1개 보장) =====
+  // ===== 다리 생성 — 결과를 먼저 균등하게 뽑고, 그 결과가 나오도록 다리를 놓는다 =====
+  // 룰렛과 같은 원칙이다(결과를 RNG로 정하고 화면을 역산 — game-theory §3).
+  // 다리만 무작위로 놓던 이전 방식은 편향됐다: 인접 교환 셔플은 섞이는 데 Θ(n² log n) 행이
+  // 필요한데 16행으로는 모자랐다(6명 실측 — 출발 자리 도착 24.3%, 반대쪽 8.8%, 균등은 16.7%).
+  // 화면은 그대로 정직하다 — 다리는 시작할 때 전부 공개되고 경로는 그 다리만 따라간다.
   buildRungs() {
     const n = this.names.length;
     const rows = this.rowCount();
+    const mixRows = rows - n; // 아래 n행은 보정용으로 남긴다(홀짝 교환 정렬은 n라운드면 끝난다)
     const rungs = [];
     const has = (row, col) => rungs.some((r) => r.row === row && r.col === col);
-    for (let row = 0; row < rows; row += 1) {
-      for (let col = 0; col < n - 1; col += 1) {
+
+    // 1) 보기 좋은 무작위 다리 — 공정성은 여기에 기대지 않는다
+    for (let row = 0; row < mixRows; row += 1) {
+      // 한 방향으로만 훑으면 먼저 보는 경계가 더 자주 채워진다(실측 1.72배) — 매 행 방향을 뒤집는다
+      const cols = [...Array(n - 1).keys()];
+      if (this.rng.frac() < 0.5) cols.reverse();
+      cols.forEach((col) => {
         // 같은 행 인접 다리 금지(한 점에서 세 갈래 방지)
-        if (!has(row, col - 1) && this.rng.frac() < 0.42) rungs.push({ row, col });
-      }
+        if (!has(row, col - 1) && !has(row, col + 1) && this.rng.frac() < 0.42) rungs.push({ row, col });
+      });
     }
     // 인접 두 줄이 한 번도 안 섞이면 심심하므로 경계마다 최소 1개 보장
     for (let col = 0; col < n - 1; col += 1) {
       if (!rungs.some((r) => r.col === col)) {
         const candidates = [];
-        for (let row = 0; row < rows; row += 1) {
+        for (let row = 0; row < mixRows; row += 1) {
           if (!has(row, col - 1) && !has(row, col + 1)) candidates.push(row);
         }
         if (candidates.length) rungs.push({ row: this.rng.pick(candidates), col });
       }
     }
+
+    // 2) 균등한 목표 순열(Fisher-Yates) — 공정성의 근거는 오직 여기다
+    const target = this.rng.shuffle([...Array(n).keys()]); // target[출발 열] = 도착 열
+
+    // 3) 1)까지 내려온 자리에서 목표까지 데려가는 보정
+    // A[위치] = 지금 그 위치에 있는 선이 가야 할 자리. 오름차순이 되면 모두 제자리다.
+    const A = [];
+    for (let i = 0; i < n; i += 1) A[this.walkTo(rungs, i, mixRows)] = target[i];
+    // 홀짝 교환 정렬: n라운드면 어떤 순열이든 정렬된다. 한 라운드의 다리는 경계 번호의 홀짝이
+    // 같아 반드시 두 칸 이상 떨어지므로, 한 점에서 세 갈래가 되는 일이 없다.
+    const layers = [];
+    for (let r = 0; r < n; r += 1) {
+      const layer = [];
+      for (let col = r % 2; col < n - 1; col += 2) {
+        if (A[col] > A[col + 1]) { [A[col], A[col + 1]] = [A[col + 1], A[col]]; layer.push(col); }
+      }
+      if (layer.length) layers.push(layer); // 할 일 없는 라운드는 버린다(순서만 지키면 된다)
+    }
+    const fixFrom = rows - layers.length; // 보정은 맨 아래에 붙인다
+    layers.forEach((layer, k) => layer.forEach((col) => rungs.push({ row: fixFrom + k, col })));
+
+    // 보정이 짧으면 그만큼 빈 줄이 생겨 사다리가 중간에 끊겨 보인다 —
+    // 같은 경계에 위아래로 하나씩(갔다가 되돌아오기)을 놓아 채운다. 결과는 그대로고 화면만 촘촘해진다.
+    for (let row = mixRows; row + 1 < fixFrom; row += 2) {
+      const col = this.rng.between(0, n - 2);
+      rungs.push({ row, col });
+      rungs.push({ row: row + 1, col });
+    }
     return rungs;
+  }
+
+  // 다리를 따라 toRow 직전까지 내려갔을 때의 열
+  walkTo(rungs, startCol, toRow) {
+    let col = startCol;
+    for (let row = 0; row < toRow; row += 1) {
+      if (rungs.some((x) => x.row === row && x.col === col)) col += 1;
+      else if (rungs.some((x) => x.row === row && x.col === col - 1)) col -= 1;
+    }
+    return col;
   }
 
   startOrShuffle() {
