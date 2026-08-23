@@ -270,7 +270,8 @@ export default class BingoScene extends MiniGame {
     chip.gapRow();
     chip('직접 입력', { outline: true, color: C.warning }, () => {
       openTextInput(this, {
-        title: '최대 숫자', hint: `${MIN_N}–${MAX_N} 사이 숫자`, inputmode: 'numeric', maxLength: 2,
+        // 참가자 빙고판은 5×5가 성립하는 값만 만들 수 있다 — 판을 함께 쓸 계획이면 여기서 미리 알린다
+        title: '최대 숫자', hint: `${MIN_N}–${MAX_N} 사이 · 빙고판도 쓰려면 25 이상`, inputmode: 'numeric', maxLength: 2,
         onSubmit: (raw) => {
           const v = parseInt(raw.trim(), 10);
           if (!Number.isInteger(v) || v < MIN_N || v > MAX_N) {

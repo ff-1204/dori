@@ -8,13 +8,32 @@
 //   뽑은 숫자 전체는 표시 줄 탭 → 전체 숫자판 팝업으로 언제든 검증 가능.
 import MiniGame from '../MiniGame.js';
 import { C, css, FONT, EASE, LAYOUT, RADIUS } from '../theme.js';
-import { makeButton, makeHeader, makeSubLink, makeModal, chipFlow, padHitArea } from '../ui.js';
+import { makeButton, makeHeader, makeSubLink, makeModal, chipFlow, padHitArea, openTextInput, closeTextInput } from '../ui.js';
 import { Sfx } from '../sfx.js';
 
 const LS_KEY = 'dori.bingocard';
-// 5×5 카드가 성립하는 범위만(마지막 구간에도 숫자 5개 이상) — '빙고 뽑기' 프리셋과 동일
+// 자주 쓰는 범위 — '빙고 뽑기'의 프리셋과 동일(직접 입력도 열려 있다)
 const PRESETS = [25, 30, 50, 75, 90];
 const DEFAULT_N = 75;
+// 사회자가 고른 범위를 그대로 따라갈 수 있어야 하므로 직접 입력을 연다('빙고 뽑기'는 10–99).
+// 다만 5×5 카드는 다섯 구간이 각각 5칸 이상이어야 성립한다 — 26·27·28·31·32·36처럼
+// 마지막 구간이 짧아지는 값은 만들 수 없다(그 값은 카드 없이 뽑기만 할 때 쓴다).
+const MIN_N = 25;
+const MAX_N = 99;
+const SETTINGS_NOTE = '범위·자유칸을 바꾸면 새 판이 돼요';
+function cardOk(max) {
+  if (!Number.isInteger(max) || max < MIN_N || max > MAX_N) return false;
+  const s = Math.ceil(max / 5);
+  return s >= 5 && max - 4 * s >= 5;
+}
+// 안내용 — 만들 수 없는 값에서 가장 가까운 가능한 값(같은 거리면 큰 쪽: 숫자가 줄면 판이 심심해진다)
+function nearestOk(v) {
+  for (let d = 1; d <= MAX_N; d += 1) {
+    if (cardOk(v + d)) return v + d;
+    if (cardOk(v - d)) return v - d;
+  }
+  return DEFAULT_N;
+}
 // 열 구간 색 — BingoScene의 구간 색 5분할과 같은 순서(색상 연결)
 const BAND = [C.warning, C.primary, C.danger, C.success, 0xc77dff];
 const CENTER = 12; // 가운데 칸(자유칸 위치)
@@ -49,8 +68,8 @@ function loadState() {
     const raw = localStorage.getItem(LS_KEY);
     if (raw) {
       const st = JSON.parse(raw);
-      // 손상 데이터 방어: 프리셋·자유칸·카드 25칸(열 구간·중복)·표시 배열을 검증해 통과분만 복원
-      if (st && PRESETS.includes(st.max) && typeof st.free === 'boolean'
+      // 손상 데이터 방어: 범위·자유칸·카드 25칸(열 구간·중복)·표시 배열을 검증해 통과분만 복원
+      if (st && cardOk(st.max) && typeof st.free === 'boolean'
         && Array.isArray(st.nums) && st.nums.length === 25
         && Array.isArray(st.marks) && st.marks.length === 25
         && st.marks.every((m) => typeof m === 'boolean')) {
@@ -87,6 +106,7 @@ export default class BingoCardScene extends MiniGame {
   onCreate() {
     this.cx = this.scale.width / 2;
     this.settingsModal = null; // 재진입 시 stale 참조 초기화
+    this.settingsNote = null;
     this.calledView = null;
     this.boardLayer = null;
     this.callStrip = null;
@@ -469,18 +489,40 @@ export default class BingoCardScene extends MiniGame {
     if (this.settingsModal || this.locked) return;
     const modal = makeModal(this, {
       title: '판 설정',
-      note: '범위·자유칸을 바꾸면 새 판이 돼요',
+      note: SETTINGS_NOTE,
       py: 300,
-      ph: 620,
-      onDone: () => { this.settingsModal.destroy(); this.settingsModal = null; },
+      ph: 700,
+      onDone: () => { closeTextInput(this); this.settingsModal.destroy(); this.settingsModal = null; },
     });
     this.settingsModal = modal.root;
+    this.settingsNote = modal.noteText;
     const chip = chipFlow(this, modal.chipsBox, modal.chips);
-    PRESETS.forEach((n) => {
+    // 프리셋에 없는 범위도 쓸 수 있어야 한다 — 사회자가 고른 범위와 맞춰야 하기 때문(직접 입력)
+    const presets = PRESETS.includes(this.maxN) ? PRESETS : [...PRESETS, this.maxN].sort((a, b) => a - b);
+    presets.forEach((n) => {
       const cur = n === this.maxN;
       chip(cur ? `1–${n} ✓` : `1–${n}`,
         cur ? { fill: C.primary, textColor: C.bg } : { outline: true },
         () => this.applySettings(n, this.free));
+    });
+    chip.gapRow();
+    chip('직접 입력', { outline: true, color: C.warning }, () => {
+      openTextInput(this, {
+        title: '최대 숫자', hint: `${MIN_N}–${MAX_N} 사이 · 사회자와 같은 범위로`, inputmode: 'numeric', maxLength: 2,
+        onSubmit: (raw) => {
+          const v = parseInt(raw.trim(), 10);
+          if (!Number.isInteger(v) || v < MIN_N || v > MAX_N) {
+            this.flashSettingsNote(`${MIN_N}–${MAX_N} 사이 숫자로 적어 주세요`);
+            return;
+          }
+          if (!cardOk(v)) {
+            // 왜 안 되는지까지 알려 준다 — 가장 가까운 가능한 값을 함께 제시
+            this.flashSettingsNote(`1–${v}은 5×5로 안 나뉘어요 — ${nearestOk(v)}은 어때요?`);
+            return;
+          }
+          this.applySettings(v, this.free);
+        },
+      });
     });
     chip.gapRow();
     chip(this.free ? '★ 자유칸 켬' : '★ 자유칸 끔',
@@ -491,6 +533,17 @@ export default class BingoCardScene extends MiniGame {
     chip(this.caller ? '🔢 뽑기 겸하기 켬' : '🔢 뽑기 겸하기 끔',
       this.caller ? { fill: C.warning, textColor: C.bg } : { outline: true, color: C.warning },
       () => this.toggleCaller());
+  }
+
+  // 잠깐 안내를 보였다가 원래 문구로 복원(범위 모달 전용)
+  flashSettingsNote(msg) {
+    if (!this.settingsNote || !this.settingsNote.active) return;
+    this.settingsNote.setText(msg).setColor(css(C.warning));
+    this.time.delayedCall(1800, () => {
+      if (this.settingsNote && this.settingsNote.active) {
+        this.settingsNote.setText(SETTINGS_NOTE).setColor(css(C.subtext));
+      }
+    });
   }
 
   applySettings(max, free) {
