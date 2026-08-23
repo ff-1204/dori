@@ -9,6 +9,8 @@
   <meta name="robots" content="noai, noimageai">
   <link rel="icon" href="assets/icon-192.png">
   <meta name="theme-color" content="#12131c">
+  <link rel="apple-touch-icon" href="assets/icon-192.png">
+  <link rel="manifest" href="manifest.json">
   <!-- 링크 공유 미리보기 -->
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="dori">
@@ -17,35 +19,31 @@
   <meta property="og:url" content="https://dori.io.kr/guide.html">
   <meta property="og:image" content="https://dori.io.kr/assets/og.png">
   <meta property="og:locale" content="ko_KR">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="dori — 결정 룰렛·사다리타기·복불복 뽑기 도구">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="사용 안내 — dori">
+  <meta name="twitter:description" content="도리 12종의 방법과 규칙, 활용 예 — 메뉴 룰렛·사다리타기·랜덤 핀볼·조 배정·뽑기 상자·로또 추첨·빙고 뽑기·빙고판·러시안 룰렛·악어 이빨·해적통·단청.">
+  <meta name="twitter:image" content="https://dori.io.kr/assets/og.png">
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2755020807980350" crossorigin="anonymous"></script>
   <link rel="stylesheet" href="site.css">
   <style>
-    :root { color-scheme: dark; }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0; background: #12131c; color: #f2f3f7;
-      font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
-      line-height: 1.75; font-size: 17px;
-    }
+    /* 아래는 이 페이지 전용 — 공통 서식은 site.css가 담당한다 */
     .wrap { max-width: 720px; margin: 0 auto; padding: 28px 20px 60px; }
     h1 { font-size: 30px; margin: 36px 0 8px; }
     h2 { font-size: 24px; margin: 36px 0 4px; }
     h3 { font-size: 20px; margin: 22px 0 2px; }
     h3 a { text-decoration: none; color: #f2f3f7; }
     h3 a:hover { color: #6cc7ff; }
-    .cat { color: #8b90a8; font-size: 15px; font-weight: normal; margin-left: 8px; }
-    p, li { color: #c9cddd; }
-    a { color: #6cc7ff; }
     .game { background: #1d1f2b; border-radius: 14px; padding: 4px 22px 16px; margin: 14px 0; }
     .game p { margin: 8px 0 10px; }
     .links { font-size: 15px; }
     .links a { font-weight: bold; text-decoration: none; margin-right: 18px; display: inline-block; padding: 6px 0; }
-    footer { margin-top: 56px; padding-top: 18px; border-top: 1px solid #2a2f42;
-      color: #8b90a8; font-size: 14px; text-align: center; }
-    footer a { color: #8b90a8; display: inline-block; padding: 8px 6px; }
   </style>
 </head>
 <body>
+<a class="skip" href="#main">본문 바로가기</a>
 <header class="site-top">
   <a class="brand" href="./">dori</a>
   <span class="desc">결정 룰렛 · 사다리타기 · 복불복 뽑기 도구</span>
@@ -57,7 +55,7 @@
     <a href="privacy.html">개인정보</a>
   </nav>
 </header>
-<div class="wrap">
+<main class="wrap" id="main" tabindex="-1">
 
   <h1>사용 안내</h1>
   <p>dori의 도리 12가지입니다. 모든 도리는 <strong>화면에 보이는 그대로 뽑는 정직한 랜덤</strong>이
@@ -168,7 +166,7 @@
     <li><a href="read-decision-fatigue.html">점심 메뉴를 못 고르는 이유</a> — 선택 과부하와 결정 피로</li>
   </ul>
   <p>공통 궁금증은 <a href="faq.html">FAQ</a>에 정리되어 있습니다.</p>
-</div>
-<div class="site-bottom">© 2026 ff-1204 · <span class="long">All Rights Reserved · </span>모든 도구는 오락 목적입니다</div>
+</main>
+<footer class="site-bottom">© 2026 ff-1204 · <span class="long">All Rights Reserved · </span>모든 도구는 오락 목적입니다</footer>
 </body>
 </html>

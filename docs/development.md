@@ -92,10 +92,12 @@ python -m http.server 8000
 고정 바·본문 서식은 다른 페이지와 같은 `site.css`를 함께 쓴다(홈만 갖고 있던 중복 CSS는 제거).
 
 ```
-.site-top (fixed 48)   ─ 이름·설명·안내 5링크
-#game     (100dvh-96)  ─ 캔버스 + 정적 폴백(#fallback)
-.site-bottom (fixed 48)─ '사이트 소개 ↓' 조작(좌) + 저작권·오락 목적 고지(중앙)
-#site-info (.wrap)     ─ 상황→도구 표, 정직한 랜덤 3원칙, 알아 두면 좋은 것, 읽을거리, 더 보기
+a.skip                 ─ 건너뛰기 링크(포커스 시에만 보임)
+header.site-top (fixed 48) ─ 이름·설명·안내 5링크
+main
+ ├ #game  (100dvh-96)  ─ 캔버스 + 정적 폴백(#fallback)
+ └ #site-info (.wrap)  ─ 상황→도구 표, 정직한 랜덤 3원칙, 알아 두면 좋은 것, 읽을거리, 더 보기
+footer.site-bottom (fixed 48) ─ '둘러보기 ↓' 조작(좌) + 저작권·오락 목적 고지(중앙)
 ```
 
 - **캔버스 크기는 그대로**다 — 첫 화면 배분(48/캔버스/48)을 건드리지 않고 아래로 늘렸다. 실측 390폭 385×684, 360폭 360×640으로 개편 전과 동일.
@@ -106,6 +108,8 @@ python -m http.server 8000
   데스크톱에서는 오른쪽에 같은 폭의 빈 칸(`.spacer`, `visibility: hidden`)을 둬 문구를 정중앙에 유지한다.
 - 역할 분담: **`#site-info`는 "무엇을 정하나"**(상황→도구), **`about.html`은 "누가 만들었나·어떻게 쓰나"**.
   문장이 겹치면 중복 콘텐츠가 되므로 서로 다른 각도로 쓴다.
+- **하단바는 DOM에서 소개 뒤에 온다** — 고정 배치라 보이는 자리는 그대로이고, 읽는 순서(스크린 리더·탭)만 제자리를 찾는다.
+  `main`은 body가 하던 플렉스 컬럼 역할을 그대로 물려받아 첫 화면 높이 계산이 바뀌지 않는다.
 - 렌더링 후 홈 본문 **82자 → 약 1,030자**(구글은 JS를 실행하므로 폴백이 아니라 이 섹션이 색인된다).
 
 ### 정적 폴백 (#fallback)
@@ -142,15 +146,34 @@ Phaser와 qrcode-generator는 `vendor/`에 두고 같은 출처에서 로드한�
 
 - **공유 버튼**(허브 우상단): 모바일은 `navigator.share`(네이티브 시트), 데스크톱은 클립보드 복사 + 토스트.
 - **QR 모달**(허브 좌상단): `qrcode-generator`(MIT, CDN)로 접속 QR 생성 — 흰 배경 + quiet zone 확보.
-- **링크 미리보기**: `index.html`에 Open Graph/Twitter 메타(제목·설명·URL·locale). `og:image`는 1200×630 제작 후 추가(TODO).
-- **검색 최적화**: title/description, canonical, JSON-LD(WebApplication), `robots.txt`, `sitemap.xml`, `<noscript>` 설명 텍스트(캔버스 게임의 크롤러 대응).
+- **링크 미리보기**: **전 페이지**에 Open Graph/Twitter 메타(제목·설명·URL·locale·이미지 1200×630 + alt, `twitter:card=summary_large_image`). 페이지를 추가하면 이 묶음을 함께 넣는다.
+- **구조화 데이터**: 홈 WebApplication · FAQ FAQPage · 읽을거리 Article · 도구/글 상세 **BreadcrumbList**(홈 › 사용 안내|읽을거리 › 이 문서).
+- **검색 최적화**: title/description, canonical, `robots.txt`, `sitemap.xml`, 정적 폴백 `#fallback`(캔버스 화면의 크롤러 대응).
 - 사이트 정보(제목·설명·URL) 변경 시 **index.html 메타 + HubScene 공유 문구 + sitemap**을 함께 갱신한다.
+
+## 접근성 (정적 페이지 공통)
+
+캔버스 안(도리 화면)은 Phaser가 그리므로 여기 규칙은 **HTML 페이지와 고정 바**에 적용된다.
+새 페이지를 만들 때 이 묶음을 그대로 가져간다.
+
+- **랜드마크**: `header.site-top` / `main.wrap#main` / `footer.site-bottom`. 페이지마다 `<main>`은 하나.
+- **건너뛰기 링크**: `<body>` 첫 줄에 `<a class="skip" href="#main">본문 바로가기</a>`.
+  고정 상단바의 같은 링크 5개를 매 페이지 지나야 하는 문제를 없앤다(WCAG 2.4.1).
+  홈은 캔버스가 키보드 조작 대상이 아니므로 `#site-info`로 보낸다.
+- **포커스 표시**: `:focus-visible`에 하늘색 링(site.css). 어두운 배경에서 브라우저 기본 링은 잘 보이지 않는다.
+- **페이지 안 이동**은 스크롤과 함께 **포커스도 옮긴다**(`el.focus({preventScroll:true})`) —
+  스크롤만 하면 다음 탭이 다시 상단바로 돌아가 링크가 헛돈다. 착지점에는 `tabindex="-1"`.
+- **대비**: 본문·보조 텍스트 모두 4.5:1 이상. 고정 바의 12px 문구가 특히 걸리기 쉽다
+  (상단바 부제 `#7a8099` 4.9:1, 하단바 `#8b90a8` 6.0:1 — 이보다 어둡게 내리지 않는다).
+- **확대 허용**: 뷰포트에 `user-scalable=no`·`maximum-scale`을 쓰지 않는다.
 
 ## 멀티 디바이스 / 반응형
 
 - 대상: **데스크톱 · 모바일 · 태블릿**.
 - 기준 해상도 720×1280(세로), Phaser `Scale.FIT` + `CENTER_BOTH`([main.js](../src/main.js)).
 - `index.html` 뷰포트에 `viewport-fit=cover`로 노치 안전 영역 대응.
+- **확대(핀치 줌)는 막지 않는다** — 첫 화면 아래가 읽는 페이지가 된 뒤로 `user-scalable=no`는 본문 확대까지 막았다.
+  캔버스 위 제스처는 `#game { touch-action: none }`이 이미 잡고 있으므로 조작은 그대로다.
 - 좌표는 고정 px 대신 `this.scale.width/height` 기준 **상대 배치**.
 - 자세한 이론·규칙(터치 타깃·안전 영역·입력 방식·방향 등)은 [responsive-design.md](./responsive-design.md).
 

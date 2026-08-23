@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 
   <!-- ===== SEO ===== -->
   <title>dori — 결정 룰렛·사다리타기·복불복 뽑기 도구</title>
@@ -109,6 +109,10 @@
       touch-action: auto;
     }
     canvas { display: block; }
+    /* main은 body가 하던 플렉스 컬럼 역할을 그대로 물려받는다 — 첫 화면 높이 계산이 바뀌지 않는다 */
+    main { display: flex; flex-direction: column; }
+    /* 건너뛰기·페이지 내 이동의 착지점 — 프로그램 포커스만 받으므로 링을 그리지 않는다 */
+    #game:focus, #site-info:focus { outline: none; }
     /* 정적 폴백 — 스크립트가 실행되지 않는 환경(심사·미리보기 렌더러, 크롤러, 스크립트 차단,
        라이브러리 로드 실패)에서 캔버스 자리가 빈 검은 상자로 남지 않게 한다.
        내용은 아래 소개(#site-info)가 담당하므로 여기서는 상황 안내와 길 안내만 짧게.
@@ -149,6 +153,7 @@
   </style>
 </head>
 <body>
+  <a class="skip" href="#site-info">소개 내용으로 바로가기</a>
   <!-- 사이트 헤더 — 캔버스 위에 항상 보인다(첫 화면에서 사이트 구조를 드러내는 역할) -->
   <header class="site-top">
     <span class="brand">dori</span>
@@ -162,7 +167,8 @@
       <a href="privacy.html">개인정보</a>
     </nav>
   </header>
-  <div id="game">
+  <main>
+  <div id="game" tabindex="-1">
     <!-- 도리 화면이 뜨지 못하는 환경(스크립트 차단·로드 실패)에서 이 자리가 빈 검은 상자로
          남지 않게 하는 안내. 사이트 내용은 아래 소개 섹션이 담당하므로 여기서는 길만 알린다. -->
     <div id="fallback">
@@ -175,17 +181,9 @@
       </div>
     </div>
   </div>
-  <div class="site-bottom">
-    <!-- 캔버스가 터치를 잡으므로 첫 화면에서는 쓸어올려 내려갈 수 없다 — 길을 눈에 보이게 둔다 -->
-    <a class="to-info" href="#site-info">둘러보기 ↓</a>
-    <span class="copy">© 2026 ff-1204 · <span class="long">All Rights Reserved · </span>모든 도구는 오락 목적입니다</span>
-    <!-- 문구를 정중앙에 두기 위한 같은 폭의 빈 칸(데스크톱 전용) -->
-    <span class="to-info spacer" aria-hidden="true">둘러보기 ↓</span>
-  </div>
-
   <!-- ===== 첫 화면 아래 — 이 화면에서 무엇을 할 수 있는지. 운영자·이용 안내 등 사이트 자체의
        소개는 about.html이 담당한다(역할 분담: 여기는 '무엇을 정하나', 저기는 '누가 만들었나'). -->
-  <section id="site-info" class="wrap">
+  <section id="site-info" class="wrap" tabindex="-1">
     <h1>무엇을 정해야 하나요</h1>
     <p>위 화면에서 바로 돌리고 뽑을 수 있습니다. 상황에 맞는 도구를 고르세요 —
     이름을 누르면 그 도구의 사용 안내로 갑니다.</p>
@@ -249,6 +247,14 @@
     <a href="faq.html">FAQ</a>에 자주 묻는 질문을 두었습니다.</p>
     <p><a class="back" href="#game">↑ 도리 화면으로</a></p>
   </section>
+  </main>
+  <footer class="site-bottom">
+    <!-- 캔버스가 터치를 잡으므로 첫 화면에서는 쓸어올려 내려갈 수 없다 — 길을 눈에 보이게 둔다 -->
+    <a class="to-info" href="#site-info">둘러보기 ↓</a>
+    <span class="copy">© 2026 ff-1204 · <span class="long">All Rights Reserved · </span>모든 도구는 오락 목적입니다</span>
+    <!-- 문구를 정중앙에 두기 위한 같은 폭의 빈 칸(데스크톱 전용) -->
+    <span class="to-info spacer" aria-hidden="true">둘러보기 ↓</span>
+  </footer>
   <script>
     // 페이지 안 이동('둘러보기 ↓', '↑ 도리 화면으로')은 해시를 바꾸지 않는다 —
     // 해시와 히스토리는 게임 딥링크·뒤로가기 스택(src/nav.js)이 쓰는 자원이라, 앵커가 한 칸 쌓이면
@@ -260,6 +266,9 @@
         if (!el) return;
         e.preventDefault();
         el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // 스크롤만 하면 키보드 포커스는 링크에 남는다 — 이어지는 탭이 다시 상단바로 돌아가
+        // '건너뛰기'와 '둘러보기'가 헛도는 것을 막는다(대상은 tabindex="-1"로 받을 준비가 되어 있다).
+        el.focus({ preventScroll: true });
       });
     });
 

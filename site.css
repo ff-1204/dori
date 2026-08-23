@@ -22,7 +22,7 @@ body {
   font-family: 'Segoe UI', sans-serif; font-size: 17px; font-weight: bold; letter-spacing: 1px;
 }
 .site-top .brand:hover { color: #6cc7ff; }
-.site-top .desc { flex: none; color: #5a6078; font-size: 12px; }
+.site-top .desc { flex: none; color: #7a8099; font-size: 12px; }
 .site-top nav { display: flex; flex: none; align-self: stretch; margin-left: auto; gap: 10px; }
 .site-top nav a {
   display: flex; align-items: center; align-self: stretch; /* 터치 타깃 = 바 높이 */
@@ -33,7 +33,7 @@ body {
   position: fixed; bottom: 0; left: 0; right: 0; z-index: 50;
   display: flex; align-items: center; justify-content: center; height: 48px; padding: 0 14px;
   background: #0f1018; border-top: 1px solid #23263a;
-  color: #6b7086; font-size: 12px; text-align: center;
+  color: #8b90a8; font-size: 12px; text-align: center;
 }
 @media (max-width: 620px) {
   .site-top { gap: 8px; padding: 0 10px; }
@@ -41,6 +41,23 @@ body {
   .site-top nav { margin-left: 8px; gap: 8px; }
   .site-bottom .long { display: none; }
 }
+
+/* ===== 키보드 이용 ===== */
+/* 건너뛰기 링크 — 모든 페이지 위에 같은 내비게이션이 고정돼 있어, 키보드로는 매번
+   같은 링크 5개를 지나야 본문에 닿는다. 평소엔 화면 밖에 숨고 탭 포커스를 받으면 내려온다. */
+.skip {
+  position: fixed; top: -60px; left: 10px; z-index: 60;
+  background: #6cc7ff; color: #12131c; font-size: 14px; font-weight: bold;
+  padding: 10px 16px; border-radius: 0 0 10px 10px; text-decoration: none;
+  transition: top 120ms ease-out;
+}
+.skip:focus { top: 0; }
+@media (prefers-reduced-motion: reduce) { .skip { transition: none } }
+/* 포커스 링 — 어두운 배경에서 브라우저 기본 링은 잘 보이지 않는다. 키보드 이동에만 표시. */
+:focus-visible { outline: 2px solid #6cc7ff; outline-offset: 2px; }
+/* 건너뛰기 대상은 프로그램 포커스만 받는 자리다 — 링을 그리지 않는다 */
+#main { scroll-margin-top: 56px; }
+#main:focus, #main:focus-visible { outline: none; }
 
 .wrap { max-width: 720px; margin: 0 auto; padding: 28px 20px 40px; }
 h1 { font-size: 30px; margin: 36px 0 8px; }
@@ -79,6 +96,3 @@ blockquote p { margin: 4px 0; }
 .art { margin: 18px 0; padding-bottom: 16px; border-bottom: 1px solid #2a2f42; }
 .art h3 { font-size: 19px; margin: 0 0 4px; }
 .art p { margin: 4px 0 0; }
-footer { margin-top: 56px; padding-top: 18px; border-top: 1px solid #2a2f42;
-  color: #8b90a8; font-size: 14px; text-align: center; }
-footer a { color: #8b90a8; display: inline-block; padding: 8px 6px; }
