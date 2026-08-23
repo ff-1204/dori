@@ -46,6 +46,8 @@ Claude Code가 이 저장소에서 작업할 때 따르는 가이드입니다. �
 > Git 규칙 변경 → `docs/git.md` 갱신.
 > 사용자에게 보이는 **의미 있는 변화가 쌓이면 `CHANGELOG.md`에 릴리스 단위로 정리**하고,
 > 프로젝트 소개가 바뀌면 `README.md`도 함께 갱신한다.
+> 큰 검토·대응 세션은 진단 근거와 실측치를 담은 **`docs/worklog-YYYY-MM-DD.md`**로 남기고,
+> [docs/workflow.md](docs/workflow.md) §5 표에 한 줄 추가한다(스냅샷이라 이후 갱신하지 않는다).
 
 ## 커밋 규칙 (요약)
 
@@ -60,7 +62,8 @@ Claude Code가 이 저장소에서 작업할 때 따르는 가이드입니다. �
 - Phaser 3(v3.80.1, `vendor/` 자체 호스팅), 바닐라 JS ES 모듈, 빌드 도구 없음
 - 홈(`index.html`)은 **첫 화면 = 도리 화면, 그 아래 = 소개 섹션(`#site-info`)** — 캔버스 배분은 건드리지 않는다. 도구·수치가 바뀌면 두 곳 다 갱신
 - 씬은 파일당 하나, `Phaser.Scene` 상속
-- 로컬 실행은 정적 서버 필요(`python -m http.server`)
+- 로컬 실행은 정적 서버 필요 — 이 개발 환경에는 Python이 없다(Node는 `C:\Program Files\nodejs`, PATH 밖). [development.md](docs/development.md) 참고
+odejs`, PATH 밖). [development.md](docs/development.md) 참고
 - 주석은 한국어로 간결하게
 
 자세한 내용은 [docs/development.md](docs/development.md) 참고.
