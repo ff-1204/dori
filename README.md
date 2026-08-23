@@ -50,7 +50,7 @@
 
 ## 기술
 
-- **Phaser 3** (CDN) + 바닐라 JS ES 모듈 — 빌드 도구 없음
+- **Phaser 3**(`vendor/` 자체 호스팅) + 바닐라 JS ES 모듈 — 빌드 도구 없음
 - **GitHub Pages** 배포 — `main` 푸시 후 약 20초면 반영
 - 에셋 대부분 코드 생성(도형·이모지 텍스처·Web Audio 합성음)
 
