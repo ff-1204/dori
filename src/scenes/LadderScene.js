@@ -13,6 +13,9 @@ import { Sfx } from '../sfx.js';
 const MIN_P = 2;
 const MAX_P = 6; // 모바일 가독성 한계(responsive-design §7)
 const NAME_MAX = 4; // 라벨 겹침 방지(글자 수 제한)
+// 더블탭 인정 간격 — 350ms는 작은 라벨을 두 번 정확히 짚기엔 빠듯했다(첫 탭이 그냥 사라진다).
+// 파괴적 조작의 '두 번 탭 확정'(1.6초)과는 달리 여기는 수정 진입이라 넉넉해도 위험하지 않다.
+const DOUBLE_MS = 500;
 
 // 시작 전 기본 안내 — 이름·결과 수정 어포던스를 노출(38px에서 화면 폭 내 길이 유지)
 const HINT_SETUP = '이름과 결과는 더블탭으로 수정';
@@ -143,7 +146,9 @@ export default class LadderScene extends MiniGame {
       const t = this.add.text(this.colX(i), 244, name, {
         fontFamily: FONT, fontSize: `${nameSize}px`, color: css(PLAYER[i]), fontStyle: 'bold',
       }).setOrigin(0.5);
-      const hit = this.add.rectangle(this.colX(i), 244, 100, 72, 0xffffff, 0)
+      // 히트는 라벨보다 크게 — 설계 단위 88 규칙(responsive-design §7). 위(문구 190)·아래(판 284)
+      // 모두 인터랙티브가 없어 넓혀도 충돌하지 않는다. 폭은 6명일 때 열 간격이 108이라 100을 유지.
+      const hit = this.add.rectangle(this.colX(i), 244, 100, 96, 0xffffff, 0)
         .setInteractive({ useHandCursor: true });
       hit.on('pointerup', () => this.onNameTap(i));
       this.labelLayer.add(t);
@@ -157,7 +162,8 @@ export default class LadderScene extends MiniGame {
       const t = this.add.text(this.colX(i), 939, r, {
         fontFamily: FONT, fontSize: `${n >= 6 ? 22 : 26}px`, color: css(C.subtext), fontStyle: 'bold',
       }).setOrigin(0.5);
-      const hit = this.add.rectangle(this.colX(i), 939, 100, 64, 0xffffff, 0)
+      // 아래로는 링크 행(y1002, 히트 974–1030)이 있어 더 못 내려간다 — 위로 넓혀 84를 확보한다
+      const hit = this.add.rectangle(this.colX(i), 931, 100, 84, 0xffffff, 0)
         .setInteractive({ useHandCursor: true });
       hit.on('pointerup', () => this.onResultTap(i));
       this.labelLayer.add(t);
@@ -344,7 +350,7 @@ export default class LadderScene extends MiniGame {
     // 시작 전: 더블탭으로 이름 수정(시작 후엔 탭 = 출발이라 수정과 충돌 — 섞기 전 설정 단계에서만)
     if (!this.started) {
       const now = this.time.now;
-      if (this.lastNameTap && this.lastNameTap.i === i && now - this.lastNameTap.t < 350) {
+      if (this.lastNameTap && this.lastNameTap.i === i && now - this.lastNameTap.t < DOUBLE_MS) {
         this.lastNameTap = null;
         this.renameName(i);
       } else {
@@ -353,15 +359,28 @@ export default class LadderScene extends MiniGame {
       }
       return;
     }
-    if (this.traced.has(i)) return;
+    // 이미 도착한 사람을 다시 누르면 아무 일도 없었다 — 수정하려던 사람에게는 '고장'으로 읽힌다.
+    // 왜 안 되는지와 어디로 가야 하는지를 알린다(정직한 피드백).
+    if (this.traced.has(i)) {
+      this.flashHint(this.traced.size === this.names.length
+        ? '수정은 새 판을 누른 뒤에'
+        : '진행 중 — 수정은 새 판에서');
+      return;
+    }
     this.startTrace(i);
   }
 
   // 결과도 참가자와 동일: 시작 전 더블탭으로 수정(시작 후엔 결과 확정 단계라 수정 불가)
   onResultTap(i) {
-    if (this.locked || this.started) return;
+    if (this.locked) return;
+    if (this.started) {
+      this.flashHint(this.traced.size === this.names.length
+        ? '수정은 새 판을 누른 뒤에'
+        : '진행 중 — 수정은 새 판에서');
+      return;
+    }
     const now = this.time.now;
-    if (this.lastResultTap && this.lastResultTap.i === i && now - this.lastResultTap.t < 350) {
+    if (this.lastResultTap && this.lastResultTap.i === i && now - this.lastResultTap.t < DOUBLE_MS) {
       this.lastResultTap = null;
       this.renameResult(i);
     } else {
